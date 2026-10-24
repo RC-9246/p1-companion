@@ -42,9 +42,9 @@ from .emotion_model import context as emotion_context, describe as emotion_descr
 DATA=Path(os.environ.get('P1_COMPANION_DATA','/AstrBot/data/plugin_data/affect'))
 HERE=Path(__file__).parent
 
-def authorized(event):
+def authorized(event,*,private_only=True):
     try:
-        if event.get_platform_id()!='qq_snowluma' or not event.is_private_chat():
+        if event.get_platform_id()!='qq_snowluma' or (private_only and not event.is_private_chat()):
             return None
         identity=identity_from_event(event)
         v=json.loads((DATA/'allowed_identities.json').read_text())
@@ -1058,11 +1058,33 @@ class AffectPlugin(Star):
 
     @filter.command('群内主动')
     async def interest_control(self,event:AstrMessageEvent,mode:str='状态',group:str=''):
-        if not authorized(event):return
+        # Consume the command even for an unsupported identity. Returning before
+        # stopping the event lets native ChatUI fall back to the model/tool loop.
         event.stop_event()
-        if not group.isdigit():yield event.plain_result('用法：/群内主动 开启或关闭 群号；状态同样带群号');return
+        if event.get_platform_id()!='qq_snowluma':
+            yield event.plain_result('这是QQ主人控制命令。请在QQ主人私聊发送 /群内主动 状态 群号，或由主人在已开启的QQ群内发送 /群内主动 状态；开启、关闭用同样格式。网页聊天不会用终端代替执行这个开关');return
+        if not authorized(event,private_only=False):return
+        mode=str(mode).strip();group=str(group).strip()
+        # Accept the documented order and the equally natural "群号 开启".
+        if mode.isdigit():mode,group=(group or '状态'),mode
+        if mode not in ('开启','关闭','状态'):
+            yield event.plain_result('用法：/群内主动 开启、关闭或状态；私聊可在后面加群号');return
+        if not event.is_private_chat():
+            from .group_chat import is_group
+            if not is_group(event) or not self.groups.allowed(event):return
+            current=str(event.get_group_id())
+            if group and group!=current:
+                yield event.plain_result('群内命令只能修改本群；管理其他群请私聊我');return
+            group=current
+        elif not group:
+            choices=[r['group'] for r in self.groups.policy() if r['bot']==str(event.get_self_id())]
+            if len(choices)==1:group=choices[0]
+        if not re.fullmatch(r'[0-9]{5,20}',group):
+            yield event.plain_result('请指定群号，例如：/群内主动 开启 123456789；也可以由主人在已开启的群内发送 /群内主动 开启');return
         row={'bot':str(event.get_self_id()),'group':group}
         if row not in self.groups.policy():yield event.plain_result('这个群尚未开启群聊');return
+        if not self.qq or not self.qq.ready or not self.agency.ready:
+            yield event.plain_result('自主模块还在准备中，请稍后重试');return
         scope=self.qq.group_key(row['bot'],group)
         if mode in ('开启','关闭'):await asyncio.to_thread(self.agency.store.config,scope,interest_join=int(mode=='开启'))
         cfg=await asyncio.to_thread(self.agency.store.ensure,scope)

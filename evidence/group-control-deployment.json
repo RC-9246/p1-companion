@@ -1,0 +1,15 @@
+{
+  "status": "deployed",
+  "version": "0.20.0",
+  "recovery_point": "/home/p1admin/p1-agent/backups/companion-patch-v020-20261024-201358",
+  "modified_files": [
+    "astrbot_plugin_affect/main.py"
+  ],
+  "seconds": 44.34,
+  "core_health": true,
+  "scoped_group_coping": true,
+  "resolved_tail_question_guard": true,
+  "background_budget_separate_from_max_deliberation": true,
+  "new_qq_test_messages": 0,
+  "legacy_background_calls_moved_to_independent_budget": 0
+}

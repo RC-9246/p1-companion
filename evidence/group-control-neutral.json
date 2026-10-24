@@ -1,0 +1,21 @@
+{
+  "neutral_actual_astrbot_sdk": {
+    "native_command_filter": true,
+    "native_group_waking_stage": true,
+    "owner_private_and_current_group": true,
+    "both_argument_orders": true,
+    "status_on_off_durable": true,
+    "new_group_isolation": true,
+    "nonowner_and_unenrolled_silent": true,
+    "webchat_consumed_without_model_or_shell": true,
+    "other_admin_handlers_unreachable": true,
+    "revocation_during_delay_cancels_reply": true,
+    "unavailable_module_reported": true,
+    "each_qq_reply_delayed_2_to_5": true,
+    "model_requests": 0,
+    "real_qq_messages": 0,
+    "production_database_modified": false
+  },
+  "neutral_core_tests": 132,
+  "neutral_custom_persona_and_empty_image_catalog_preserved": true
+}

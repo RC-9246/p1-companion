@@ -1,0 +1,62 @@
+{
+  "status": "passed",
+  "targeted_command_rounds": [
+    {
+      "name": "round-1",
+      "passed": true,
+      "seconds": 14.82
+    },
+    {
+      "name": "round-2",
+      "passed": true,
+      "seconds": 15.28
+    },
+    {
+      "name": "round-3",
+      "passed": true,
+      "seconds": 14.88
+    },
+    {
+      "name": "round-4",
+      "passed": true,
+      "seconds": 15.38
+    },
+    {
+      "name": "round-5",
+      "passed": true,
+      "seconds": 15.06
+    }
+  ],
+  "webchat_command_stops_before_model_and_shell": true,
+  "regression_checks": [
+    {
+      "name": "unit",
+      "passed": true,
+      "seconds": 48.84
+    },
+    {
+      "name": "agency",
+      "passed": true,
+      "seconds": 18.74
+    },
+    {
+      "name": "groups",
+      "passed": true,
+      "seconds": 15.51
+    },
+    {
+      "name": "scope_matrix",
+      "passed": true,
+      "seconds": 32.48
+    }
+  ],
+  "unit_tests": 299,
+  "production_containers_unchanged": true,
+  "container_count": 8,
+  "checkpoint_matches_live": true,
+  "all_database_integrity_ok": true,
+  "core_health": true,
+  "new_real_qq_test_messages": 0,
+  "model_requests": 0,
+  "recovery_point": "/home/p1admin/p1-agent/backups/companion-patch-v020-20261024-201358"
+}

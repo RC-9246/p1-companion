@@ -1,0 +1,11 @@
+{
+  "real_safari_chatui": true,
+  "observed_original_load_failed_and_session_list_failure": true,
+  "page_reload_restored_session_list": true,
+  "status_command_submitted": true,
+  "immediate_qq_owner_usage_hint_visible": true,
+  "no_tool_card_in_new_command_reply": true,
+  "no_test_qq_messages": true,
+  "webchat_not_promoted_to_qq_owner": true,
+  "private_session_id_group_number_and_screenshot_excluded": true
+}

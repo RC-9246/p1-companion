@@ -35,6 +35,28 @@ class Groups:
         except (OSError,ValueError,TypeError):return []
     def allowed(self,event):
         return is_group(event) and self.plugin.enabled() and {'bot':scope(event)[0],'group':scope(event)[1]} in self.policy()
+    async def control(self,event):
+        """Only the owner's current-group switch bypasses conversational routing.
+
+        Do not run native waking here: it would activate unrelated admin/plugin
+        handlers. No model call, group admission token or memory write is needed.
+        """
+        text=str(getattr(event.message_obj,'message_str','')).strip()
+        match=re.fullmatch(r'/?群内主动(?:\s+(.*))?',text,re.S)
+        if not match:return False
+        event.stop_event()
+        from .main import authorized
+        if not self.allowed(event) or not authorized(event,private_only=False):return True
+        args=(match[1] or '').split()
+        guard=lambda:self.allowed(event) and bool(authorized(event,private_only=False))
+        event.set_extra('_p1_qq_send_guard',guard)
+        self.plugin.install_reply_delay(event)
+        if len(args)>2:
+            await event.send(event.plain_result('用法：/群内主动 开启、关闭或状态；群内只修改本群'))
+            return True
+        async for result in self.plugin.interest_control(event,*args):
+            await event.send(result)
+        return True
     def install(self):
         from astrbot.core.pipeline.waking_check.stage import WakingCheckStage
         from astrbot.core.pipeline.whitelist_check.stage import WhitelistCheckStage
@@ -48,6 +70,7 @@ class Groups:
                     if _kind=='whitelist' and qq and qq.private_allowed(event):return
                     return await _previous(stage,event)
                 if _kind=='wake':
+                    if await owner.control(event):return
                     try:accepted=await owner.route(event)
                     except Exception as exc:
                         logger.info('[P1 Groups] route_silent code='+type(exc).__name__);accepted=False
