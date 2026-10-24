@@ -1,0 +1,155 @@
+{
+  "synthetic_formats_verified": 16,
+  "formats": [
+    {
+      "name": "sample.txt",
+      "passed": true,
+      "mode": "text",
+      "seconds": 0.469,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "data.csv",
+      "passed": true,
+      "mode": "text",
+      "seconds": 0.396,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "data.json",
+      "passed": true,
+      "mode": "text",
+      "seconds": 0.396,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "source.py",
+      "passed": true,
+      "mode": "text",
+      "seconds": 0.419,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "subtitle.srt",
+      "passed": true,
+      "mode": "text",
+      "seconds": 0.488,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "mail.eml",
+      "passed": true,
+      "mode": "text",
+      "seconds": 0.414,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "page.html",
+      "passed": true,
+      "mode": "text",
+      "seconds": 0.387,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "sample.docx",
+      "passed": true,
+      "mode": "text",
+      "seconds": 0.37,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "sample.pptx",
+      "passed": true,
+      "mode": "text",
+      "seconds": 0.356,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "sample.xlsx",
+      "passed": true,
+      "mode": "text",
+      "seconds": 0.355,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "sample.odt",
+      "passed": true,
+      "mode": "text",
+      "seconds": 0.446,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "sample.epub",
+      "passed": true,
+      "mode": "text",
+      "seconds": 0.363,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "sample.zip",
+      "passed": true,
+      "mode": "archive_preview",
+      "seconds": 0.358,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "sample.pdf",
+      "passed": true,
+      "mode": "text",
+      "seconds": 0.563,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "sample.png",
+      "passed": true,
+      "mode": "ocr",
+      "seconds": 2.145,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "sample.rtf",
+      "passed": true,
+      "mode": "text",
+      "seconds": 0.363,
+      "error": null,
+      "reason": null
+    }
+  ],
+  "security_cases": [
+    {
+      "name": "evil.zip",
+      "denied": true
+    },
+    {
+      "name": "entity.docx",
+      "denied": true
+    },
+    {
+      "name": "program.exe",
+      "denied": true
+    },
+    {
+      "name": "mismatch.pdf",
+      "denied": true
+    }
+  ],
+  "math_experiment_executed": true,
+  "forbidden_code_denied": true,
+  "user_files_processed": 0,
+  "real_qq_messages": 0
+}

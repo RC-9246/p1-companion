@@ -1,0 +1,26 @@
+services:
+  workbench:
+    image: p1-companion-workbench:0.20.0
+    container_name: p1-workbench
+    init: true
+    restart: unless-stopped
+    user: '1001:1001'
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 40
+    mem_limit: 512m
+    command: [nice, -n, "15", python, server.py]
+    tmpfs: ["/tmp:size=96m,mode=1777"]
+    volumes:
+      - /srv/p1-agent/astrbot/data/plugin_data/affect/workbench_token:/run/secrets/workbench_token:ro
+    networks: [control]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; assert urllib.request.urlopen('http://127.0.0.1:8767/health',timeout=3).status == 200"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+networks:
+  control:
+    name: p1-companion-control
+    external: true

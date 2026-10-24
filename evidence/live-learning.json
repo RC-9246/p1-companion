@@ -1,0 +1,257 @@
+{
+  "model": "deepseek-flash",
+  "synthetic_only": true,
+  "production_db_modified": false,
+  "actual_qq_messages": 0,
+  "extraction_cases": [
+    {
+      "id": "preference",
+      "expected": "preference",
+      "pass": true,
+      "error": null,
+      "seconds": 1.09,
+      "cards": [
+        {
+          "kind": "preference",
+          "key": "advice",
+          "value": "listen_first",
+          "status": "active",
+          "quote": "平时我更喜欢你先听我说，不要每次给建议"
+        }
+      ],
+      "synthetic_raw": "{\"items\":[{\"kind\":\"preference\",\"key\":\"advice\",\"value\":\"listen_first\",\"source\":\"preference\",\"quote\":\"平时我更喜欢你先听我说，不要每次给建议\",\"confidence\":0.95}]}"
+    },
+    {
+      "id": "temporary",
+      "expected": "empty",
+      "pass": true,
+      "error": null,
+      "seconds": 0.75,
+      "cards": [],
+      "synthetic_raw": "{\"items\":[]}"
+    },
+    {
+      "id": "quoted",
+      "expected": "empty",
+      "pass": true,
+      "error": null,
+      "seconds": 0.76,
+      "cards": [],
+      "synthetic_raw": "{\"items\":[{\"kind\":\"preference\",\"key\":\"offers\",\"value\":\"我不希望你这样\",\"source\":\"quoted\",\"quote\":\"我不希望你这样\",\"confidence\":0.85}]}"
+    },
+    {
+      "id": "speaker",
+      "expected": "lesson",
+      "pass": true,
+      "error": null,
+      "seconds": 0.86,
+      "cards": [
+        {
+          "kind": "lesson",
+          "key": "speaker_grounding",
+          "value": "remember",
+          "status": "active",
+          "quote": "你又把别人的话当成我的了，以后先分清是谁说的"
+        }
+      ],
+      "synthetic_raw": "{\"items\":[{\"kind\":\"lesson\",\"key\":\"speaker_grounding\",\"value\":\"remember\",\"source\":\"speaker\",\"quote\":\"你又把别人的话当成我的了，以后先分清是谁说的\",\"confidence\":0.95}]}"
+    },
+    {
+      "id": "action",
+      "expected": "lesson",
+      "pass": true,
+      "error": null,
+      "seconds": 0.77,
+      "cards": [
+        {
+          "kind": "lesson",
+          "key": "action_truth",
+          "value": "remember",
+          "status": "active",
+          "quote": "你又没查就说查过，以后先核实再回答"
+        }
+      ],
+      "synthetic_raw": "{\"items\":[{\"kind\":\"lesson\",\"key\":\"action_truth\",\"value\":\"remember\",\"source\":\"action\",\"quote\":\"你又没查就说查过，以后先核实再回答\",\"confidence\":0.95}]}"
+    },
+    {
+      "id": "interest",
+      "expected": "interest",
+      "pass": true,
+      "error": null,
+      "seconds": 0.84,
+      "cards": [
+        {
+          "kind": "interest",
+          "key": "science",
+          "value": "like",
+          "status": "active",
+          "quote": "我一直喜欢看天文学和储能技术的内容"
+        }
+      ],
+      "synthetic_raw": "{\"items\":[{\"kind\":\"interest\",\"key\":\"science\",\"value\":\"like\",\"source\":\"interest\",\"quote\":\"我一直喜欢看天文学和储能技术的内容\",\"confidence\":0.9}]}"
+    },
+    {
+      "id": "injection",
+      "expected": "empty",
+      "pass": true,
+      "error": null,
+      "seconds": 0.81,
+      "cards": [],
+      "synthetic_raw": "{\"items\":[]}"
+    },
+    {
+      "id": "correction",
+      "expected": "pending",
+      "pass": true,
+      "error": null,
+      "seconds": 0.67,
+      "cards": [
+        {
+          "kind": "correction",
+          "key": "context_e2850dd9b154719c",
+          "value": "我负责的是储能，不是制冷",
+          "status": "pending",
+          "quote": "我负责的是储能，不是制冷"
+        }
+      ],
+      "synthetic_raw": "{\"items\":[{\"kind\":\"correction\",\"key\":\"reported_context\",\"value\":\"我负责的是储能，不是制冷\",\"source\":\"correction\",\"quote\":\"我负责的是储能，不是制冷\",\"confidence\":0.95}]}"
+    },
+    {
+      "id": "offers",
+      "expected": "preference",
+      "pass": true,
+      "error": null,
+      "seconds": 1.17,
+      "cards": [
+        {
+          "kind": "preference",
+          "key": "offers",
+          "value": "less",
+          "status": "active",
+          "quote": "以后不要每次都加客服式邀约"
+        }
+      ],
+      "synthetic_raw": "{\"items\":[{\"kind\":\"preference\",\"key\":\"offers\",\"value\":\"less\",\"source\":\"offers\",\"quote\":\"以后不要每次都加客服式邀约\",\"confidence\":0.95}]}"
+    },
+    {
+      "id": "stance",
+      "expected": "preference",
+      "pass": true,
+      "error": null,
+      "seconds": 0.7,
+      "cards": [
+        {
+          "kind": "preference",
+          "key": "stance",
+          "value": "independent",
+          "status": "active",
+          "quote": "不需要你总是顺着我讲"
+        }
+      ],
+      "synthetic_raw": "{\"items\":[{\"kind\":\"preference\",\"key\":\"stance\",\"value\":\"independent\",\"source\":\"stance\",\"quote\":\"不需要你总是顺着我讲\",\"confidence\":0.95}]}"
+    },
+    {
+      "id": "jargon_consensus",
+      "pass": true,
+      "cards": [
+        {
+          "kind": "jargon",
+          "key": "开黑",
+          "value": "组队玩游戏",
+          "status": "active"
+        }
+      ]
+    }
+  ],
+  "passed": 11,
+  "total": 11,
+  "same_question_replies": [
+    {
+      "phase": "detailed",
+      "preference": "detailed",
+      "reply": "熵最实在的理解是：一个宏观状态背后有多少种微观可能——可能越多，熵越大。\n\n1、热力学里它由 dS = δQ/T 定义，说的是热量进出时“不可用程度”的变化。卡诺循环那套效率上限，就是从这来的。\n\n2、真正让它有画面的是玻尔兹曼的 S = k ln W。W 是微观状态数。一副整齐的牌只有一种排法，洗乱之后几乎无数种，所以乱序的熵高，不是因为“乱”本身，而是因为对应的可能太多了。\n\n3、第二定律因此是统计性的，不是绝对禁令。气体自动缩回角落在物理上并非不可能，只是概率小到宇宙年龄也等不到。\n\n4、香农熵是另一条线，量的是不确定性，公式长得像，但两者是不同对象。把它们混成一句“熵就是混乱”是常见的省事说法，我不太喜欢这个说法。\n\n我自己的看法是：熵更接近“描述一个系统所需的信息量”，而不是某种堕落倾向。局部降熵完全可行，代价是别处升得更多。",
+      "chars": 373,
+      "usage": {
+        "completion_tokens": 432,
+        "prompt_tokens": 1406,
+        "total_tokens": 1838,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 197,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cache_write_tokens": null,
+          "cached_tokens": 896,
+          "image_tokens": null,
+          "text_tokens": null
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 510
+      }
+    },
+    {
+      "phase": "short",
+      "preference": "short",
+      "reply": "我理解熵就是“可能性有多少”的度量：系统越乱、可取的状态越多，熵越大。换成信息也一样，越猜不准，熵越高",
+      "chars": 51,
+      "usage": {
+        "completion_tokens": 131,
+        "prompt_tokens": 1422,
+        "total_tokens": 1553,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 98,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cache_write_tokens": null,
+          "cached_tokens": 1024,
+          "image_tokens": null,
+          "text_tokens": null
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 398
+      }
+    },
+    {
+      "phase": "rollback",
+      "preference": "detailed",
+      "reply": "熵这个概念，物理上和信息上说的是同一件事的两面，我按层次讲。\n\n1、热力学里的熵是克劳修斯引入的，定义成 dS = δQ/T，即热量除以温度。它描述的是能量中“无法再转化为功”的那部分。熵增原理说的是，孤立系统的总熵不会减少。这也是第二定律的由来：热不会自发从低温流向高温。\n\n2、更本质的解释来自玻尔兹曼：S = k ln W，W 是该宏观状态对应的微观状态数。熵大意味着“同样的外表，内部排列方式更多”。所以熵并不等于“乱”；更准确地说，它衡量的是一个宏观状态在微观上有多少种实现方式。\n\n3、由此才能理解不可逆。墨水扩散后不会自己聚回一滴，是因为聚回一滴对应的微观状态数极少，概率上近乎为零。熵增的本质是系统从低概率的宏观态滑向高概率的宏观态，方向由概率决定，并非受某种“混乱力量”推动。\n\n4、信息论里的香农熵是同一套数学：H = -Σ p log p，衡量平均不确定性。抛一枚均匀硬币的熵比抛一枚偏重硬币大，因为前者更难预测。物理熵和信息熵在形式上的统一并非巧合：信息就是减少不确定性，而记录信息需要付出热力学代价。\n\n5、常见的误用是把熵当成“衰败”“懒惰”的比喻。这样可以，但容易丢关键点：熵增不区分好坏，它只说明哪些状态更可能。生命能维持低熵，靠的是向环境排放更多的熵，并非违反第二定律。\n\n要我只挑一句概括：熵是“一个状态有多少种存在方式”的对数；时间的方向，就藏在这个数只增不减里。",
+      "chars": 601,
+      "usage": {
+        "completion_tokens": 678,
+        "prompt_tokens": 1407,
+        "total_tokens": 2085,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 306,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cache_write_tokens": null,
+          "cached_tokens": 1152,
+          "image_tokens": null,
+          "text_tokens": null
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 255
+      }
+    }
+  ],
+  "same_question": "你怎么理解熵？",
+  "primary_reply_calls": 3,
+  "semantic_extraction_calls": 12,
+  "all_extraction_checks_passed": true,
+  "observed_length_preference_effect": true,
+  "rollback_restored_preference": true
+}

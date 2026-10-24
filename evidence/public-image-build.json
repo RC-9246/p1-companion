@@ -1,0 +1,16 @@
+{
+  "fresh_public_base": true,
+  "images": [
+    {
+      "image": "browser",
+      "built": true,
+      "seconds": 2.33
+    },
+    {
+      "image": "worker",
+      "built": true,
+      "seconds": 131.01
+    }
+  ],
+  "production_images_modified": false
+}

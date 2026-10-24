@@ -1,0 +1,8 @@
+[Unit]
+Description=P1 Companion daily protected leisure state backup
+[Timer]
+OnCalendar=*-*-* 04:40:00
+RandomizedDelaySec=10m
+Persistent=true
+[Install]
+WantedBy=timers.target

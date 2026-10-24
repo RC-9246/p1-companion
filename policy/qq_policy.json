@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "enabled": true,
+  "scope": "whitelist",
+  "cross_forward": "allow",
+  "quiet_start": 23,
+  "quiet_end": 8,
+  "private_min_minutes": 60,
+  "private_max_minutes": 180,
+  "group_min_minutes": 20,
+  "group_max_minutes": 60,
+  "private_daily": 4,
+  "group_daily": 4,
+  "global_daily": 16,
+  "max_unanswered": 2,
+  "favorite_daily": 12
+}

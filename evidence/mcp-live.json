@@ -1,0 +1,22 @@
+{
+  "mcp_handshake": true,
+  "tools": [
+    "p1_mcp_capabilities",
+    "p1_mcp_document_formats",
+    "p1_mcp_experiment",
+    "p1_mcp_read",
+    "p1_mcp_search",
+    "p1_mcp_service_status",
+    "p1_mcp_sources",
+    "p1_mcp_transform",
+    "p1_mcp_workflow"
+  ],
+  "n8n_workflow_live": true,
+  "title": "3.15.1 Documentation",
+  "source": "https://docs.python.org/3/",
+  "unapproved_workflow_denied": true,
+  "metadata_url_denied": true,
+  "public_search_live": true,
+  "private_search_denied": true,
+  "qq_messages_sent": 0
+}

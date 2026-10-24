@@ -1,0 +1,16 @@
+{
+  "fixed_metadata_entries": 27,
+  "two_clean_maintenance_passes": [
+    {
+      "repairs": [],
+      "all_services_healthy": true,
+      "all_databases_valid": true
+    },
+    {
+      "repairs": [],
+      "all_services_healthy": true,
+      "all_databases_valid": true
+    }
+  ],
+  "production_containers_no_restart": true
+}

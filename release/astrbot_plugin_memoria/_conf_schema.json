@@ -1,0 +1,119 @@
+{
+  "enabled": {
+    "description": "启用记忆系统",
+    "type": "bool",
+    "default": true
+  },
+  "inject_enabled": {
+    "description": "向 LLM 注入记忆上下文",
+    "type": "bool",
+    "default": true
+  },
+  "commands_enabled": {
+    "description": "启用记忆指令（记忆/记住/忘记等）",
+    "type": "bool",
+    "default": true
+  },
+  "auto_accept_dream": {
+    "description": "做梦结果自动转正（不经过候选阶段）",
+    "type": "bool",
+    "default": false
+  },
+  "max_inject_memories": {
+    "description": "每次 LLM 请求最多注入记忆条数",
+    "type": "int",
+    "default": 12,
+    "hint": "1-50"
+  },
+  "max_dream_messages": {
+    "description": "做梦时最多读取消息数",
+    "type": "int",
+    "default": 160,
+    "hint": "20-1000"
+  },
+  "min_dream_activity": {
+    "description": "群聊做梦最低活跃度（AI 互动次数）",
+    "type": "int",
+    "default": 20,
+    "hint": "低于此值的会话不会自动做梦"
+  },
+  "auto_dream_enabled": {
+    "description": "启用自动做梦（活跃会话空闲后自动整理记忆）",
+    "type": "bool",
+    "default": true
+  },
+  "auto_dream_idle_secs": {
+    "description": "自动做梦空闲触发秒数",
+    "type": "int",
+    "default": 900,
+    "hint": "会话空闲多久后触发自动做梦"
+  },
+  "auto_dream_scan_secs": {
+    "description": "自动做梦扫描间隔秒数",
+    "type": "int",
+    "default": 300,
+    "hint": "每隔多久扫描一次待做梦会话"
+  },
+  "auto_dream_min_interval_secs": {
+    "description": "同会话自动做梦最小间隔秒数",
+    "type": "int",
+    "default": 21600,
+    "hint": "防止同一会话频繁做梦"
+  },
+  "auto_dream_max_sessions_per_scan": {
+    "description": "每轮自动做梦最大会话数",
+    "type": "int",
+    "default": 2,
+    "hint": "1-20"
+  },
+  "dream_provider_id": {
+    "description": "做梦使用的模型 Provider（留空使用默认回复模型）",
+    "type": "string",
+    "default": "",
+    "_special": "select_provider"
+  },
+  "dream_custom_model": {
+    "description": "做梦自定义模型名（留空使用 Provider 当前模型）",
+    "type": "string",
+    "default": "",
+    "hint": "例如 gemini-2.5-pro / gpt-4.1"
+  },
+  "follow_up_tracking_enabled": {
+    "description": "启用 AI 自主持续追踪判定",
+    "type": "bool",
+    "default": true
+  },
+  "follow_up_max_turns": {
+    "description": "持续追踪最大轮次",
+    "type": "int",
+    "default": 3,
+    "hint": "1-10"
+  },
+  "tool_prompt_enabled": {
+    "description": "向模型注入记忆工具使用提示",
+    "type": "bool",
+    "default": true
+  },
+  "allow_agent_memory_write": {
+    "description": "允许模型通过工具写入候选记忆",
+    "type": "bool",
+    "default": true
+  },
+  "memory_decay_days": {
+    "description": "记忆衰减半衰期天数",
+    "type": "int",
+    "default": 90,
+    "hint": "越老的记忆有效度越低"
+  },
+  "min_confidence": {
+    "description": "最低注入置信度",
+    "type": "float",
+    "default": 0.55,
+    "hint": "0-1，低于此值的记忆不注入 LLM"
+  },
+  "admin_users": {
+    "description": "管理员用户 ID（每行一个）",
+    "type": "text",
+    "default": ""
+  }
+}

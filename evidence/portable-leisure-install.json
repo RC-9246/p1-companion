@@ -1,0 +1,12 @@
+{
+  "fresh_neutral_bootstrap": true,
+  "nonroot_leisure_health": true,
+  "nonroot_egress_listens": true,
+  "installed_code_group_readable": true,
+  "recovered_nonroot_code_and_token_actual_services": true,
+  "real_docker_services": 2,
+  "accounts_used": false,
+  "network": "none",
+  "production_data_mounted": false,
+  "production_lifecycle_unchanged": true
+}

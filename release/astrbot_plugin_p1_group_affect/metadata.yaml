@@ -1,0 +1,6 @@
+name: astrbot_plugin_p1_group_affect
+display_name: P1 群聊人格情感
+desc: 各群独立伙伴人格、21维状态与成员关系
+version: v0.16.0
+author: p1-local
+astrbot_version: ">=4.29,<5"

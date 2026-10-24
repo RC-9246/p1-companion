@@ -1,0 +1,2 @@
+FROM p1-companion-browser:0.8.0
+COPY policy.py broker.py egress.py search_policy.py /opt/browser/

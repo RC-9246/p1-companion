@@ -1,0 +1,55 @@
+services:
+  leisure:
+    image: p1-companion-browser:0.20.0
+    container_name: p1-leisure
+    init: true
+    restart: unless-stopped
+    user: '1001:1001'
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true", "seccomp=./seccomp_profile.json"]
+    pids_limit: 256
+    mem_limit: 700m
+    shm_size: 96m
+    working_dir: /opt/leisure
+    command: [nice, -n, "10", python, server.py]
+    environment: {PYTHONDONTWRITEBYTECODE: '1', PYTHONUNBUFFERED: '1'}
+    tmpfs: ["/tmp:size=160m,mode=1777", "/home/companion:size=16m,uid=1001,gid=1001"]
+    volumes:
+      - ./server.py:/opt/leisure/server.py:ro
+      - ./policy.py:/opt/leisure/policy.py:ro
+      - ./quota.py:/opt/leisure/quota.py:ro
+      - ./private_api.py:/opt/leisure/private_api.py:ro
+      - /srv/p1-agent/astrbot/data/plugin_data/affect/leisure_state:/state
+      - /srv/p1-agent/astrbot/data/plugin_data/affect/leisure_policy:/policy:ro
+      - /srv/p1-agent/astrbot/data/plugin_data/affect/leisure_token:/run/secrets/leisure_token:ro
+    networks: [control]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; assert urllib.request.urlopen('http://127.0.0.1:8766/health',timeout=3).status == 200"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  egress:
+    image: p1-companion-browser:0.20.0
+    container_name: p1-leisure-egress
+    restart: unless-stopped
+    user: '1001:1001'
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 80
+    mem_limit: 80m
+    working_dir: /opt/leisure
+    command: [nice, -n, "10", python, egress.py]
+    environment: {PYTHONDONTWRITEBYTECODE: '1', PYTHONUNBUFFERED: '1'}
+    volumes:
+      - ./egress.py:/opt/leisure/egress.py:ro
+      - ./policy.py:/opt/leisure/policy.py:ro
+    networks: [control, egress]
+networks:
+  control:
+    name: p1-companion-control
+    external: true
+  egress:
+    name: p1-companion-egress
+    external: true

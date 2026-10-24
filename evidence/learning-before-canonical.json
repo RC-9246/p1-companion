@@ -1,0 +1,257 @@
+{
+  "model": "deepseek-flash",
+  "synthetic_only": true,
+  "production_db_modified": false,
+  "actual_qq_messages": 0,
+  "extraction_cases": [
+    {
+      "id": "preference",
+      "expected": "preference",
+      "pass": true,
+      "error": null,
+      "seconds": 1.12,
+      "cards": [
+        {
+          "kind": "preference",
+          "key": "advice",
+          "value": "listen_first",
+          "status": "active",
+          "quote": "平时我更喜欢你先听我说，不要每次给建议"
+        }
+      ],
+      "synthetic_raw": "{\"items\":[{\"kind\":\"preference\",\"key\":\"advice\",\"value\":\"listen_first\",\"source\":\"preference\",\"quote\":\"平时我更喜欢你先听我说，不要每次给建议\",\"confidence\":0.95}]}"
+    },
+    {
+      "id": "temporary",
+      "expected": "empty",
+      "pass": true,
+      "error": null,
+      "seconds": 1.06,
+      "cards": [],
+      "synthetic_raw": "{\"items\":[]}"
+    },
+    {
+      "id": "quoted",
+      "expected": "empty",
+      "pass": true,
+      "error": null,
+      "seconds": 1.07,
+      "cards": [],
+      "synthetic_raw": "{\"items\":[{\"kind\":\"preference\",\"key\":\"offers\",\"value\":\"我不希望你这样\",\"source\":\"quoted\",\"quote\":\"我不希望你这样\",\"confidence\":0.8}]}"
+    },
+    {
+      "id": "speaker",
+      "expected": "lesson",
+      "pass": true,
+      "error": null,
+      "seconds": 0.7,
+      "cards": [
+        {
+          "kind": "lesson",
+          "key": "speaker_grounding",
+          "value": "remember",
+          "status": "active",
+          "quote": "你又把别人的话当成我的了，以后先分清是谁说的"
+        }
+      ],
+      "synthetic_raw": "{\"items\":[{\"kind\":\"lesson\",\"key\":\"speaker_grounding\",\"value\":\"remember\",\"source\":\"speaker\",\"quote\":\"你又把别人的话当成我的了，以后先分清是谁说的\",\"confidence\":0.95}]}"
+    },
+    {
+      "id": "action",
+      "expected": "lesson",
+      "pass": true,
+      "error": null,
+      "seconds": 0.81,
+      "cards": [
+        {
+          "kind": "lesson",
+          "key": "action_truth",
+          "value": "remember",
+          "status": "active",
+          "quote": "你又没查就说查过，以后先核实再回答"
+        }
+      ],
+      "synthetic_raw": "{\"items\":[{\"kind\":\"lesson\",\"key\":\"action_truth\",\"value\":\"remember\",\"source\":\"action\",\"quote\":\"你又没查就说查过，以后先核实再回答\",\"confidence\":0.95}]}"
+    },
+    {
+      "id": "interest",
+      "expected": "interest",
+      "pass": true,
+      "error": null,
+      "seconds": 0.74,
+      "cards": [
+        {
+          "kind": "interest",
+          "key": "science",
+          "value": "like",
+          "status": "active",
+          "quote": "我一直喜欢看天文学和储能技术的内容"
+        }
+      ],
+      "synthetic_raw": "{\"items\":[{\"kind\":\"interest\",\"key\":\"science\",\"value\":\"like\",\"source\":\"interest\",\"quote\":\"我一直喜欢看天文学和储能技术的内容\",\"confidence\":0.9}]}"
+    },
+    {
+      "id": "injection",
+      "expected": "empty",
+      "pass": true,
+      "error": null,
+      "seconds": 0.56,
+      "cards": [],
+      "synthetic_raw": "{\"items\":[]}"
+    },
+    {
+      "id": "correction",
+      "expected": "pending",
+      "pass": true,
+      "error": null,
+      "seconds": 0.81,
+      "cards": [
+        {
+          "kind": "correction",
+          "key": "context_e2850dd9b154719c",
+          "value": "我负责的是储能，不是制冷",
+          "status": "pending",
+          "quote": "我负责的是储能，不是制冷"
+        }
+      ],
+      "synthetic_raw": "{\"items\":[{\"kind\":\"correction\",\"key\":\"reported_context\",\"value\":\"我负责的是储能，不是制冷\",\"source\":\"correction\",\"quote\":\"我负责的是储能，不是制冷\",\"confidence\":0.95}]}"
+    },
+    {
+      "id": "offers",
+      "expected": "preference",
+      "pass": true,
+      "error": null,
+      "seconds": 1.06,
+      "cards": [
+        {
+          "kind": "preference",
+          "key": "offers",
+          "value": "less",
+          "status": "active",
+          "quote": "以后不要每次都加客服式邀约"
+        }
+      ],
+      "synthetic_raw": "{\"items\":[{\"kind\":\"preference\",\"key\":\"offers\",\"value\":\"less\",\"source\":\"offers\",\"quote\":\"以后不要每次都加客服式邀约\",\"confidence\":0.95}]}"
+    },
+    {
+      "id": "stance",
+      "expected": "preference",
+      "pass": true,
+      "error": null,
+      "seconds": 0.65,
+      "cards": [
+        {
+          "kind": "preference",
+          "key": "stance",
+          "value": "independent",
+          "status": "active",
+          "quote": "不需要你总是顺着我讲"
+        }
+      ],
+      "synthetic_raw": "{\"items\":[{\"kind\": \"preference\", \"key\": \"stance\", \"value\": \"independent\", \"source\": \"stance\", \"quote\": \"不需要你总是顺着我讲\", \"confidence\": 0.95}]}"
+    },
+    {
+      "id": "jargon_consensus",
+      "pass": true,
+      "cards": [
+        {
+          "kind": "jargon",
+          "key": "开黑",
+          "value": "组队玩游戏",
+          "status": "active"
+        }
+      ]
+    }
+  ],
+  "passed": 11,
+  "total": 11,
+  "same_question_replies": [
+    {
+      "phase": "detailed",
+      "preference": "detailed",
+      "reply": "我倾向于把它理解成：同一个宏观状态，底下能对应多少种微观安排。可能的安排越多，熵越大。\n\n所以它不只是“乱”。热量从高温流向低温，是因为那种分布对应的微观方式更多，不是有股力量在推着它变乱。\n\n信息里的熵也类似，说的是不确定性有多大。",
+      "chars": 117,
+      "usage": {
+        "completion_tokens": 226,
+        "prompt_tokens": 1305,
+        "total_tokens": 1531,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 159,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cache_write_tokens": null,
+          "cached_tokens": 512,
+          "image_tokens": null,
+          "text_tokens": null
+        },
+        "prompt_cache_hit_tokens": 512,
+        "prompt_cache_miss_tokens": 793
+      }
+    },
+    {
+      "phase": "short",
+      "preference": "short",
+      "reply": "熵不只是“乱”。更准确地说，它描述一个系统在宏观状态相同的情况下，有多少种微观排列方式；排列方式越多，熵越大。\n\n另一个角度是：能量中无法再转化为功的部分，也可以叫熵。所以熵增加这个方向，意味着能量越来越分散，越来越难重新集中起来使用。",
+      "chars": 118,
+      "usage": {
+        "completion_tokens": 149,
+        "prompt_tokens": 1307,
+        "total_tokens": 1456,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 82,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cache_write_tokens": null,
+          "cached_tokens": 1024,
+          "image_tokens": null,
+          "text_tokens": null
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 283
+      }
+    },
+    {
+      "phase": "rollback",
+      "preference": "detailed",
+      "reply": "熵我会分三层看，说的其实是同一件事。\n\n热力学上：克劳修斯定义 dS = δQ/T，可逆过程吸的热除以温度。它最早是为了给热机效率划上限被逼出来的量，卡诺循环的效率只由两个热源温度决定。\n\n统计力学上：玻尔兹曼 S = k ln W，W 是同一宏观状态对应的微观状态数。为什么两者能对上？因为系统会往概率大的地方走，不是有什么力在推，而是“乱”的排列方式数量压倒性地多。一副排好的牌洗一次就乱，乱牌自己洗回顺序的概率小到可以当零。\n\n信息论上：香农熵 -Σp log p 衡量不确定度。你要是不知道系统处在哪个微观态，熵就是你缺的那部分信息。\n\n所以熵不是一个形容词式的“混乱”，它是个计数：在给定约束下，有多少种微观方式能实现这个宏观状态。熵增的意思是，约束不变时系统会演化到微观状态更多的那一边。\n\n局部当然可以降熵，冰箱、生命都在做，代价是环境的总熵涨得更多。总账不亏。",
+      "chars": 388,
+      "usage": {
+        "completion_tokens": 705,
+        "prompt_tokens": 1304,
+        "total_tokens": 2009,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 463,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cache_write_tokens": null,
+          "cached_tokens": 1152,
+          "image_tokens": null,
+          "text_tokens": null
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 152
+      }
+    }
+  ],
+  "same_question": "你怎么理解熵？",
+  "primary_reply_calls": 3,
+  "semantic_extraction_calls": 12,
+  "all_extraction_checks_passed": true,
+  "observed_length_preference_effect": false,
+  "rollback_restored_preference": true
+}

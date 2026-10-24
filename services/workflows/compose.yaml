@@ -1,0 +1,50 @@
+services:
+  workflows:
+    image: docker.n8n.io/n8nio/n8n:2.44.6@sha256:d02752c6ab446ae9db8deec2f9cc887c378f77cdcad31650814df936b7386dfb
+    container_name: p1-n8n
+    restart: unless-stopped
+    user: '1000:1000'
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 100
+    mem_limit: 640m
+    tmpfs: ['/tmp:size=64m,mode=1777', '/home/node/.cache:size=48m,uid=1000,gid=1000,mode=0700']
+    env_file: workflow.env
+    environment:
+      TZ: Asia/Shanghai
+      GENERIC_TIMEZONE: Asia/Shanghai
+      DB_TYPE: sqlite
+      DB_SQLITE_DATABASE: /home/node/.n8n/workflow.db
+      DB_SQLITE_POOL_SIZE: '2'
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: 'true'
+      N8N_DIAGNOSTICS_ENABLED: 'false'
+      N8N_VERSION_NOTIFICATIONS_ENABLED: 'false'
+      N8N_TEMPLATES_ENABLED: 'false'
+      N8N_PUBLIC_API_DISABLED: 'true'
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: 'true'
+      N8N_SECURE_COOKIE: 'false'
+      N8N_RUNNERS_MODE: external
+      N8N_COMMUNITY_PACKAGES_ENABLED: 'false'
+      N8N_UNVERIFIED_PACKAGES_ENABLED: 'false'
+      EXECUTIONS_DATA_SAVE_ON_SUCCESS: none
+      EXECUTIONS_DATA_SAVE_ON_ERROR: none
+      EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS: 'false'
+      EXECUTIONS_DATA_PRUNE: 'true'
+      EXECUTIONS_DATA_MAX_AGE: '24'
+      NODES_EXCLUDE: '["n8n-nodes-base.code","n8n-nodes-base.executeCommand","n8n-nodes-base.readWriteFile","n8n-nodes-base.ssh","n8n-nodes-base.localFileTrigger"]'
+      NODE_OPTIONS: --max-old-space-size=384
+    volumes:
+      - /srv/p1-agent/astrbot/data/companion_workflows/n8n:/home/node/.n8n
+      - /srv/p1-agent/astrbot/data/companion_services/workflows/bootstrap:/bootstrap:ro
+    networks: [control]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:5678/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+networks:
+  control:
+    external: true
+    name: p1-companion-control

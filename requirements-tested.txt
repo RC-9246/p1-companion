@@ -1,0 +1,7 @@
+mcp==1.30.0
+aiohttp==3.14.5
+aiosqlite==0.22.1
+qrcode==8.2
+Pillow==13.0.0
+markdown-it-py==4.2.0
+playwright==1.64.0

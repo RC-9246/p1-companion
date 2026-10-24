@@ -1,0 +1,11 @@
+[Unit]
+Description=P1 Companion bounded worker recovery and attachment TTL cleanup
+After=docker.service
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+ExecStart=/usr/local/sbin/p1-companion-maintain.py
+TimeoutStartSec=600
+Nice=15
+IOSchedulingClass=idle

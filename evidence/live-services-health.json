@@ -1,0 +1,30 @@
+{
+  "browser_health": {
+    "ok": true,
+    "mode": "read_only",
+    "sandbox_required": true
+  },
+  "leisure_health": {
+    "ok": true,
+    "site": "bilibili",
+    "browser_running": false,
+    "browser_connected": false,
+    "page_closed": false,
+    "logged_in": true,
+    "public_interactions": false
+  },
+  "actual_qq_messages": 0,
+  "public_account_interactions": 0,
+  "model_requests": 0,
+  "watch_quota": {
+    "ok": true,
+    "daily_limit_seconds": 28800,
+    "remaining_seconds": 28506
+  },
+  "bilibili_session": {
+    "ok": true,
+    "logged_in": true,
+    "challenge": false,
+    "session_saved": true
+  }
+}

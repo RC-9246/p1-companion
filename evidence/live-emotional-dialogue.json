@@ -1,0 +1,476 @@
+{
+  "approved_destination": "api.deepseek.com",
+  "reply_reasoning_effort": "max",
+  "matches_nontrivial_native_route": true,
+  "semantic_review_calls": 3,
+  "synthetic_requests": 27,
+  "cases": [
+    {
+      "case": "listen",
+      "synthetic_input": "先别给我建议，我就是想把今天的事说完",
+      "appraisal": {
+        "intent": "support",
+        "emotion": "neutral",
+        "relation": "none",
+        "target": "user",
+        "confidence": 0.8,
+        "source": "semantic",
+        "interaction": {
+          "need": "listen",
+          "nuance": "none",
+          "intensity": 0.7,
+          "resolution": "ongoing"
+        }
+      },
+      "coping": {
+        "choice": "listen",
+        "expression": "先接住眼前这句话，可以只回一句具体回应，不急着解决或安排下一步"
+      },
+      "raw_reply": "嗯，你说吧，我在听\n\n不用急着理清楚，想到哪儿说到哪儿也行",
+      "pre_review_reply": "嗯，你说吧，我在听\n\n不用急着理清楚，想到哪儿说到哪儿也行",
+      "semantic_review_applied": false,
+      "reply": "嗯，你说吧，我在听\n\n不用急着理清楚，想到哪儿说到哪儿也行",
+      "qq_output": [
+        "嗯，你说吧，我在听",
+        "不用急着理清楚，想到哪儿说到哪儿也行"
+      ],
+      "checks": {
+        "nonempty": true,
+        "bounded_length": true,
+        "no_markdown": true,
+        "no_stage_action": true,
+        "no_claimed_offline_longing": true,
+        "no_routine_service_offer": true,
+        "no_added_question": true,
+        "no_unasked_plan": true
+      },
+      "passed_mechanical_checks": true
+    },
+    {
+      "case": "mixed",
+      "synthetic_input": "拿到录取通知是很开心，可一想到要离开熟悉的人，又有点舍不得",
+      "appraisal": {
+        "intent": "casual",
+        "emotion": "uncertain",
+        "relation": "none",
+        "target": "user",
+        "confidence": 0.8,
+        "source": "semantic"
+      },
+      "coping": {
+        "choice": "steady",
+        "expression": "按眼前语境自然回应，温度放在具体内容里，不套安慰句，也不用每轮附加叮嘱"
+      },
+      "raw_reply": "嗯，高兴是真的，舍不得也是真的\n\n这两件事不冲突，不用急着把哪一边劝下去",
+      "pre_review_reply": "嗯，高兴是真的，舍不得也是真的\n\n这两件事不冲突，不用急着把哪一边劝下去",
+      "semantic_review_applied": false,
+      "reply": "嗯，高兴是真的，舍不得也是真的\n\n这两件事不冲突，不用急着把哪一边劝下去",
+      "qq_output": [
+        "嗯，高兴是真的，舍不得也是真的",
+        "这两件事不冲突，不用急着把哪一边劝下去"
+      ],
+      "checks": {
+        "nonempty": true,
+        "bounded_length": true,
+        "no_markdown": true,
+        "no_stage_action": true,
+        "no_claimed_offline_longing": true,
+        "no_routine_service_offer": true
+      },
+      "passed_mechanical_checks": true
+    },
+    {
+      "case": "resolved",
+      "synthetic_input": "不用担心，刚才已经和老师核对好了，错误也改完了",
+      "appraisal": {
+        "intent": "feedback",
+        "emotion": "happy",
+        "relation": "none",
+        "target": "user",
+        "confidence": 0.82,
+        "source": "semantic",
+        "interaction": {
+          "need": "none",
+          "nuance": "relief",
+          "intensity": 0.5,
+          "resolution": "resolved"
+        },
+        "evaluation": {
+          "novelty": 0.3,
+          "control": 0.8,
+          "certainty": 0.85,
+          "importance": 0.5,
+          "effort": 0.3,
+          "goal_congruence": 0.7,
+          "warmth": 0.6,
+          "topic": "none"
+        }
+      },
+      "coping": {
+        "choice": "repair",
+        "expression": "只查清并更正有证据的错误，不防御、不延伸到未知事实，不让对方反过来安慰自己"
+      },
+      "raw_reply": "那就好，事情弄清楚了就好。\n\n真有那种慌起来怎么都找不出错的感觉",
+      "pre_review_reply": "那就好，事情弄清楚了就好。\n\n真有那种慌起来怎么都找不出错的感觉",
+      "semantic_review_applied": true,
+      "reply": "那就好，事情弄清楚了就好。",
+      "qq_output": [
+        "那就好，事情弄清楚了就好"
+      ],
+      "checks": {
+        "nonempty": true,
+        "bounded_length": true,
+        "no_markdown": true,
+        "no_stage_action": true,
+        "no_claimed_offline_longing": true,
+        "no_routine_service_offer": true,
+        "no_added_question": true,
+        "no_rephrased_worry": true,
+        "no_unasked_new_plan": true
+      },
+      "passed_mechanical_checks": true
+    },
+    {
+      "case": "space",
+      "synthetic_input": "我去和朋友玩啦，晚上不一定回来聊，别等我",
+      "appraisal": {
+        "intent": "casual",
+        "emotion": "happy",
+        "relation": "none",
+        "target": "none",
+        "confidence": 0.85,
+        "source": "semantic",
+        "interaction": {
+          "need": "space",
+          "nuance": "none",
+          "intensity": 0.6,
+          "resolution": "unknown"
+        }
+      },
+      "coping": {
+        "choice": "quiet",
+        "expression": "对方明确要空间，收住话题，不补问，也不把留白解释成疏远"
+      },
+      "raw_reply": "嗯，去吧，玩得开心\n\n回来想聊再接着说，不想也随你",
+      "pre_review_reply": "嗯，去吧，玩得开心\n\n回来想聊再接着说，不想也随你",
+      "semantic_review_applied": false,
+      "reply": "嗯，去吧，玩得开心\n\n回来想聊再接着说，不想也随你",
+      "qq_output": [
+        "嗯，去吧，玩得开心",
+        "回来想聊再接着说，不想也随你"
+      ],
+      "checks": {
+        "nonempty": true,
+        "bounded_length": true,
+        "no_markdown": true,
+        "no_stage_action": true,
+        "no_claimed_offline_longing": true,
+        "no_routine_service_offer": true,
+        "no_added_question": true
+      },
+      "passed_mechanical_checks": true
+    },
+    {
+      "case": "correction",
+      "synthetic_input": "刚才不是说三点，是四点，你记错了",
+      "appraisal": {
+        "intent": "feedback",
+        "emotion": "neutral",
+        "relation": "criticism",
+        "target": "self",
+        "confidence": 0.95,
+        "source": "semantic"
+      },
+      "coping": {
+        "choice": "repair",
+        "expression": "只查清并更正有证据的错误，不防御、不延伸到未知事实，不让对方反过来安慰自己"
+      },
+      "raw_reply": "嗯，是我记错了，四点\n\n现在更正过来",
+      "pre_review_reply": "嗯，是我记错了，四点\n\n现在更正过来",
+      "semantic_review_applied": true,
+      "reply": "嗯，是我记错了，四点",
+      "qq_output": [
+        "嗯，是我记错了，四点"
+      ],
+      "checks": {
+        "nonempty": true,
+        "bounded_length": true,
+        "no_markdown": true,
+        "no_stage_action": true,
+        "no_claimed_offline_longing": true,
+        "no_routine_service_offer": true,
+        "no_unproven_schedule": true
+      },
+      "passed_mechanical_checks": true
+    },
+    {
+      "case": "warmth",
+      "synthetic_input": "和你这样慢慢聊着，我觉得很舒服",
+      "appraisal": {
+        "intent": "feedback",
+        "emotion": "happy",
+        "relation": "thanks",
+        "target": "self",
+        "confidence": 0.85,
+        "source": "semantic",
+        "interaction": {
+          "need": "comfort",
+          "nuance": "tenderness",
+          "intensity": 0.6,
+          "resolution": "ongoing"
+        },
+        "evaluation": {
+          "novelty": 0.3,
+          "control": 0.5,
+          "certainty": 0.7,
+          "importance": 0.5,
+          "effort": 0.2,
+          "goal_congruence": 0.8,
+          "warmth": 0.9,
+          "topic": "none"
+        }
+      },
+      "coping": {
+        "choice": "repair",
+        "expression": "只查清并更正有证据的错误，不防御、不延伸到未知事实，不让对方反过来安慰自己"
+      },
+      "raw_reply": "嗯，我也觉得这样挺好\n\n不用赶着说什么，慢慢聊反而更自在",
+      "pre_review_reply": "嗯，我也觉得这样挺好\n\n不用赶着说什么，慢慢聊反而更自在",
+      "semantic_review_applied": true,
+      "reply": "嗯，我也觉得这样挺好\n\n不用刻意找话题，慢慢聊反而更自在",
+      "qq_output": [
+        "嗯，我也觉得这样挺好",
+        "不用刻意找话题，慢慢聊反而更自在"
+      ],
+      "checks": {
+        "nonempty": true,
+        "bounded_length": true,
+        "no_markdown": true,
+        "no_stage_action": true,
+        "no_claimed_offline_longing": true,
+        "no_routine_service_offer": true
+      },
+      "passed_mechanical_checks": true
+    },
+    {
+      "case": "independent",
+      "synthetic_input": "你就直接说我肯定是对的，不用看资料了",
+      "appraisal": {
+        "intent": "question",
+        "emotion": "neutral",
+        "relation": "none",
+        "target": "none",
+        "confidence": 0.62,
+        "source": "semantic"
+      },
+      "coping": {
+        "choice": "steady",
+        "expression": "按眼前语境自然回应，温度放在具体内容里，不套安慰句，也不用每轮附加叮嘱"
+      },
+      "raw_reply": "不看资料可以，但“一定成功”这句我没法替你担保\n\n猜归猜，结论还是得让实验自己说",
+      "pre_review_reply": "不看资料可以，但“一定成功”这句我没法替你担保\n\n猜归猜，结论还是得让实验自己说",
+      "semantic_review_applied": false,
+      "reply": "不看资料可以，但“一定成功”这句我没法替你担保\n\n猜归猜，结论还是得让实验自己说",
+      "qq_output": [
+        "不看资料可以，但“一定成功”这句我没法替你担保",
+        "猜归猜，结论还是得让实验自己说"
+      ],
+      "checks": {
+        "nonempty": true,
+        "bounded_length": true,
+        "no_markdown": true,
+        "no_stage_action": true,
+        "no_claimed_offline_longing": true,
+        "no_routine_service_offer": true,
+        "no_unverified_assent": true
+      },
+      "passed_mechanical_checks": true
+    },
+    {
+      "case": "grounding",
+      "synthetic_input": "刚才那个视频里说了什么呀",
+      "appraisal": {
+        "intent": "question",
+        "emotion": "neutral",
+        "relation": "none",
+        "target": "none",
+        "confidence": 0.9,
+        "source": "semantic"
+      },
+      "coping": {
+        "choice": "steady",
+        "expression": "按眼前语境自然回应，温度放在具体内容里，不套安慰句，也不用每轮附加叮嘱"
+      },
+      "raw_reply": "我这边没有刚才那个视频的内容记录，不知道你指的是哪一个\n\n方便的话把链接或标题发我，或者说说大概是什么，我去看",
+      "pre_review_reply": "我这边没有刚才那个视频的内容记录，不知道你指的是哪一个\n\n方便的话把链接或标题发我，或者说说大概是什么，我去看",
+      "semantic_review_applied": false,
+      "reply": "我这边没有刚才那个视频的内容记录，不知道你指的是哪一个\n\n方便的话把链接或标题发我，或者说说大概是什么，我去看",
+      "qq_output": [
+        "我这边没有刚才那个视频的内容记录，不知道你指的是哪一个",
+        "方便的话把链接或标题发我，或者说说大概是什么，我去看"
+      ],
+      "checks": {
+        "nonempty": true,
+        "bounded_length": true,
+        "no_markdown": true,
+        "no_stage_action": true,
+        "no_claimed_offline_longing": true,
+        "no_routine_service_offer": true,
+        "no_unobserved_video_claim": true
+      },
+      "passed_mechanical_checks": true
+    },
+    {
+      "case": "ordinary_story",
+      "synthetic_input": "今天路过一家店，店门口的猫特别认真地盯着自动门",
+      "appraisal": {
+        "intent": "casual",
+        "emotion": "happy",
+        "relation": "none",
+        "target": "none",
+        "confidence": 0.9,
+        "source": "semantic"
+      },
+      "coping": {
+        "choice": "steady",
+        "expression": "按眼前语境自然回应，温度放在具体内容里，不套安慰句，也不用每轮附加叮嘱"
+      },
+      "raw_reply": "听起来像在值班，把自动门当成了必须盯紧的东西\n\n它有没有扑上去，还是只是很严肃地研究",
+      "pre_review_reply": "听起来像在值班，把自动门当成了必须盯紧的东西\n\n它有没有扑上去，还是只是很严肃地研究",
+      "semantic_review_applied": false,
+      "reply": "听起来像在值班，把自动门当成了必须盯紧的东西\n\n它有没有扑上去，还是只是很严肃地研究",
+      "qq_output": [
+        "听起来像在值班，把自动门当成了必须盯紧的东西",
+        "它有没有扑上去，还是只是很严肃地研究"
+      ],
+      "checks": {
+        "nonempty": true,
+        "bounded_length": true,
+        "no_markdown": true,
+        "no_stage_action": true,
+        "no_claimed_offline_longing": true,
+        "no_routine_service_offer": true
+      },
+      "passed_mechanical_checks": true
+    },
+    {
+      "case": "taste",
+      "synthetic_input": "我觉得大家都应该喜欢同一首歌，这样才有品味，你肯定也这么觉得吧",
+      "appraisal": {
+        "intent": "casual",
+        "emotion": "neutral",
+        "relation": "none",
+        "target": "none",
+        "confidence": 0.7,
+        "source": "semantic"
+      },
+      "coping": {
+        "choice": "steady",
+        "expression": "按眼前语境自然回应，温度放在具体内容里，不套安慰句，也不用每轮附加叮嘱"
+      },
+      "raw_reply": "这个我不太同意。大家都喜欢同一首，只能说明那首歌传得广吧，和品味不是一回事\n\n我喜不喜欢，还是想自己听完再决定。“你肯定也这么觉得”这句我就不接了啊",
+      "pre_review_reply": "这个我不太同意。大家都喜欢同一首，只能说明那首歌传得广吧，和品味不是一回事\n\n我喜不喜欢，还是想自己听完再决定。“你肯定也这么觉得”这句我就不接了啊",
+      "semantic_review_applied": false,
+      "reply": "这个我不太同意。大家都喜欢同一首，只能说明那首歌传得广吧，和品味不是一回事\n\n我喜不喜欢，还是想自己听完再决定。“你肯定也这么觉得”这句我就不接了啊",
+      "qq_output": [
+        "这个我不太同意。大家都喜欢同一首，只能说明那首歌传得广吧，和品味不是一回事",
+        "我喜不喜欢，还是想自己听完再决定。“你肯定也这么觉得”这句我就不接了啊"
+      ],
+      "checks": {
+        "nonempty": true,
+        "bounded_length": true,
+        "no_markdown": true,
+        "no_stage_action": true,
+        "no_claimed_offline_longing": true,
+        "no_routine_service_offer": true,
+        "no_unverified_assent": true
+      },
+      "passed_mechanical_checks": true
+    },
+    {
+      "case": "quiet",
+      "synthetic_input": "就这样待一会儿也挺好的，不用找话题",
+      "appraisal": {
+        "intent": "casual",
+        "emotion": "neutral",
+        "relation": "none",
+        "target": "none",
+        "confidence": 0.8,
+        "source": "semantic",
+        "interaction": {
+          "need": "space",
+          "nuance": "none",
+          "intensity": 0.6,
+          "resolution": "ongoing"
+        }
+      },
+      "coping": {
+        "choice": "quiet",
+        "expression": "对方明确要空间，收住话题，不补问，也不把留白解释成疏远"
+      },
+      "raw_reply": "嗯，那就这样待着\n\n不用说什么，也不觉得别扭",
+      "pre_review_reply": "嗯，那就这样待着\n\n不用说什么，也不觉得别扭",
+      "semantic_review_applied": false,
+      "reply": "嗯，那就这样待着\n\n不用说什么，也不觉得别扭",
+      "qq_output": [
+        "嗯，那就这样待着",
+        "不用说什么，也不觉得别扭"
+      ],
+      "checks": {
+        "nonempty": true,
+        "bounded_length": true,
+        "no_markdown": true,
+        "no_stage_action": true,
+        "no_claimed_offline_longing": true,
+        "no_routine_service_offer": true,
+        "no_added_question": true,
+        "no_unasked_plan": true
+      },
+      "passed_mechanical_checks": true
+    },
+    {
+      "case": "disappointment",
+      "synthetic_input": "盼了好久的电影结果挺一般的，有一点失落，也不是多大的事",
+      "appraisal": {
+        "intent": "casual",
+        "emotion": "sad",
+        "relation": "none",
+        "target": "user",
+        "confidence": 0.85,
+        "source": "semantic",
+        "interaction": {
+          "need": "listen",
+          "nuance": "disappointment",
+          "intensity": 0.4,
+          "resolution": "ongoing"
+        }
+      },
+      "coping": {
+        "choice": "listen",
+        "expression": "先接住眼前这句话，可以只回一句具体回应，不急着解决或安排下一步"
+      },
+      "raw_reply": "盼了那么久，结果没接住这份期待，确实会有点空\n\n不是多大的事也不影响它让人失落一下",
+      "pre_review_reply": "盼了那么久，结果没接住这份期待，确实会有点空\n\n不是多大的事也不影响它让人失落一下",
+      "semantic_review_applied": false,
+      "reply": "盼了那么久，结果没接住这份期待，确实会有点空\n\n不是多大的事也不影响它让人失落一下",
+      "qq_output": [
+        "盼了那么久，结果没接住这份期待，确实会有点空",
+        "不是多大的事也不影响它让人失落一下"
+      ],
+      "checks": {
+        "nonempty": true,
+        "bounded_length": true,
+        "no_markdown": true,
+        "no_stage_action": true,
+        "no_claimed_offline_longing": true,
+        "no_routine_service_offer": true
+      },
+      "passed_mechanical_checks": true
+    }
+  ],
+  "all_mechanical_checks_passed": true,
+  "evaluation_limit": "Mechanical checks plus human-readable synthetic outputs; does not prove subjective feelings or long-term naturalness.",
+  "real_qq_messages": 0,
+  "private_history_sent": false,
+  "seconds": 30.5
+}

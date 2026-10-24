@@ -1,0 +1,175 @@
+{
+  "isolated_fault_injection": true,
+  "cases": [
+    {
+      "case": "missing_astrbot_plugin_affect",
+      "passed": true
+    },
+    {
+      "case": "missing_astrbot_plugin_memoria",
+      "passed": true
+    },
+    {
+      "case": "missing_astrbot_plugin_p1_reflection",
+      "passed": true
+    },
+    {
+      "case": "missing_astrbot_plugin_p1_stickers",
+      "passed": true
+    },
+    {
+      "case": "missing_astrbot_plugin_p1_group_memory",
+      "passed": true
+    },
+    {
+      "case": "missing_astrbot_plugin_p1_group_affect",
+      "passed": true
+    },
+    {
+      "case": "missing_astrbot_plugin_p1_qq_style",
+      "passed": true
+    },
+    {
+      "case": "missing_astrbot_plugin_p1_learning",
+      "passed": true
+    },
+    {
+      "case": "tampered_plugin_recovered",
+      "passed": true
+    },
+    {
+      "case": "poisoned_checkpoint_rejected",
+      "passed": true
+    },
+    {
+      "case": "policy_groups_recovers_closed",
+      "passed": true
+    },
+    {
+      "case": "policy_groups_revoked_access_stays_closed",
+      "passed": true
+    },
+    {
+      "case": "policy_qq_recovers_closed",
+      "passed": true
+    },
+    {
+      "case": "policy_qq_revoked_access_stays_closed",
+      "passed": true
+    },
+    {
+      "case": "policy_identities_recovers_closed",
+      "passed": true
+    },
+    {
+      "case": "policy_identities_revoked_access_stays_closed",
+      "passed": true
+    },
+    {
+      "case": "database_affect_restored",
+      "passed": true
+    },
+    {
+      "case": "database_memoria_restored",
+      "passed": true
+    },
+    {
+      "case": "database_groups_restored",
+      "passed": true
+    },
+    {
+      "case": "database_agency_restored",
+      "passed": true
+    },
+    {
+      "case": "database_astrbot_restored",
+      "passed": true
+    },
+    {
+      "case": "database_knowledge_restored",
+      "passed": true
+    },
+    {
+      "case": "bad_backup_does_not_overwrite_original",
+      "passed": true
+    },
+    {
+      "case": "resource_memory_safe_degrade",
+      "passed": true
+    },
+    {
+      "case": "resource_disk_safe_degrade",
+      "passed": true
+    },
+    {
+      "case": "resource_thermal_safe_degrade",
+      "passed": true
+    },
+    {
+      "case": "resource_clock_safe_degrade",
+      "passed": true
+    },
+    {
+      "case": "internal_token_owner_and_mode_restored",
+      "passed": true
+    },
+    {
+      "case": "nonroot_leisure_code_group_read_restored",
+      "passed": true
+    },
+    {
+      "case": "backup_without_py_extension_is_executable",
+      "passed": true
+    },
+    {
+      "case": "content_unchanged_permission_drift_repaired",
+      "passed": true
+    },
+    {
+      "case": "fixed_permissions_do_not_trigger_repeated_repairs",
+      "passed": true
+    },
+    {
+      "case": "missing_container_recreated_from_known_image",
+      "passed": true
+    },
+    {
+      "case": "crashed_container_restart_actual",
+      "passed": true
+    },
+    {
+      "case": "repair_did_not_change_image",
+      "passed": true
+    },
+    {
+      "case": "second_fault_escalates_to_verified_image_recreation",
+      "passed": true
+    },
+    {
+      "case": "independent_watchdog_repairs_repair_engine",
+      "passed": true
+    },
+    {
+      "case": "infinite_experiment_bounded_service_survives",
+      "passed": true
+    },
+    {
+      "case": "deployment_and_self_repair_share_exclusive_lock",
+      "passed": true
+    },
+    {
+      "case": "three_failure_gate_and_restart_cooldown",
+      "passed": true
+    },
+    {
+      "case": "all_production_containers_unchanged",
+      "passed": true
+    }
+  ],
+  "all_passed": true,
+  "real_container_crash_and_recreation": true,
+  "production_data_mounted_into_lab": false,
+  "lab_network": "none",
+  "production_before_after_equal": true,
+  "real_qq_messages": 0
+}

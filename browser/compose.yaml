@@ -1,0 +1,43 @@
+services:
+  browser:
+    image: p1-companion-browser:0.20.0
+    container_name: p1-browser
+    init: true
+    restart: unless-stopped
+    user: '1001:1001'
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true", "seccomp=./seccomp_profile.json"]
+    pids_limit: 160
+    mem_limit: 700m
+    shm_size: 128m
+    tmpfs: ["/tmp:size=192m,mode=1777", "/home/companion:size=16m,uid=1001,gid=1001"]
+    volumes:
+      - /srv/p1-agent/astrbot/data/plugin_data/affect/browser_policy:/policy:ro
+      - /srv/p1-agent/astrbot/data/plugin_data/affect/browser_token:/run/secrets/browser_token:ro
+    networks: [control]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; assert urllib.request.urlopen('http://127.0.0.1:8765/health',timeout=3).status == 200"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  egress:
+    image: p1-companion-browser:0.20.0
+    container_name: p1-browser-egress
+    command: [python, egress.py]
+    restart: unless-stopped
+    user: '1001:1001'
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 60
+    mem_limit: 100m
+    volumes:
+      - /srv/p1-agent/astrbot/data/plugin_data/affect/browser_policy:/policy:ro
+    networks: [control, egress]
+networks:
+  control:
+    name: p1-companion-control
+    internal: true
+  egress:
+    name: p1-companion-egress

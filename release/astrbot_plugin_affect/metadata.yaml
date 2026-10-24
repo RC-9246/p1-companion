@@ -1,0 +1,6 @@
+name: astrbot_plugin_affect
+display_name: P1 Companion · Saki
+desc: 多维模拟情绪、语境理解、长期记忆协作与自主社交调度与MCP隔离浏览
+version: v0.20.0
+author: p1-local
+astrbot_version: ">=4.29,<5"

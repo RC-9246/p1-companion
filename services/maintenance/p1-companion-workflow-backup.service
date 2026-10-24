@@ -1,0 +1,7 @@
+[Unit]
+Description=P1 Companion n8n online database backup
+After=docker.service
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/p1-companion-workflow-backup
+UMask=0077

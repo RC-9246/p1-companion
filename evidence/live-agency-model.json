@@ -1,0 +1,24 @@
+{
+  "approved_destination": "api.deepseek.com",
+  "synthetic_model_requests": 2,
+  "activity_choice_valid": true,
+  "selected_activity": "research",
+  "selected_topic": "cooking",
+  "day_hours": 6.5,
+  "grounded_note_shape_valid": true,
+  "max_effort_usage": [
+    {
+      "effort": "max",
+      "completion_tokens": 316,
+      "prompt_tokens": 1475
+    },
+    {
+      "effort": "max",
+      "completion_tokens": 109,
+      "prompt_tokens": 941
+    }
+  ],
+  "seconds": 4.36,
+  "private_history_sent": false,
+  "real_qq_messages": 0
+}

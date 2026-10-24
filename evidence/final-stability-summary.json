@@ -1,0 +1,39 @@
+{
+  "version": "0.20.0",
+  "source_generation": "emotion_learning_and_recovery_permission_metadata",
+  "rounds_passed": 5,
+  "unit_tests_each": [
+    299,
+    299,
+    299,
+    299,
+    299
+  ],
+  "total_unit_executions": 1495,
+  "checks_each_round": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "round_seconds": [
+    252.01,
+    242.38,
+    244.18,
+    252.55,
+    244.05
+  ],
+  "memory_available_mb": [
+    1993,
+    1996,
+    1979,
+    1797,
+    1953
+  ],
+  "fixed_recovery_metadata_entries": 27,
+  "budget_namespaces_separate": true,
+  "actual_qq_validation_messages": 0,
+  "production_containers_no_restart_during_five_rounds": true,
+  "prior_297_test_cycle_not_counted_here": true
+}

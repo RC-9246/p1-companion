@@ -1,0 +1,17 @@
+{
+  "neutral_bootstrap_fresh_directory": true,
+  "dry_run_no_writes": true,
+  "plugins_installed": 8,
+  "python_sources_compile": true,
+  "neutral_empty_catalog_accepted": true,
+  "owner_identity_exact": true,
+  "private_tokens_mode_uid_verified": true,
+  "nonroot_bind_code_group_readable": true,
+  "social_and_groups_closed_by_default": true,
+  "mcp_configuration_shape_native": true,
+  "custom_root_propagates": true,
+  "original_config_recoverable": true,
+  "docker_calls": 0,
+  "network_calls": 0,
+  "production_data_written": false
+}

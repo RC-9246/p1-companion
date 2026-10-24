@@ -1,0 +1,3 @@
+Scoped adaptation: target normalization in scene.py, from https://github.com/muyouzhi6/astrbot_plugin_context_aware at f026c5635f49b43b18f2f4e53eefbc7a0180cd94 (MIT, copyright 2026 木有知). Full license in LICENSE. The rest of this plugin is local implementation. No upstream runtime engine or unreviewed tools are installed.
+
+Design references only, no copied code: Emotion Spirit (Aston957/astrbot_plugin_emotion_spirit, fd61ff59c938c78398e96119d4ebd86276b708ba, MIT) layered persona/state; MaiBot (Mai-with-u/MaiBot, c602a2780f4f4dda4a6be46d67abc1cfb1ad420c, GPL-3.0) conversation planning. These projects' documentation demonstrates designs, not independently measured success for this device.
