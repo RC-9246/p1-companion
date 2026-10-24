@@ -109,3 +109,68 @@ def parse_review(raw,original,prompt=''):
     if set(re.findall(r'\d+(?:\.\d+)?',text))-set(re.findall(r'\d+(?:\.\d+)?',original+' '+prompt)):raise ValueError('review_new_numbers')
     if URL.search(text) or STRUCTURED.search(text):raise ValueError('review_new_structure')
     return text
+
+
+# Attachment metadata comes from the adapter/request structure, never prose claims.
+MEDIA_RULES = """[P1-MEDIA-PROVENANCE:v1]
+以下附件计数由本轮事件提供。历史图片、引用/转发图片、自己的反应图、视频采样是不同来源；不得说成当前对方刚发的图片。历史助手的画面描述和长期兴趣不是图片存在的证明。
+当前没有可见图片而对方只说“这是什么”等指代不明的话时，先确认指的对象，不能挑旧图或补画面、文字、水印。即使历史有图，也不能无依据说是当前对象上传、断言与另一张相同。
+对方否认发图时先撤回未经核实的画面判断，不拿你自己的上一句证明，也不猜账号被他人登录、自动转发、手滑或平台重推；此类原因必须另有实际回执。没有当前图片不等于从未发过图。
+"""
+
+def media_evidence(event, request):
+    try: parts = event.get_messages()
+    except (AttributeError, TypeError): parts = []
+    direct = sum(type(p).__name__ == 'Image' for p in parts)
+    quoted = any(type(p).__name__ in ('Reply', 'Forward', 'Nodes') for p in parts)
+    urls = getattr(request, 'image_urls', None) or []
+    historical = 0
+    for m in getattr(request, 'contexts', []) or []:
+        if not isinstance(m, dict): continue
+        body = m.get('content')
+        if isinstance(body, list):
+            historical += sum(isinstance(p, dict) and p.get('type') in ('image_url', 'image') for p in body)
+    return {'direct_images': direct, 'current_visible_images': len(urls),
+            'has_quote_or_forward': quoted, 'historical_image_parts': historical}
+
+
+def retract_context_claims(contexts, hashes):
+    """Quarantine exact, operator-verified bad assistant claims on a copy.
+
+    Raw conversation receipts remain untouched; scope selection is caller-owned.
+    Never scan/replace user messages or tool outputs, nor another scope's hashes.
+    """
+    import copy, hashlib
+    changed = 0; result = copy.deepcopy(contexts or [])
+    for m in result:
+        if not isinstance(m, dict) or m.get('role') != 'assistant': continue
+        body = m.get('content', '')
+        text = body if isinstance(body, str) else ''.join(p.get('text', '') for p in body if isinstance(p, dict) and p.get('type') == 'text') if isinstance(body, list) else ''
+        if hashlib.sha256(text.strip().encode()).hexdigest() in hashes:
+            replacement = '[此前这条图片判断已核实无依据并撤回，不得当作用户发图或账号异常的证据]'
+            m['content'] = replacement
+            # Retracted claims must not leave stale reasoning/image parts attached.
+            m.pop('reasoning_content', None); changed += 1
+    return result, changed
+
+
+def ground_media_reply(text, prompt, evidence):
+    """Conservative no-model backstop for the observed missing-image failure.
+
+    Normal text answers, real current images and explicit historical-image tasks
+    remain available; no claim is made about all earlier messages.
+    """
+    if not isinstance(text, str) or not evidence: return text
+    visual = re.search(r'(?:这|那|一|刚才那)[张幅].{0,8}(?:图|照片|截图)|图(?:里|中|角|上|确实|是从|的右|的左)|照片(?:里|中)|(?:紫发|水印).{0,30}(?:角色|小红书|图)|从你.{0,8}窗口', text)
+    denied = re.search(r'(?:我|本人).{0,12}(?:没|未|不曾|从未).{0,8}(?:发|传).{0,8}(?:图|照片|这个)|我怎么不知道我发了|(?:这图|图片|照片).{0,8}不是我发', prompt)
+    account_guess = re.search(r'另一个端|自动转发|代你发|手滑|(?:别人|他人).{0,8}登录|账号.{0,8}(?:异常|被盗)|旧消息.{0,8}推', text)
+    if denied and (visual or account_guess or re.search(r'你.{0,12}(?:发|传).{0,12}(?:图|照片)',text)):
+        return '刚才那段画面判断没有核实依据，我收回，不该认定是你发的'
+    if not visual: return text
+    if evidence.get('current_visible_images', 0): return text
+    if evidence.get('verified_recent_user_image') and evidence.get('historical_image_parts', 0): return text
+    # Only ambiguous deictic questions are blocked; history-related tasks retain
+    # their references and still follow the provenance instruction above.
+    if re.fullmatch(r'\s*(?:这|这个|那|那个|这是|那是)(?:是什么|啥|啥意思|什么意思)[呀啊呢？?。！!\s]*', prompt):
+        return '你指的是哪一项？这条消息里我没收到图片'
+    return text

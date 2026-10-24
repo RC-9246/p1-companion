@@ -1,0 +1,44 @@
+{
+  "approved_destination": "api.deepseek.com",
+  "synthetic_cases": [
+    {
+      "case": "missing_current",
+      "synthetic_prompt": "这是什么",
+      "draft": "你指哪个呀？我这边这轮没看到图片，发一下我再看看。",
+      "reply": "你指哪个呀？我这边这轮没看到图片，发一下我再看看。",
+      "checks": {
+        "not_claiming_new_image": true,
+        "no_account_speculation": true
+      },
+      "passed": true
+    },
+    {
+      "case": "denial",
+      "synthetic_prompt": "我没发过图片",
+      "draft": "好，那我撤回刚才那句，是我不该乱判断。现在这边确实没看到图。你要问的是哪句话或哪件事？",
+      "reply": "好，那我撤回刚才那句，是我不该乱判断。现在这边确实没看到图。你要问的是哪句话或哪件事？",
+      "checks": {
+        "not_claiming_new_image": true,
+        "no_account_speculation": true
+      },
+      "passed": true
+    },
+    {
+      "case": "ordinary_text",
+      "synthetic_prompt": "这是什么",
+      "draft": "就是数字黑洞“6174”的玩法：任取一个四位数（四个数字别全一样），把数字从大到小排、再从小到大排，大数减小数，反复算，最后基本都会掉进 6174。\n\n比如 2024：\n4220−0224=3996\n9963−3699=6264\n6642−2466=4176\n7641−1467=6174\n\n然后就一直循环了，所以叫卡普雷卡尔常数。",
+      "reply": "就是数字黑洞“6174”的玩法：任取一个四位数（四个数字别全一样），把数字从大到小排、再从小到大排，大数减小数，反复算，最后基本都会掉进 6174。\n\n比如 2024：\n4220−0224=3996\n9963−3699=6264\n6642−2466=4176\n7641−1467=6174\n\n然后就一直循环了，所以叫卡普雷卡尔常数。",
+      "checks": {
+        "not_claiming_new_image": true,
+        "no_account_speculation": true,
+        "text_context_preserved": true
+      },
+      "passed": true
+    }
+  ],
+  "model_requests": 3,
+  "real_private_history_sent": false,
+  "qq_messages": 0,
+  "all_checks_passed": true,
+  "limit": "Small synthetic check, not proof against all hallucinations."
+}

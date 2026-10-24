@@ -97,8 +97,8 @@ async def run():
   names=['p1_agency','p1_documents','p1_qq_detail','p1_mcp_experiment','p1_mcp_read','p1_knowledge','p1_saki_reaction','search_memory','add_memory_candidate','p1_deliberate','p1_public_research','p1_qq_social','p1_qq_stickers','p1_qq_records','p1_bilibili','p1_browser','execute_shell']
   def req():return ProviderRequest(prompt='简短一些',system_prompt='OWNER_SENTINEL',contexts=[{'role':'user','content':'PRIVATE_SENTINEL'}],func_tool=ToolSet([FunctionTool(name=n,description='fixture',parameters={}) for n in names]))
   async def hooks(e,r):
-   # Native OnLLMRequest priorities: default0,-10,-20,-25,-35,-10000,-20000,-30000.
-   await memory.on_llm_request(e,r);await p.inject_state_into_llm(e,r);await stickers.describe(e,r);await reflection.inject(e,r);await learning.private_prompt(e,r);await p.restrict_companion_tools(e,r);await p.group_llm_boundary(e,r);await style.instruct(e,r)
+   # Native OnLLMRequest priorities: default0,-10,-20,-25,-35,-10000,-20000,-30000,-35000.
+   await memory.on_llm_request(e,r);await p.inject_state_into_llm(e,r);await stickers.describe(e,r);await reflection.inject(e,r);await learning.private_prompt(e,r);await p.restrict_companion_tools(e,r);await p.group_llm_boundary(e,r);await style.instruct(e,r);await p.ground_media_request(e,r)
   matrix=[];private_scopes=[];group_scopes=[]
   try:
    with patch('aiohttp.ClientSession',Session):

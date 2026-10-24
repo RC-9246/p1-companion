@@ -1,0 +1,22 @@
+{
+  "installed_code_replay_passed": true,
+  "actual_current_attachment_count": 0,
+  "historical_image_parts": 34,
+  "exact_active_memory_rows": 1,
+  "specific_image_claim_in_active_memory": false,
+  "six_false_assistant_turns_quarantined_in_request_only": true,
+  "real_qq_messages": 0,
+  "real_model_calls": 0,
+  "raw_conversation_unchanged": true,
+  "production_files_verified": 135,
+  "databases": {
+    "affect/affect.db": "ok",
+    "memoria/memoria.db": "ok",
+    "p1_groups/groups.db": "ok",
+    "affect/agency/agency.db": "ok"
+  },
+  "containers_running": 8,
+  "unit_tests_passed": 308,
+  "scope_matrix_includes_new_media_hook": true,
+  "latest_core_health": true
+}

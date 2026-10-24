@@ -453,6 +453,43 @@ class AffectPlugin(Star):
         except Exception as exc:
             logger.warning('[P1 Companion] context_skipped code='+type(exc).__name__)
 
+    @filter.on_llm_request(priority=-35000)
+    async def ground_media_request(self,event:AstrMessageEvent,request):
+        scope=self.scope_for(event)
+        if not scope:return
+        from .reply_chunks import MEDIA_RULES,media_evidence,retract_context_claims
+        evidence=media_evidence(event,request)
+        # A genuine same-sender recent image may support a natural follow-up.
+        # Adapter-bound receipts, rather than model prose, establish its source.
+        evidence['verified_recent_user_image']=False
+        if self.qq and self.qq.ready:
+            rows=await asyncio.to_thread(self.qq.store.messages,self.qq.event_ref(event),12)
+            evidence['verified_recent_user_image']=any(r['sender']==str(event.get_sender_id()) and r['media']>0 and 0<=time.time()-r['at']<=600 for r in rows)
+        event.set_extra('_p1_media_evidence',evidence)
+        try:
+            corrections=json.loads((DATA/'media_retractions.json').read_text())
+            hashes=corrections.get(scope,[]) if isinstance(corrections,dict) else []
+            hashes={h for h in hashes if isinstance(h,str) and re.fullmatch(r'[0-9a-f]{64}',h)}
+            if hashes:
+                request.contexts,count=retract_context_claims(request.contexts,hashes)
+                if count:event.set_extra('_p1_media_retracted',count)
+        except (OSError,ValueError,TypeError):pass
+        marker='[P1-MEDIA-PROVENANCE:v1]'
+        if marker not in request.system_prompt:
+            request.system_prompt+='\n'+MEDIA_RULES+'\n本轮附件证据：'+json.dumps(evidence,ensure_ascii=False)
+
+    @filter.on_llm_response(priority=-35000)
+    async def ground_media_response(self,event:AstrMessageEvent,response):
+        if not self.scope_for(event) or getattr(response,'role',None)!='assistant' or getattr(response,'tools_call_name',[]):return
+        from .reply_chunks import ground_media_reply
+        original=getattr(response,'completion_text','')
+        revised=ground_media_reply(original,str(getattr(event.message_obj,'message_str','')),event.get_extra('_p1_media_evidence'))
+        if revised!=original:
+            response.completion_text=revised
+            try:
+                if self.store:await asyncio.to_thread(self.store.audit,'media_grounding','revised')
+            except Exception as exc:logger.info('[P1 Media] audit_deferred code='+type(exc).__name__)
+
     @filter.on_llm_response(priority=-10)
     async def mark_response(self,event:AstrMessageEvent,response):
         pending=event.get_extra('_p1_companion_pending')
