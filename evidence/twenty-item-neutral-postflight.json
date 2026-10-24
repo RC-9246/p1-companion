@@ -1,0 +1,16 @@
+{
+  "neutral_version_checks": [
+    {
+      "name": "core",
+      "passed": true,
+      "tests": 134
+    },
+    {
+      "name": "quota",
+      "passed": true,
+      "tests": 5
+    }
+  ],
+  "private_persona_and_images_not_exported": true,
+  "actual_qq_messages": 0
+}

@@ -40,6 +40,20 @@ class StoreTests(unittest.TestCase):
         self.s.migrate()
     def tearDown(self):
         self.tmp.cleanup()
+    def test_budget_view_does_not_charge_and_tracks_reset(self):
+        now=1792840000;first=self.s.budget_status(2,now,bucket=1)
+        self.assertEqual(first['remaining'],2)
+        with sqlite3.connect(self.path) as c:self.assertEqual(c.execute('SELECT COUNT(*) FROM companion_budget').fetchone()[0],0)
+        self.assertTrue(self.s.take_budget(2,now,bucket=1));self.assertEqual(self.s.budget_status(2,now,bucket=1)['remaining'],1)
+        self.assertTrue(self.s.take_budget(2,now,bucket=1));self.assertFalse(self.s.take_budget(2,now,bucket=1))
+        self.assertEqual(self.s.budget_status(2,now,bucket=1)['remaining'],0)
+        self.assertEqual(self.s.budget_status(2,first['resets_at'],bucket=1)['remaining'],2)
+        self.assertEqual(self.s.budget_status(2,now,bucket=0)['used'],0)
+    def test_budget_view_rejects_invalid_namespace_and_limit(self):
+        for bucket in (10,-1,True):
+            with self.assertRaises(ValueError):self.s.budget_status(2,bucket=bucket)
+        for limit in (0,-1,True,100001):
+            with self.assertRaises(ValueError):self.s.budget_status(limit)
     def test_existing_identity_can_be_read_while_another_writer_is_reserved(self):
         self.s.ensure_identity(I)
         with sqlite3.connect(self.path) as blocker:

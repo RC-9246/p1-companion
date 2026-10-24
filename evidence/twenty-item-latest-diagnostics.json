@@ -1,0 +1,40 @@
+{
+  "latest_actions": [
+    {
+      "state": "complete",
+      "minutes_ago": 1.7,
+      "activity": "research"
+    },
+    {
+      "state": "failed",
+      "minutes_ago": 5.5,
+      "error": "ValueError",
+      "code": "research_no_result",
+      "phase": "research"
+    },
+    {
+      "state": "failed",
+      "minutes_ago": 12.5,
+      "error": "ValueError",
+      "code": "research_no_result",
+      "phase": "research"
+    },
+    {
+      "state": "failed",
+      "minutes_ago": 14.5,
+      "error": "ValueError",
+      "code": "research_no_result",
+      "phase": "research"
+    },
+    {
+      "state": "failed",
+      "minutes_ago": 17.2,
+      "error": "ValueError"
+    },
+    {
+      "state": "failed",
+      "minutes_ago": 22.2,
+      "error": "ValueError"
+    }
+  ]
+}

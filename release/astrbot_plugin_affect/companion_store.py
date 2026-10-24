@@ -234,6 +234,15 @@ class CompanionStore:
             if len(selected)>=3:break
         return selected
 
+    def budget_status(self,limit=200,now=None,bucket=0):
+        if type(bucket) is not int or not 0<=bucket<=9:raise ValueError('budget_bucket_out_of_range')
+        if type(limit) is not int or not 1<=limit<=100000:raise ValueError('budget_limit_out_of_range')
+        day=int(time.time() if now is None else now)//86400
+        with closing(self.connect()) as c:
+            row=c.execute('SELECT used FROM companion_budget WHERE day=?',(day*10+bucket,)).fetchone()
+        used=int(row[0]) if row else 0
+        return {'used':used,'limit':limit,'remaining':max(0,limit-used),'resets_at':(day+1)*86400,'day_basis':'UTC'}
+
     def take_budget(self,limit=200,now=None,bucket=0):
         if type(bucket) is not int or not 0<=bucket<=9:raise ValueError('budget_bucket_out_of_range')
         day=int(time.time() if now is None else now)//86400*10+bucket

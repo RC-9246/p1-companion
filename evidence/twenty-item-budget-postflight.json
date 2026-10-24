@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "unit_tests": 301,
+  "quota_specific_rounds": 5,
+  "native_quota_tests": 25,
+  "checks": [
+    {
+      "name": "quota-five",
+      "passed": true,
+      "tests": 25
+    },
+    {
+      "name": "unit",
+      "passed": true,
+      "tests": 301
+    },
+    {
+      "name": "scope_matrix",
+      "passed": true,
+      "tests": null
+    }
+  ],
+  "real_public_probe": {
+    "real_public_search_ok": true,
+    "real_public_page_ok": true,
+    "public_daily_limit": 240,
+    "counter_before": 61,
+    "counter_after": 63,
+    "production_budget_counters_incremented": true,
+    "private_content_sent": false,
+    "actual_qq_messages": 0
+  },
+  "model_api_limits_unchanged": true,
+  "source_and_checkpoint_match": true,
+  "core_health": true,
+  "historical_failures_preserved": true,
+  "all_twenty_requirements_fully_complete": false,
+  "recovery_point": "/home/p1admin/p1-agent/backups/companion-patch-v020-20261024-211241"
+}

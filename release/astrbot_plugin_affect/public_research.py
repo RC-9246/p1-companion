@@ -1,8 +1,12 @@
 """Scoped public research for all admitted companions, no account/browser-session access."""
 import asyncio,json,time,xml.etree.ElementTree as ET
 from .search_policy import query as checked_query,public_url
+DAILY_LIMIT=240  # Shared public search/page reads; model API budgets are separate.
 class Research:
  def __init__(self,plugin):self.plugin=plugin;self.cache={}
+ def budget_status(self):
+  view=getattr(self.plugin.store,'budget_status',None)
+  return view(DAILY_LIMIT,bucket=1) if callable(view) else {'limit':DAILY_LIMIT,'remaining':None,'resets_at':None}
  async def run(self,event,action,query='',url=''):
   scope=self.plugin.scope_for(event)
   if not scope or not self.plugin.enabled():return {'ok':False,'error':'forbidden'}
@@ -10,7 +14,7 @@ class Research:
   try:
    if action=='capabilities':
     from .browser_policy import domains
-    return {'ok':True,'public_search':True,'read_domains':sorted(domains(self.plugin.thinking.data/'browser_policy/domains.json')),'account_access':False,'scope_isolated':True}
+    return {'ok':True,'public_search':True,'read_domains':sorted(domains(self.plugin.thinking.data/'browser_policy/domains.json')),'account_access':False,'scope_isolated':True,'public_read_budget':await asyncio.to_thread(self.budget_status)}
    if action=='search':term=checked_query(query)
    else:
     from .browser_policy import validate_url,domains
@@ -18,7 +22,8 @@ class Research:
    key=(scope,action,term if action=='search' else url);cached=self.cache.get(key)
    if cached and time.time()-cached['at']<(120 if action=='search' else 3600):return {**cached['value'],'cached':True,'fetched_at':cached['at']}
    count=event.get_extra('_p1_public_research_calls',0)
-   if count>=3 or not await asyncio.to_thread(self.plugin.store.take_budget,60,bucket=1):return {'ok':False,'error':'research_budget'}
+   if count>=3:return {'ok':False,'error':'research_turn_limit'}
+   if not await asyncio.to_thread(self.plugin.store.take_budget,DAILY_LIMIT,bucket=1):return {'ok':False,'error':'research_budget','budget':await asyncio.to_thread(self.budget_status)}
    event.set_extra('_p1_public_research_calls',count+1)
    import aiohttp
    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=27),trust_env=False) as client:
