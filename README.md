@@ -1,5 +1,9 @@
 # P1 Companion — 可复现的持续运行数字伙伴
 
+**本项目主要由 GPT 完成。** 人类提出目标、提供设备与授权、反馈体验；OpenAI GPT 系列模型通过 ChatGPT / Codex 承担本项目新增工程的主要设计、编码、集成、排障、测试编排、文档与工具部署工作。既有框架和第三方代码保留各自作者归属；部署后的日常推理使用已配置的 DeepSeek，不因开发来源而变成 GPT。详见 [开发来源与贡献说明](AI_DEVELOPMENT.md)。
+
+**安装或授予权限前，请阅读 [完整免责声明、风险披露与使用条款](DISCLAIMER.md)。** 这是实验性工程，不承诺零故障、十年免维护、账号永不封禁或AI输出必然正确。主动交流、云端模型和登录工具可能涉及他人隐私、对外行为及实际费用，需由有权主体依法授权；免责不替代授权、安全措施或软件许可，也不免除依法不能免除的责任。
+
 AstrBot + SnowLuma/OneBot + 已配置的DeepSeek，增加独立记忆/情绪/学习、群聊理解、统一主动交流、自主目标、公开研究、私密B站整理、文件理解、有界实验、MCP和自修复。
 
 这是中性人格交付。私人角色提示词、具体关系阶段、账号/密钥、数据库、原始对话和第三方图片没有进入此目录。兼容API中保留的 `saki` 名称是历史标识，不表示随包附带原人格。生产验收与中性版本验收分别记录，不能相互替代。
@@ -89,7 +93,7 @@ B站首次登录：主人私聊发送 `/B站 登录`，用手机扫码后发送 
 
 ## 文档、来源与边界
 
-[最终验收报告](docs/release-report.md)、[完整实施过程](docs/development-history.md)、[后续方向](docs/further-capabilities.md)、[二十项功能](docs/feature-matrix.md)、[记忆空间](docs/memory-spaces.md)、[情绪设计](docs/emotion-design.md)、[持续学习](docs/self-learning.md)、[控制](docs/controls.md)、[恢复](docs/recovery.md)、[适用边界](docs/boundaries.md)、[来源](PROVENANCE.md)。各上游适配的UPSTREAM与LICENSE保留原路径。未为整包第三方代码重新授予统一许可证；Memoria上游许可证尚未确认，公开再分发前应核对。
+[GPT开发来源](AI_DEVELOPMENT.md)、[完整免责与使用条款](DISCLAIMER.md)、[最终验收报告](docs/release-report.md)、[完整实施过程](docs/development-history.md)、[后续方向](docs/further-capabilities.md)、[二十项功能](docs/feature-matrix.md)、[记忆空间](docs/memory-spaces.md)、[情绪设计](docs/emotion-design.md)、[持续学习](docs/self-learning.md)、[控制](docs/controls.md)、[恢复](docs/recovery.md)、[适用边界](docs/boundaries.md)、[来源](PROVENANCE.md)。各上游适配的UPSTREAM与LICENSE保留原路径。未为整包第三方代码重新授予统一许可证；Memoria上游许可证尚未确认，公开再分发前应取得适当许可或排除相关代码，免责条款不能补足授权。
 
 本项目没有连接Windows/Android/iPhone控制、邮箱、日历、付款和任意系统Shell。公共网页只是资料，无法访问时不假称读完；B站公开评论/弹幕禁用；OCR不保证全部视觉隐私，未知原图不跨范围转发。当前模型费用由使用者账号承担，日志、导出与缓存不应收集无关私聊。
 
