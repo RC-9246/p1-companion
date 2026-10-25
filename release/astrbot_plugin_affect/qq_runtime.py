@@ -43,12 +43,17 @@ class QQController:
   return result
  def schedule(self,kind):
   p=self.policy();return time.time()+secrets.SystemRandom().uniform(p[kind+'_min_minutes']*60,p[kind+'_max_minutes']*60)
- def autonomy_allowed(self,row):
+ def autonomy_allowed(self,row,lane='background'):
   if not row or not row['enabled']:return False
   agency=getattr(self.plugin,'agency',None)
   if agency and agency.ready:
    cfg=agency.store.ensure(row['identity'])
-   if cfg['paused'] or cfg['level']<3 or (row['kind']=='group' and not cfg['interest_join']):return False
+   if cfg['paused'] or cfg['level']<3:return False
+   if row['kind']=='group':
+    routes=agency.store.reply_routes(row['identity'])
+    if lane=='native':
+     if not routes['native']:return False
+    elif not routes['p1'] or (lane in ('interest','background') and not routes[lane]):return False
   if row['kind']=='private':
    if self.plugin.social.store.paused_until(row['identity'])>time.time():return False
    old=self.plugin.social.store.get(row['identity']) if self.owner(row['identity']) else None
@@ -174,7 +179,7 @@ class QQController:
   row=self.store.target(target or actor['ref'])
   if not row or not self.allowed(row) or (not row['enabled'] and row['ref']!=actor['ref']) or (not actor['owner'] and row['ref']!=actor['ref']):raise ValueError('recipient_not_authorized')
   return row
- async def perform(self,row,event,kind,action,params,*,proactive=False,text='',guard=None,verify=None,preflight=None):
+ async def perform(self,row,event,kind,action,params,*,proactive=False,text='',guard=None,verify=None,preflight=None,auto_lane='background'):
   p=self.policy()
   agency=getattr(self.plugin,'agency',None)
   if agency and agency.ready:
@@ -188,7 +193,7 @@ class QQController:
    async with self.plugin.reply_gate:
     await self.plugin.reply_pause(secrets.SystemRandom().uniform(2,5))
     current=await asyncio.to_thread(self.store.target,row['ref'])
-    if (agency and agency.ready and (agency.store.ensure(row['identity'])['paused'] or agency.store.ensure(row['identity'])['level']<3)) or (not current or (proactive and not current['enabled']) or not current['alive'] or current['generation']!=row['generation'] or not self.allowed(current) or (proactive and quiet(time.time(),self.policy())) or (guard and not guard()) or (proactive and not self.autonomy_allowed(current))):
+    if (agency and agency.ready and (agency.store.ensure(row['identity'])['paused'] or agency.store.ensure(row['identity'])['level']<3)) or (not current or (proactive and not current['enabled']) or not current['alive'] or current['generation']!=row['generation'] or not self.allowed(current) or (proactive and quiet(time.time(),self.policy())) or (guard and not guard()) or (proactive and not self.autonomy_allowed(current,auto_lane))):
      await asyncio.to_thread(self.store.finish,id,'cancelled');return {'ok':False,'state':'cancelled'}
     if preflight:
      await asyncio.wait_for(preflight(),FORWARD_PREFLIGHT_TIMEOUT)

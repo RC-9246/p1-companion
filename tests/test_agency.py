@@ -49,6 +49,46 @@ class AgencyPersistence(unittest.TestCase):
  def test_interest_join_switch_cooldown_and_group_isolation(self):
   self.assertTrue(self.s.join(G,time.time(),True));self.assertFalse(self.s.join(G,time.time()+1));self.assertTrue(self.s.join(G,time.time()+1201))
   self.s.config(G,interest_join=0);self.assertFalse(self.s.join(G,time.time()+3000));self.assertTrue(self.s.join('g1:'+'d'*64,time.time()))
+ def test_reply_routes_upgrade_preserves_old_closed_scope(self):
+  self.s.config(G,interest_join=0)
+  self.assertEqual(self.s.reply_routes(G),{'native':0,'p1':0,'interest':1,'background':1})
+  self.s.route_config(G,native=1)
+  self.assertEqual(self.s.reply_routes(G)['p1'],0);self.assertEqual(self.s.reply_routes(G)['native'],1)
+  self.assertFalse(self.s.join(G,time.time()))
+ def test_reply_routes_native_and_p1_four_combinations_are_independent(self):
+  for native,p1 in ((0,0),(1,0),(0,1),(1,1)):
+   self.s.route_config(G,native=native,p1=p1)
+   r=self.s.reply_routes(G);self.assertEqual((r['native'],r['p1']),(native,p1));self.assertEqual(self.s.join(G,time.time()),bool(p1))
+ def test_reply_subroutes_are_independent_and_rollback_gate_is_conservative(self):
+  self.s.route_config(G,p1=1,interest=0,background=1)
+  self.assertFalse(self.s.join(G,time.time()));self.assertEqual(self.s.ensure(G)['interest_join'],0)
+  self.s.route_config(G,interest=1,background=0)
+  self.assertTrue(self.s.join(G,time.time()));self.assertEqual(self.s.reply_routes(G)['p1'],1);self.assertEqual(self.s.ensure(G)['interest_join'],0)
+  self.s.config(G,interest_join=0);self.assertEqual(self.s.reply_routes(G)['p1'],0)
+  self.s.config(G,interest_join=1);self.assertEqual(self.s.reply_routes(G)['background'],0)
+ def test_route_controls_cannot_be_written_by_model_preferences(self):
+  for key in ('native','p1','reply_routes_v1'):
+   with self.assertRaises(ValueError):self.s.preference(G,key,1)
+  with self.assertRaises(ValueError):self.s.config(G,native=1)
+  for changes in ({'native':True},{'native':2},{'unknown':1}):
+   with self.assertRaises(ValueError):self.s.route_config(G,**changes)
+ def test_reply_routes_persist_per_group_and_new_groups_do_not_inherit(self):
+  self.s.route_config(G,native=1,p1=0,background=0);self.s.wipe(G)
+  fresh=AgencyStore(self.tmp.name)
+  self.assertEqual(fresh.reply_routes(G),{'native':1,'p1':0,'interest':1,'background':0})
+  self.assertEqual(fresh.reply_routes('g1:'+'d'*64),{'native':0,'p1':1,'interest':1,'background':1})
+ def test_expression_updates_cannot_lose_concurrent_operator_controls(self):
+  self.s.ensure(G)
+  def edit(i):
+   if i%2:self.s.preference(G,'pace_minutes',15)
+   else:self.s.route_config(G,native=1,interest=0)
+  with ThreadPoolExecutor(max_workers=3) as pool:list(pool.map(edit,range(16)))
+  self.assertEqual(self.s.reply_routes(G),{'native':1,'p1':1,'interest':0,'background':1})
+  self.assertEqual(json.loads(self.s.ensure(G)['preferences'])['pace_minutes'],15)
+ def test_invalid_route_preferences_fail_closed(self):
+  self.s.ensure(G)
+  with self.s.db() as c,c:c.execute('UPDATE scope SET preferences=? WHERE scope=?',(json.dumps({'reply_routes_v1':{'native':True}}),G))
+  self.assertEqual(self.s.reply_routes(G),{'native':0,'p1':0,'interest':0,'background':0})
  def test_levels_pause_and_policy_fields_cannot_be_changed_by_preferences(self):
   self.s.config(I,level=0);self.assertIsNone(self.s.reserve(I,'work'))
   self.s.config(I,level=3,paused=1);self.assertIsNone(self.s.reserve(I,'work'))

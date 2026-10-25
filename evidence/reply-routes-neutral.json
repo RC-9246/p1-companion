@@ -1,0 +1,8 @@
+{
+  "native_sdk_suites": {
+    "integration_reply_routes": true,
+    "integration_group_control": true
+  },
+  "real_qq_messages": 0,
+  "production_db_modified": false
+}

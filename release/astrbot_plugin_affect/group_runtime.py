@@ -51,19 +51,20 @@ class Groups:
         handlers. No model call, group admission token or memory write is needed.
         """
         text=str(getattr(event.message_obj,'message_str','')).strip()
-        match=re.fullmatch(r'/?群内主动(?:\s+(.*))?',text,re.S)
+        match=re.fullmatch(r'/?(群内主动|主动线路)(?:\s+(.*))?',text,re.S)
         if not match:return False
         event.stop_event()
         from .main import authorized
         if not self.allowed(event) or not authorized(event,private_only=False):return True
-        args=(match[1] or '').split()
+        args=(match[2] or '').split()
         guard=lambda:self.allowed(event) and bool(authorized(event,private_only=False))
         event.set_extra('_p1_qq_send_guard',guard)
         self.plugin.install_reply_delay(event)
-        if len(args)>2:
-            await event.send(event.plain_result('用法：/群内主动 开启、关闭或状态；群内只修改本群'))
+        if len(args)>(3 if match[1]=='主动线路' else 2):
+            await event.send(event.plain_result('用法：/主动线路 原生或P1 开启、关闭或状态；群内只修改本群'))
             return True
-        async for result in self.plugin.interest_control(event,*args):
+        handler=self.plugin.reply_route_control if match[1]=='主动线路' else self.plugin.interest_control
+        async for result in handler(event,*args):
             await event.send(result)
         return True
     def install(self):
@@ -114,6 +115,39 @@ class Groups:
                 {'role':'user','content':json.dumps({'current':text[:600],'speaker':member(event),'same_thread':same,'recent':recent},ensure_ascii=False)}],
                 temperature=0,max_tokens=100,response_format={'type':'json_object'},extra_body={'thinking':{'type':'disabled'}})
             return parse_route(result.choices[0].message.content)
+    async def native_candidate(self,event):
+        """Reuse AstrBot's probability/whitelist predicate, with scoped delivery.
+
+        Never run the builtin sender alongside our pipeline: that would create
+        a second model request with an unrelated conversation and no shared gate.
+        """
+        from types import SimpleNamespace
+        from astrbot.core.message.components import Plain,Image,Json
+        from astrbot.builtin_stars.astrbot.group_chat_context import GroupChatContext
+        from .qq_policy import quiet
+        agency=getattr(self.plugin,'agency',None);qq=getattr(self.plugin,'qq',None)
+        if not agency or not agency.ready or not qq or not qq.ready:return False
+        if str(event.message_obj.message_str).lstrip().startswith('/') or not any(isinstance(c,(Plain,Image,Json)) for c in event.get_messages()):return False
+        if quiet(time.time(),qq.policy()):return False
+        row=await asyncio.to_thread(qq.store.target,qq.event_ref(event))
+        if not row or not qq.allowed(row) or not qq.autonomy_allowed(row,'native') or not qq.store.can_action(row,time.time(),qq.policy(),True):return False
+        try:
+            raw=self.plugin.context.get_config(umo=event.unified_msg_origin)['provider_ltm_settings']['active_reply']
+            probability=raw.get('possibility_reply',0)
+            if type(probability) not in (int,float) or not 0<=probability<=1:return False
+            cfg={'enable_active_reply':raw.get('enable',False) is True,'ar_method':raw.get('method'),'ar_possibility':probability,'ar_whitelist':raw.get('whitelist',[])}
+            view=SimpleNamespace(get_message_type=event.get_message_type,is_at_or_wake_command=False,
+                unified_msg_origin=event.unified_msg_origin,get_group_id=event.get_group_id)
+            return bool(await GroupChatContext.need_active_reply(SimpleNamespace(cfg=lambda _:cfg),view))
+        except Exception as exc:
+            logger.info('[P1 Groups] native_route_silent code='+type(exc).__name__);return False
+    def auto_valid(self,event):
+        lane=event.get_extra('_p1_group_auto_route')
+        if not lane:return True
+        qq=getattr(self.plugin,'qq',None)
+        if not qq or not qq.ready:return False
+        row=qq.store.target(qq.event_ref(event))
+        return bool(row and qq.allowed(row) and qq.autonomy_allowed(row,lane))
     async def bind_images(self,event):
         """Bind pixels to this admitted event before native request collection.
 
@@ -221,10 +255,12 @@ class Groups:
         open_thread=bool(qq and qq.group_open(*key,now))
         same=same or open_thread
         related=bool(scene and scene['flow']['seconds_since_saki'] is not None and 0<=scene['flow']['seconds_since_saki']<=90 and re.match(r'^(?:那|所以|也就是说|等下|谢谢|是说|为什么|怎么|还有|确实|对了)',text))
-        interest=False
+        interest=False;native=False
         if signal not in ('direct','name') and not ((same or related) and 0<len(text)<=600):
             interest=bool(agency and not (v['busy'] and now-v['busy'][1]<120) and await agency.interest(event,text,recent))
-            if not interest:return False
+            if not interest and not (v['busy'] and now-v['busy'][1]<120):native=await self.native_candidate(event)
+            if not interest and not native:return False
+            event.set_extra('_p1_group_auto_route','interest' if interest else 'native')
         if v['busy'] and now-v['busy'][1]<120:
             if not event.get_extra('_p1_group_requeued') and (signal=='direct' or same or speaker==v.get('busy_member')):
                 queue=self.pending.setdefault(key,FairQueue());queue.push(speaker,event,now)
@@ -234,7 +270,7 @@ class Groups:
         event.set_extra('_p1_group_token',token)
         accepted=False
         try:
-            accepted=interest or signal=='direct' or await asyncio.wait_for(self.classify(event,text,recent,same),5)
+            accepted=interest or native or signal=='direct' or await asyncio.wait_for(self.classify(event,text,recent,same),5)
             if not accepted or not self.allowed(event):return False
             await asyncio.wait_for(self.provider(event),2)
             if not await asyncio.to_thread(self.plugin.store.take_budget,200,bucket=4):return False
@@ -259,7 +295,7 @@ class Groups:
             if not event.get_extra('_p1_group_admitted',False) and v['busy'] and v['busy'][0]==token:v['busy']=None
     def valid(self,event):
         v=self.state.groups.get(scope(event));token=event.get_extra('_p1_group_token')
-        return bool(self.allowed(event) and v and v['busy'] and v['busy'][0]==token and time.time()-v['busy'][1]<120)
+        return bool(self.allowed(event) and v and v['busy'] and v['busy'][0]==token and time.time()-v['busy'][1]<120 and self.auto_valid(event))
     async def expire(self,event,token):
         try:
             await asyncio.sleep(115)
@@ -308,6 +344,7 @@ class Groups:
         agency=getattr(self.plugin,"agency",None)
         if agency and agency.ready:await agency.prompt(event,request)
         if event.get_extra("_p1_interest_join",False):request.system_prompt+="\n本次是你基于兴趣自主加入公开话题，对方没有向你提问。仅在确有具体贡献时自然说一两句，不假装被询问，不抢着总结全群或索取回应；若已没有贡献，简短收住。"
+        if event.get_extra('_p1_group_auto_route')=='native':request.system_prompt+='\n本次由群聊概率接话机制选中，当前群友没有点名或要求你回答。结合当前公开话题自然接一句即可，不假装被询问，不逐条总结全群，不制造亲密关系，也不解释概率机制。'
         from .thinking import GUIDANCE
         request.system_prompt+=GUIDANCE
     async def send(self,event,message):
@@ -324,10 +361,11 @@ class Groups:
             if not self.valid(event):event.set_extra('_p1_send_cancelled',True);return
             platform=self.plugin.context.get_platform_inst('qq_snowluma')
             interest_reservation=None
-            if event.get_extra('_p1_interest_join',False) and not event.get_extra('_p1_interest_reserved'):
+            auto_lane=event.get_extra('_p1_group_auto_route') or ('interest' if event.get_extra('_p1_interest_join',False) else '')
+            if auto_lane and not event.get_extra('_p1_interest_reserved'):
                 qq=self.plugin.qq;row=await asyncio.to_thread(qq.store.target,qq.event_ref(event))
-                if not row or not qq.autonomy_allowed(row):event.set_extra('_p1_send_cancelled',True);return
-                interest_reservation=await asyncio.to_thread(qq.store.reserve,row,'interest:'+str(event.message_obj.message_id),'message',time.time(),qq.policy(),True,text)
+                if not row or not qq.autonomy_allowed(row,auto_lane):event.set_extra('_p1_send_cancelled',True);return
+                interest_reservation=await asyncio.to_thread(qq.store.reserve,row,auto_lane+':'+str(event.message_obj.message_id),'message',time.time(),qq.policy(),True,text)
                 if not interest_reservation:event.set_extra('_p1_send_cancelled',True);return
                 event.set_extra('_p1_interest_reserved',interest_reservation)
             receipt=await asyncio.wait_for(platform.get_client().send_group_msg(group_id=int(event.get_group_id()),message=payload),15)

@@ -64,16 +64,50 @@ CREATE TABLE IF NOT EXISTS circuit(name TEXT PRIMARY KEY,failures INTEGER NOT NU
   for k,v in changes.items():
    if type(v) is not int or not 0<=v<=(3 if k=='level' else 1):raise ValueError('invalid_control')
   with closing(self.db()) as c,c:
-   for k,v in changes.items():c.execute('UPDATE scope SET '+k+'=? WHERE scope=?',(v,scope))
+   c.execute('BEGIN IMMEDIATE')
+   if 'interest_join' in changes:
+    cfg=dict(c.execute('SELECT * FROM scope WHERE scope=?',(scope,)).fetchone())
+    routes=self._reply_routes(cfg);routes['p1']=changes['interest_join'];self._write_reply_routes(c,scope,cfg,routes)
+   for k,v in changes.items():
+    if k!='interest_join':c.execute('UPDATE scope SET '+k+'=? WHERE scope=?',(v,scope))
   return self.ensure(scope)
+ @staticmethod
+ def _reply_routes(cfg):
+  default={'native':0,'p1':int(bool(cfg['interest_join'])),'interest':1,'background':1}
+  try:p=json.loads(cfg['preferences'])
+  except (ValueError,TypeError):return dict.fromkeys(default,0)
+  if not isinstance(p,dict):return dict.fromkeys(default,0)
+  if 'reply_routes_v1' not in p:return default
+  r=p['reply_routes_v1']
+  if not isinstance(r,dict) or set(r)!=set(default) or any(type(v) is not int or v not in (0,1) for v in r.values()):return dict.fromkeys(default,0)
+  return dict(r)
+ def reply_routes(self,scope):return self._reply_routes(self.ensure(scope))
+ @staticmethod
+ def _write_reply_routes(c,scope,cfg,routes):
+  try:p=json.loads(cfg['preferences'])
+  except (ValueError,TypeError):p={}
+  if not isinstance(p,dict):p={}
+  p['reply_routes_v1']=routes
+  # A previous release ignores new controls. Keep its one-bit gate conservative
+  # so reverting code cannot unexpectedly re-enable a disabled P1 sub-route.
+  legacy=int(bool(routes['p1'] and routes['interest'] and routes['background']))
+  c.execute('UPDATE scope SET preferences=?,interest_join=? WHERE scope=?',(json.dumps(p),legacy,scope))
+ def route_config(self,scope,**changes):
+  self.ensure(scope)
+  if not changes or any(k not in ('native','p1','interest','background') or type(v) is not int or v not in (0,1) for k,v in changes.items()):raise ValueError('invalid_reply_route_control')
+  with closing(self.db()) as c,c:
+   c.execute('BEGIN IMMEDIATE');cfg=dict(c.execute('SELECT * FROM scope WHERE scope=?',(scope,)).fetchone())
+   r=self._reply_routes(cfg);r.update(changes);self._write_reply_routes(c,scope,cfg,r)
+  return self.reply_routes(scope)
  def preference(self,scope,key,value):
-  cfg=self.ensure(scope);p=json.loads(cfg['preferences'])
+  self.ensure(scope)
   if key=='pace_minutes' and type(value) is int and 8<=value<=30:pass
   elif key=='exploration' and type(value) in (int,float) and math.isfinite(value) and 0<=value<=1:pass
   elif key=='expression' and value in ('brief','balanced','listen_first'):pass
   else:raise ValueError('preference_not_allowed')
-  p[key]=value
-  with closing(self.db()) as c,c:c.execute('UPDATE scope SET preferences=? WHERE scope=?',(json.dumps(p),scope))
+  with closing(self.db()) as c,c:
+   c.execute('BEGIN IMMEDIATE');p=json.loads(c.execute('SELECT preferences FROM scope WHERE scope=?',(scope,)).fetchone()[0]);p[key]=value
+   c.execute('UPDATE scope SET preferences=? WHERE scope=?',(json.dumps(p),scope))
   return p
  def interests(self,scope):
   self.ensure(scope)
@@ -185,7 +219,8 @@ CREATE TABLE IF NOT EXISTS circuit(name TEXT PRIMARY KEY,failures INTEGER NOT NU
   with closing(self.db()) as c,c:c.execute('UPDATE scope SET next_at=? WHERE scope=?',(time.time()+seconds,scope))
  def join(self,scope,now,commit=False):
   cfg=self.ensure(scope)
-  if cfg['paused'] or cfg['level']<3 or not cfg['interest_join'] or now-cfg['last_join']<1200:return False
+  routes=self._reply_routes(cfg)
+  if cfg['paused'] or cfg['level']<3 or not routes['p1'] or not routes['interest'] or now-cfg['last_join']<1200:return False
   with closing(self.db()) as c,c:
    n=c.execute("SELECT COUNT(*) FROM action WHERE scope=? AND kind='interest_join' AND state IN ('reserved','complete','unknown') AND at>?",(scope,now-86400)).fetchone()[0]
    if n>=4:return False
@@ -204,6 +239,7 @@ CREATE TABLE IF NOT EXISTS circuit(name TEXT PRIMARY KEY,failures INTEGER NOT NU
   return key
  def context(self,scope,query=''):
   cfg=self.ensure(scope)
+  routes=self._reply_routes(cfg);cfg['interest_join']=routes['p1']
   with closing(self.db()) as c:
    feedback=[dict(x) for x in c.execute("SELECT id,rule,evidence,expires FROM feedback WHERE rule IN ('brief','detailed','listen_first','fewer_questions','no_images','plain_qq') AND scope=? AND active=1 AND expires>? ORDER BY at DESC LIMIT 5",(scope,time.time()))]
    actions=[dict(x) for x in c.execute('SELECT kind,state,at,seconds,details FROM action WHERE scope=? ORDER BY at DESC LIMIT 8',(scope,))]
@@ -212,7 +248,7 @@ CREATE TABLE IF NOT EXISTS circuit(name TEXT PRIMARY KEY,failures INTEGER NOT NU
   for g in goals:g['notes']=g['notes'][:500]
   events=self.search(scope,query,5)
   for e in events:e['text']=e['text'][:600]
-  return {'control':cfg,'interests':self.interests(scope),'goals':goals,'events':events,'explicit_feedback':feedback,'topics':topics,'recent_actions':actions,'shared_device_budget':self.budget()}
+  return {'control':cfg,'reply_routes':routes,'interests':self.interests(scope),'goals':goals,'events':events,'explicit_feedback':feedback,'topics':topics,'recent_actions':actions,'shared_device_budget':self.budget()}
  def wipe(self,scope):
   self.ensure(scope)
   with closing(self.db()) as c,c:

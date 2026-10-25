@@ -53,6 +53,13 @@ async def main():
    assert event.stopped
    assert not event.get_extra('_p1_group_admitted') and not event.get_extra('activated_handlers')
    return event,replies[before:]
+  route_command=CommandFilter('主动线路',handler_md=N(handler=AffectPlugin.reply_route_control))
+  async def private_route(text,sender='20001',web=False):
+   event=Event(text,sender=sender)
+   if web:event.get_platform_id=lambda:'webchat'
+   assert route_command.filter(event,{})
+   out=[x async for x in p.reply_route_control(event,**event.get_extra('parsed_params'))]
+   return ''.join(x.text for r in out for x in r.chain)
   try:
    # Native private command parsing and durable configuration, both argument orders.
    for text,want in (('/群内主动 关闭 30001',0),('/群内主动 开启 30001',1),('/群内主动 30001 关闭',0),('/群内主动 30001 开启',1)):
@@ -92,6 +99,29 @@ async def main():
    # Unrelated management commands are never offered the narrow bypass.
    assert not await p.groups.control(Event('/浏览授权 example.org','30001'))
    assert not await p.groups.control(Event('转述：/群内主动 关闭','30001'))
+   # Independent native/P1 and P1 sub-route controls use the same narrow owner bypass.
+   for text,key,want in [('/主动线路 原生 开启','native',1),('/主动线路 P1 关闭','p1',0),('/主动线路 兴趣 关闭','interest',0),('/主动线路 后台 关闭','background',0)]:
+    assert (await group(text))[1];assert p.agency.store.reply_routes(scope)[key]==want
+   assert p.agency.store.reply_routes(scope)=={'native':1,'p1':0,'interest':0,'background':0}
+   assert p.agency.store.reply_routes(other)['native']==0
+   assert '原生概率开' in await private_route('/主动线路 状态 30001')
+   assert '本群' in (await group('/主动线路 原生 关闭 30002'))[1][0]
+   assert not (await group('/主动线路 原生 关闭',sender='20002'))[1]
+   assert not await private_route('/主动线路 原生 关闭 30001',sender='20002')
+   assert 'QQ主人' in await private_route('/主动线路 原生 关闭 30001',web=True)
+   assert p.agency.store.reply_routes(scope)['native']==1
+   assert '用法' in await private_route('/主动线路 错误 开启 30001')
+   assert '尚未开启' in await private_route('/主动线路 原生 开启 39999')
+   assert (await group('/主动线路 全部 关闭'))[1]
+   assert not any(p.agency.store.reply_routes(scope).values())
+   assert '原生概率开' in await private_route('/主动线路 原生 开启 30001')
+   assert p.agency.store.reply_routes(scope)['p1']==0
+   await private_route('/主动线路 兴趣 开启 30001');await private_route('/主动线路 后台 开启 30001')
+   await private('/群内主动 开启 30001')
+   assert p.agency.store.reply_routes(scope)=={'native':1,'p1':1,'interest':1,'background':1}
+   # Legacy P1 control must not modify the independently enabled native route.
+   await private('/群内主动 关闭 30001');assert p.agency.store.reply_routes(scope)['native']==1
+   await private('/群内主动 开启 30001')
    # Availability and authority revocation cannot turn into a traceback or leak reply.
    p.agency.ready=False;assert '准备中' in await private('/群内主动 关闭 30001');p.agency.ready=True
    assert p.agency.store.ensure(scope)['interest_join']==1
@@ -107,6 +137,6 @@ async def main():
    p.agency.store.config(scope,interest_join=1)
    assert all(2<=x.args[0]<=5 for x in p.reply_pause.await_args_list)
    assert not p.groups.route.await_args_list
-   print(json.dumps({'native_command_filter':True,'native_group_waking_stage':True,'owner_private_and_current_group':True,'both_argument_orders':True,'status_on_off_durable':True,'new_group_isolation':True,'nonowner_and_unenrolled_silent':True,'webchat_consumed_without_model_or_shell':True,'other_admin_handlers_unreachable':True,'revocation_during_delay_cancels_reply':True,'unavailable_module_reported':True,'each_qq_reply_delayed_2_to_5':True,'model_requests':0,'real_qq_messages':0,'production_database_modified':False},ensure_ascii=False))
+   print(json.dumps({'native_command_filter':True,'native_group_waking_stage':True,'owner_private_and_current_group':True,'both_argument_orders':True,'status_on_off_durable':True,'independent_native_and_p1_controls':True,'independent_interest_and_background_controls':True,'legacy_p1_control_preserves_native':True,'all_off_control':True,'new_group_isolation':True,'nonowner_and_unenrolled_silent':True,'webchat_consumed_without_model_or_shell':True,'other_admin_handlers_unreachable':True,'revocation_during_delay_cancels_reply':True,'unavailable_module_reported':True,'each_qq_reply_delayed_2_to_5':True,'model_requests':0,'real_qq_messages':0,'production_database_modified':False},ensure_ascii=False))
   finally:await p.terminate()
 asyncio.run(main())

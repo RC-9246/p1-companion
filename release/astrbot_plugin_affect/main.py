@@ -1125,8 +1125,45 @@ class AffectPlugin(Star):
             yield event.plain_result('自主模块还在准备中，请稍后重试');return
         scope=self.qq.group_key(row['bot'],group)
         if mode in ('开启','关闭'):await asyncio.to_thread(self.agency.store.config,scope,interest_join=int(mode=='开启'))
-        cfg=await asyncio.to_thread(self.agency.store.ensure,scope)
-        yield event.plain_result('本群主动发言'+('已开启' if cfg['interest_join'] else '已关闭')+'；会结合兴趣与上下文选择是否插话，仍遵守免打扰、冷却和发送额度。被点名的正常回复不受这个开关影响')
+        routes=await asyncio.to_thread(self.agency.store.reply_routes,scope)
+        yield event.plain_result('本群P1智能主动'+('已开启' if routes['p1'] else '已关闭')+'；兴趣插话'+('开' if routes['interest'] else '关')+'，后台联系'+('开' if routes['background'] else '关')+'。原生概率线路独立控制：/主动线路 状态；被点名的正常回复不受影响')
+
+    @filter.command('主动线路')
+    async def reply_route_control(self,event:AstrMessageEvent,lane:str='状态',mode:str='状态',group:str=''):
+        event.stop_event()
+        if event.get_platform_id()!='qq_snowluma':
+            yield event.plain_result('请由QQ主人在已开启群内发送 /主动线路 状态，或私聊发送 /主动线路 状态 群号');return
+        if not authorized(event,private_only=False):return
+        lane=str(lane).strip();mode=str(mode).strip();group=str(group).strip()
+        if lane=='状态' and mode.isdigit() and not group:group=mode;mode='状态'
+        names={'原生':'native','P1':'p1','p1':'p1','兴趣':'interest','后台':'background'}
+        if lane not in (*names,'状态','全部') or mode not in ('开启','关闭','状态'):
+            yield event.plain_result('用法：/主动线路 原生、P1、兴趣或后台 开启/关闭/状态；私聊在末尾加群号。全部 关闭可停止两路主动');return
+        if not event.is_private_chat():
+            from .group_chat import is_group
+            if not is_group(event) or not self.groups.allowed(event):return
+            current=str(event.get_group_id())
+            if group and group!=current:yield event.plain_result('群内命令只能修改本群；管理其他群请私聊我');return
+            group=current
+        elif not group:
+            choices=[r['group'] for r in self.groups.policy() if r['bot']==str(event.get_self_id())]
+            if len(choices)==1:group=choices[0]
+        if not re.fullmatch(r'[0-9]{5,20}',group):yield event.plain_result('请指定群号：/主动线路 原生 开启 群号；群内直接用 /主动线路 原生 开启');return
+        if {'bot':str(event.get_self_id()),'group':group} not in self.groups.policy():yield event.plain_result('这个群尚未开启群聊');return
+        if not self.qq or not self.qq.ready or not self.agency.ready:yield event.plain_result('自主模块还在准备中，请稍后重试');return
+        scope=self.qq.group_key(str(event.get_self_id()),group)
+        if mode in ('开启','关闭') and lane!='状态':
+            change={k:int(mode=='开启') for k in ('native','p1','interest','background')} if lane=='全部' else {names[lane]:int(mode=='开启')}
+            await asyncio.to_thread(self.agency.store.route_config,scope,**change)
+        routes=await asyncio.to_thread(self.agency.store.reply_routes,scope);cfg=await asyncio.to_thread(self.agency.store.ensure,scope)
+        label=lambda value:'开' if value else '关'
+        hint='；当前自主空间已暂停或等级不足3' if cfg['paused'] or cfg['level']<3 else ''
+        try:
+            native=self.context.get_config(umo='qq_snowluma:GroupMessage:'+group)['provider_ltm_settings']['active_reply']
+            value=native.get('possibility_reply');prob=str(round(value*100,1))+'%' if type(value) in (int,float) and 0<=value<=1 else '未知'
+            ui='（面板'+label(native.get('enable') is True)+'，概率'+prob+'）'
+        except (KeyError,TypeError,ValueError):ui='（面板状态暂不可读）'
+        yield event.plain_result('本群主动线路：原生概率'+label(routes['native'])+ui+'；P1智能'+label(routes['p1'])+'（兴趣'+label(routes['interest'])+'、后台'+label(routes['background'])+'）'+hint+'。原生还遵循AstrBot面板的主动回复总开关、概率和白名单；两路共用免打扰及发送限额，同一消息最多回复一次。/群内主动 只控制P1，正常@回复不受影响')
 
     @filter.llm_tool(name='p1_qq_detail')
     async def qq_detail_tool(self,event:AstrMessageEvent,action:str='capabilities',message_ref:str='',value:str=''):

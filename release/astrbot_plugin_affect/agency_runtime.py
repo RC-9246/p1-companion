@@ -93,7 +93,7 @@ class Agency:
   scope=self.scope(event)
   if not scope or not await asyncio.to_thread(self.store.join,scope,time.time()):return False
   qq=self.plugin.qq;row=await asyncio.to_thread(qq.store.target,qq.event_ref(event))
-  if not row or not qq.autonomy_allowed(row) or not qq.store.can_action(row,time.time(),qq.policy(),True):return False
+  if not row or not qq.autonomy_allowed(row,'interest') or not qq.store.can_action(row,time.time(),qq.policy(),True):return False
   matched=[r['topic'] for r in await asyncio.to_thread(self.store.interests,scope) if r['score']>=.45 and any(w in text.lower() for w in TOPICS[r['topic']].split())]
   if not matched:return False
   # Each group can cause at most 12 interest classifiers/day, even in a busy room.
@@ -186,7 +186,7 @@ class Agency:
      if time.time()-goal['due']>86400:await asyncio.to_thread(self.store.update_goal,scope,goal['id'],'abandoned','提醒过期一天，未补发');status='quiet';return
      # Claim before sending; an unknown receipt is never automatically replayed.
      await asyncio.to_thread(self.store.update_goal,scope,goal['id'],'active','正在投递提醒')
-     result=await self.plugin.qq.perform(row,'reminder:'+goal['id'],'message','send_private_msg' if row['kind']=='private' else 'send_group_msg',{'user_id' if row['kind']=='private' else 'group_id':int(row['peer']),'message':[{'type':'text','data':{'text':self.plugin.qq.plain('提醒一下：'+goal['title'])}}]},proactive=True,text='提醒一下：'+goal['title'],guard=lambda:self.row_valid(row))
+     result=await self.plugin.qq.perform(row,'reminder:'+goal['id'],'message','send_private_msg' if row['kind']=='private' else 'send_group_msg',{'user_id' if row['kind']=='private' else 'group_id':int(row['peer']),'message':[{'type':'text','data':{'text':self.plugin.qq.plain('提醒一下：'+goal['title'])}}]},proactive=True,text='提醒一下：'+goal['title'],guard=lambda:self.row_valid(row),auto_lane='reminder')
      await asyncio.to_thread(self.store.update_goal,scope,goal['id'],'done' if result.get('ok') else 'failed','真实送达' if result.get('ok') else '未确认送达，不自动重发');status='complete';return
     state=await asyncio.to_thread(self.plugin.store.read_emotion,scope) if row['kind']=='private' else {}
     view=getattr(getattr(self.plugin,'store',None),'budget_status',None)

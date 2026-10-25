@@ -1,0 +1,19 @@
+{
+  "native_probability_predicate_used": true,
+  "four_native_p1_combinations": true,
+  "p1_selected_before_probability_fallback": true,
+  "native_ui_enable_probability_whitelist_honored": true,
+  "independent_interest_and_background": true,
+  "same_message_deduplicated": true,
+  "single_scoped_transport_and_receipt": true,
+  "shared_proactive_limit_ledger": true,
+  "late_disable_cancels_send": true,
+  "stale_directory_denied_then_verified_refresh": true,
+  "quiet_pause_and_enrollment_preserved": true,
+  "normal_mentions_with_both_routes_off": true,
+  "delay_2_to_5_preserved": true,
+  "fake_qq_sends": 1,
+  "real_qq_sends": 0,
+  "model_requests": 0,
+  "production_database_modified": false
+}
