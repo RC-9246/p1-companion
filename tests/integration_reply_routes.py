@@ -24,6 +24,9 @@ async def run():
   (d/'qq_policy.json').write_text(json.dumps(dict(DEFAULT,enabled=True)))
   native={'enable':True,'method':'possibility_reply','possibility_reply':1.0,'whitelist':[]}
   cfg={'platform_settings':{'enable_id_white_list':True,'id_whitelist':['qq_snowluma:FriendMessage:20002']},'provider_ltm_settings':{'active_reply':native}}
+  from astrbot_plugin_affect.thinking import FAST_PROVIDER,MAX_PROVIDER
+  cfg['provider']=[{'id':FAST_PROVIDER,'enable':True,'model':'deepseek-flash','custom_extra_body':{'thinking':{'type':'disabled'},'max_tokens':2048}},
+   {'id':MAX_PROVIDER,'enable':True,'model':'deepseek-flash','custom_extra_body':{'reasoning_effort':'max','thinking':{'type':'enabled'}}}]
   (d.parents[1]/'cmd_config.json').write_text(json.dumps(cfg))
   api=API();delays=[]
   async def send_group_msg(**kw):return await api.call_action('send_group_msg',**kw)
@@ -34,6 +37,9 @@ async def run():
   p=AffectPlugin(ctx)
   async def pause(n):delays.append(n)
   p.reply_pause=pause;await p.initialize()
+  assert not json.loads((d/'companion_health.json').read_text())['quick_group_provider_ready']
+  ctx.provider_manager.inst_map={FAST_PROVIDER:N()};await p.provider_ready_health()
+  assert json.loads((d/'companion_health.json').read_text())['quick_group_provider_ready']
   class E(Event):
    seq=0
    def __init__(self,parts=None,group='30003'):
@@ -57,6 +63,7 @@ async def run():
      e=E();accepted=await p.groups.route(e);assert accepted==bool(a or b)
      if accepted:
       assert e.get_extra('_p1_group_auto_route')==('interest' if b else 'native')
+      assert e.get_extra('selected_provider')==FAST_PROVIDER
       assert not await p.groups.route(e),'same actual message cannot be selected twice'
       await p.groups.finish(e)
     p.agency.store.route_config(scope,native=1,p1=0)
@@ -69,6 +76,8 @@ async def run():
     # Only one scoped send, through delay and shared proactive reservation.
     e=E();assert await p.groups.route(e);await e.send(MessageChain([Plain('这段节奏确实挺特别')]))
     assert len(api.sent)==1 and api.sent[0][0]=='send_group_msg'
+    timing=json.loads((d/'group_latency_last.json').read_text());assert timing['route']=='native' and timing['effort']=='fast' and timing['required_delay_ms'] is not None
+    assert '20003' not in json.dumps(timing) and '30003' not in json.dumps(timing)
     with p.qq.store.db() as c:
      row=c.execute('SELECT event,proactive,state FROM p1_qq_actions').fetchone()
      assert row['event'].startswith('native:') and row['proactive']==1 and row['state']=='sent'
@@ -92,8 +101,9 @@ async def run():
     # Explicit @ remains conversational when all unsolicited routes are off.
     p.agency.store.route_config(scope,native=0,p1=0);e=E([At(qq='10001'),Plain('你好')])
     assert await p.groups.route(e) and not e.get_extra('_p1_group_auto_route');await p.groups.finish(e)
+    assert e.get_extra('selected_provider')==MAX_PROVIDER
     assert all(2<=x<=5 for x in delays)
   finally:await p.terminate()
-  result={'native_probability_predicate_used':True,'four_native_p1_combinations':True,'p1_selected_before_probability_fallback':True,'native_ui_enable_probability_whitelist_honored':True,'independent_interest_and_background':True,'same_message_deduplicated':True,'single_scoped_transport_and_receipt':True,'shared_proactive_limit_ledger':True,'late_disable_cancels_send':True,'stale_directory_denied_then_verified_refresh':True,'quiet_pause_and_enrollment_preserved':True,'normal_mentions_with_both_routes_off':True,'delay_2_to_5_preserved':True,'fake_qq_sends':1,'real_qq_sends':0,'model_requests':0,'production_database_modified':False}
+  result={'native_probability_predicate_used':True,'four_native_p1_combinations':True,'p1_selected_before_probability_fallback':True,'native_ui_enable_probability_whitelist_honored':True,'independent_interest_and_background':True,'same_message_deduplicated':True,'single_scoped_transport_and_receipt':True,'shared_proactive_limit_ledger':True,'late_disable_cancels_send':True,'stale_directory_denied_then_verified_refresh':True,'quiet_pause_and_enrollment_preserved':True,'normal_mentions_with_both_routes_off':True,'casual_auto_selects_quick_after_real_admission':True,'normal_mention_keeps_max':True,'content_free_phase_metrics_written_after_receipt':True,'delay_2_to_5_preserved':True,'fake_qq_sends':1,'real_qq_sends':0,'model_requests':0,'production_database_modified':False}
   (R/'evidence/reply-routes-native.json').write_text(json.dumps(result,indent=2));print(json.dumps(result))
 if __name__=='__main__':asyncio.run(run())

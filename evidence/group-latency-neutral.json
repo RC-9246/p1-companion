@@ -1,0 +1,10 @@
+{
+  "native_sdk_suites": {
+    "integration_reply_routes.py": true,
+    "integration_latency.py": true
+  },
+  "neutral_core_tests": 171,
+  "real_model_calls": 0,
+  "real_qq_messages": 0,
+  "production_database_modified": false
+}

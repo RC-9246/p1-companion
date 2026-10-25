@@ -1,0 +1,18 @@
+{
+  "background_gate_held_foreground_still_completed": true,
+  "foreground_vote_seconds": 0.002,
+  "busy_foreground_skips_without_api_or_budget": true,
+  "whole_vote_deadline_seconds": 3,
+  "observed_timeout_seconds": 3.004,
+  "timeout_revocation_cancellation_release_gate": true,
+  "destination_and_budget_checked": true,
+  "busy_affect_fallback_seconds": 0.003,
+  "appraisal_provider_timeout_seconds": 5.013,
+  "appraisal_fallback_keeps_scoped_emotion_hint": true,
+  "decision_tokens_cap": 160,
+  "decision_thinking_disabled": true,
+  "decision_sdk_retries": 0,
+  "real_model_calls": 0,
+  "real_qq_messages": 0,
+  "production_database_modified": false
+}

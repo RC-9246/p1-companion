@@ -29,7 +29,7 @@ from .browser_policy import DEFAULT_DOMAINS, hostname, domains
 from .privacy_logging import install as install_privacy, remove as remove_privacy
 from .social_runtime import SocialController
 from .qq_runtime import QQController
-from .thinking import Thinking,GUIDANCE
+from .thinking import Thinking,GUIDANCE,FAST_PROVIDER,latency_mark,latency_report
 from .public_research import Research
 from .agency_runtime import Agency
 from .reactions import Catalog, ReactionStore, eligible_context
@@ -178,9 +178,12 @@ class AffectPlugin(Star):
             return
         original_send=event.send
         async def delayed_send(message):
+            latency_mark(event,'send_queued')
             async with self.reply_gate:
+                latency_mark(event,'send_unlocked')
                 delay=secrets.SystemRandom().uniform(2.0,5.0)
                 await self.reply_pause(delay)
+                latency_mark(event,'send_delayed')
                 pending=event.get_extra('_p1_companion_pending')
                 if pending and companion_identity(event,self.context)!=pending['identity']:
                     pending['failed']=True;event.set_extra('_p1_send_cancelled',True);return
@@ -188,7 +191,13 @@ class AffectPlugin(Star):
                 if guard and not guard():
                     event.set_extra('_p1_send_cancelled',True)
                     return
-                return await self.send_with_reaction(event,message,original_send)
+                result=await self.send_with_reaction(event,message,original_send)
+                try:
+                    if getattr(event,'get_group_id',lambda:'')() and getattr(event,'_has_send_oper',False) and not event.get_extra('_p1_send_cancelled') and not event.get_extra('_p1_latency_reported'):
+                        event.set_extra('_p1_latency_reported',True)
+                        await asyncio.to_thread(atomic_json,DATA/'group_latency_last.json',latency_report(event))
+                except Exception as exc:logger.info('[P1 Latency] record_skipped code='+type(exc).__name__)
+                return result
         event.send=delayed_send
         event.set_extra('_p1_reply_delay_installed',True)
 
@@ -256,6 +265,11 @@ class AffectPlugin(Star):
             self.store=None
             logger.error('[P1 Companion] initialization_degraded code='+type(exc).__name__)
 
+    @filter.on_astrbot_loaded()
+    async def provider_ready_health(self):
+        # Provider loading follows plugin initialization in this AstrBot build.
+        if self.enabled():self.health('ready')
+
     async def terminate(self):
         await self.agency.stop()
         self.groups.close()
@@ -313,7 +327,8 @@ class AffectPlugin(Star):
             'qq_actions_ready':bool(self.qq and self.qq.ready),
             'qq_known_targets':len(self.qq.targets) if self.qq else 0,
             'agency_ready':self.agency.ready,'attachment_decoding_ready':self.agency.ready,
-            'thinking_router_ready':hasattr(self,'thinking'),'public_research_ready':hasattr(self,'research')})
+            'thinking_router_ready':hasattr(self,'thinking'),'public_research_ready':hasattr(self,'research'),
+            'quick_group_provider_ready':bool(getattr(getattr(self.context,'provider_manager',None),'inst_map',{}).get(FAST_PROVIDER))})
 
     def enabled(self):
         return self.store is not None and not (DATA/'companion.disabled').exists()
@@ -482,6 +497,7 @@ class AffectPlugin(Star):
     @filter.on_llm_response(priority=-35000)
     async def ground_media_response(self,event:AstrMessageEvent,response):
         if not self.scope_for(event) or getattr(response,'role',None)!='assistant' or getattr(response,'tools_call_name',[]):return
+        latency_mark(event,'response_ready')
         from .reply_chunks import ground_media_reply
         original=getattr(response,'completion_text','')
         revised=ground_media_reply(original,str(getattr(event.message_obj,'message_str','')),event.get_extra('_p1_media_evidence'))
@@ -496,6 +512,7 @@ class AffectPlugin(Star):
         pending=event.get_extra('_p1_companion_pending')
         emotion_pending=pending or event.get_extra('_p1_group_affect_pending')
         if emotion_pending and getattr(response,'role',None)=='assistant' and not getattr(response,'tools_call_name',[]):
+            latency_mark(event,'response_ready')
             prompt=str(getattr(event.message_obj,'message_str',''))
             response.completion_text=natural_reply(getattr(response,'completion_text',''),emotion_pending['appraisal'],prompt)
             response.completion_text=await self.review_reply(event,response.completion_text,emotion_pending['appraisal'],prompt)
@@ -949,9 +966,10 @@ class AffectPlugin(Star):
         with closing(self.thinking.db()) as c:
             rows=c.execute("SELECT kind,effort,status,COUNT(*) FROM p1_thinking_audit WHERE scope=? AND at>? GROUP BY kind,effort,status",(scope,time.time()-86400)).fetchall()
         routed=sum(n for kind,effort,status,n in rows if kind=='native_route' and effort=='max')
+        quick=sum(n for kind,effort,status,n in rows if kind=='native_route' and effort=='fast')
         voluntary=sum(n for kind,effort,status,n in rows if kind=='voluntary' and status=='complete')
         background=sum(n for kind,effort,status,n in rows if kind in ('idle','autonomous','reflection','agency') and effort=='max' and status=='complete')
-        yield event.plain_result('当前会话：实质性对话优先max，简短寒暄high；可以自主深入权衡。过去24小时选择max '+str(routed)+'轮，深入权衡成功'+str(voluntary)+'次，后台max完成'+str(background)+'次。选择次数不等于接口成功次数；不展示内部思考原文。')
+        yield event.plain_result('当前会话：普通群内主动接话优先快速配置，复杂情绪与认真分析保留max，仍可自主深入权衡。过去24小时选择快速回复'+str(quick)+'轮、max '+str(routed)+'轮，深入权衡成功'+str(voluntary)+'次，后台max完成'+str(background)+'次。选择次数不等于接口成功次数；不展示内部思考原文。')
 
     @filter.llm_tool(name='p1_deliberate')
     async def deliberate_tool(self,event:AstrMessageEvent,question:str):

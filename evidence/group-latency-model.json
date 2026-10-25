@@ -1,0 +1,59 @@
+{
+  "synthetic_only": true,
+  "model": "deepseek-flash",
+  "same_existing_account_and_endpoint": true,
+  "real_private_context_sent": false,
+  "real_qq_messages": 0,
+  "model_requests": 4,
+  "records": [
+    {
+      "case": 1,
+      "mode": "max",
+      "seconds": 1.621,
+      "ok": true,
+      "reply_characters": 30,
+      "reasoning_tokens": 54,
+      "completion_tokens": 76,
+      "service_offer_phrase": false,
+      "markdown_heading": false
+    },
+    {
+      "case": 1,
+      "mode": "quick",
+      "seconds": 0.783,
+      "ok": true,
+      "reply_characters": 31,
+      "reasoning_tokens": 0,
+      "completion_tokens": 21,
+      "service_offer_phrase": false,
+      "markdown_heading": false
+    },
+    {
+      "case": 2,
+      "mode": "quick",
+      "seconds": 0.952,
+      "ok": true,
+      "reply_characters": 34,
+      "reasoning_tokens": 0,
+      "completion_tokens": 23,
+      "service_offer_phrase": false,
+      "markdown_heading": false
+    },
+    {
+      "case": 2,
+      "mode": "max",
+      "seconds": 2.096,
+      "ok": true,
+      "reply_characters": 42,
+      "reasoning_tokens": 153,
+      "completion_tokens": 182,
+      "service_offer_phrase": false,
+      "markdown_heading": false
+    }
+  ],
+  "median_model_seconds": {
+    "max": 1.859,
+    "quick": 0.867
+  },
+  "limits": "Two short synthetic scenes only; excludes production prompt, tools, appraisal, queue, required 2\u20135s delay and QQ transport; not a guarantee of chat latency or emotional quality."
+}

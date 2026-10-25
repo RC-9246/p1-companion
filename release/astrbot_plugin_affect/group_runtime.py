@@ -14,6 +14,7 @@ from pathlib import Path
 from astrbot.api import logger
 from astrbot.core.agent.message import TextPart
 from astrbot.core.agent.tool import ToolSet
+from .thinking import latency_mark
 from .group_chat import (GroupState,FairQueue,PUBLIC_PERSONA,ROUTER_PROMPT,is_group,
                          member,parse_route,scope,signals)
 
@@ -220,6 +221,7 @@ class Groups:
         event.set_extra('provider_request',request)
     async def route(self,event):
         if not self.allowed(event) or str(event.get_sender_id())==str(event.get_self_id()):return False
+        latency_mark(event,'input')
         qq=getattr(self.plugin,'qq',None)
         if qq:
             try:await qq.observe(event)
@@ -290,6 +292,7 @@ class Groups:
             event.set_extra('enable_streaming',False)
             event.set_extra('_p1_qq_send_guard',lambda:self.valid(event))
             self.plugin.install_reply_delay(event)
+            latency_mark(event,'admitted')
             return True
         finally:
             if not event.get_extra('_p1_group_admitted',False) and v['busy'] and v['busy'][0]==token:v['busy']=None
@@ -347,6 +350,7 @@ class Groups:
         if event.get_extra('_p1_group_auto_route')=='native':request.system_prompt+='\n本次由群聊概率接话机制选中，当前群友没有点名或要求你回答。结合当前公开话题自然接一句即可，不假装被询问，不逐条总结全群，不制造亲密关系，也不解释概率机制。'
         from .thinking import GUIDANCE
         request.system_prompt+=GUIDANCE
+        latency_mark(event,'prompt_ready')
     async def send(self,event,message):
         if not self.valid(event):event.set_extra('_p1_send_cancelled',True);return
         from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import AiocqhttpMessageEvent

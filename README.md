@@ -126,3 +126,5 @@ sudo python3 tests/portable_leisure_install.py
 群聊本轮图与同群引用图的输入修复、验证和适用边界见 [群聊图片说明](docs/group-image-fix.md)。
 
 原生概率接话与 P1 智能主动的独立开关：[主动线路控制](docs/reply-routes.md)。
+
+群内主动接话排队和模型参数优化：[延迟修复、复现与测量边界](docs/group-latency.md)。

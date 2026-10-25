@@ -1,8 +1,9 @@
 import json,sys,tempfile,unittest
 from pathlib import Path
 from types import SimpleNamespace as N
+from unittest.mock import patch
 R=Path(__file__).resolve().parents[1];sys.path.insert(0,str(R/'release'));sys.path.insert(0,str(R/'tests'))
-from astrbot_plugin_affect.thinking import Thinking,effort_for,MAX_PROVIDER
+from astrbot_plugin_affect.thinking import Thinking,effort_for,MAX_PROVIDER,FAST_PROVIDER,latency_report
 from astrbot_plugin_affect.public_research import Research
 from test_qq_actions import Event
 class ThinkingTests(unittest.IsolatedAsyncioTestCase):
@@ -23,7 +24,7 @@ class ThinkingTests(unittest.IsolatedAsyncioTestCase):
  async def asyncTearDown(self):self.tmp.cleanup()
  def test_small_ack_and_substantive_topics(self):
   for x in ['嗯','谢谢你','晚安','哈哈哈！','好的']:self.assertEqual(effort_for(x),'high')
-  for x in ['我很难过，但又觉得自己没资格难过','你怎么看','帮我比较这几条记录再决定怎么回','最近呢','伙伴，你觉得我们这样合适吗']:self.assertEqual(effort_for(x),'max')
+  for x in ['我很难过，但又觉得自己没资格难过','你怎么看','帮我比较这几条记录再决定怎么回','最近呢','沙季，你觉得我们这样合适吗']:self.assertEqual(effort_for(x),'max')
  async def test_native_route_is_event_local_not_global(self):
   a=Event(text='我有点矛盾，不知道怎么面对这件事');b=Event(text='谢谢')
   await self.t.select(a);await self.t.select(b)
@@ -34,6 +35,30 @@ class ThinkingTests(unittest.IsolatedAsyncioTestCase):
  async def test_missing_or_disabled_max_does_not_break_normal_chat(self):
   self.cfg['provider'][0]['enable']=False;e=Event(text='认真解释一下')
   await self.t.select(e);self.assertIsNone(e.get_extra('selected_provider'));self.assertEqual(e.get_extra('_p1_thinking_selected'),'high')
+ async def test_casual_autonomous_group_reply_uses_scoped_quick_provider(self):
+  self.cfg['provider'].append({'id':FAST_PROVIDER,'enable':True,'model':'deepseek-flash','custom_extra_body':{'thinking':{'type':'disabled'},'max_tokens':2048}})
+  for lane in ('native','interest'):
+   e=Event(group='30003',text='这个配乐的节奏真不错');e.set_extra('_p1_group_auto_route',lane)
+   await self.t.select(e);self.assertEqual(e.get_extra('selected_provider'),FAST_PROVIDER);self.assertEqual(e.get_extra('_p1_thinking_selected'),'fast')
+  private=Event(text='这个配乐的节奏真不错');await self.t.select(private);self.assertEqual(private.get_extra('selected_provider'),MAX_PROVIDER)
+  serious=Event(group='30003',text='我很难过，不知道该怎么办');serious.set_extra('_p1_group_auto_route','native')
+  await self.t.select(serious);self.assertEqual(serious.get_extra('selected_provider'),MAX_PROVIDER)
+  self.assertEqual(self.cfg['provider'][0]['custom_extra_body'],{'reasoning_effort':'max'})
+ async def test_missing_malformed_and_unapproved_quick_fall_back(self):
+  for body in (None,{'thinking':{'type':'disabled'},'max_tokens':'2048'},{'thinking':{'type':'enabled'},'max_tokens':2048}):
+   self.cfg['provider'][:]=self.cfg['provider'][:1];self.cfg['provider'].append({'id':FAST_PROVIDER,'enable':True,'model':'deepseek-flash','custom_extra_body':body})
+   e=Event(group='30003',text='这段配乐挺好听');e.set_extra('_p1_group_auto_route','native');await self.t.select(e)
+   self.assertEqual(e.get_extra('selected_provider'),MAX_PROVIDER)
+  self.cfg['provider'][-1]['custom_extra_body']={'thinking':{'type':'disabled'},'max_tokens':2048}
+  async def wrong(*a):return N(client=N(base_url=N(host='example.com',scheme='https')))
+  self.plugin.context.provider_manager.get_provider_by_id=wrong
+  e=Event(group='30003',text='这段配乐挺好听');e.set_extra('_p1_group_auto_route','native');await self.t.select(e)
+  self.assertEqual(e.get_extra('selected_provider'),MAX_PROVIDER)
+ def test_latency_metrics_split_delay_from_generation_without_content(self):
+  e=Event(text='password=synthetic_secret');e.set_extra('_p1_reply_clock',{'start':0,'input':0,'admitted':2,'prompt_ready':3,'response_ready':7,'send_queued':8,'send_unlocked':10,'send_delayed':13})
+  with patch('time.monotonic',return_value=14):r=latency_report(e)
+  self.assertEqual(r['total_ms'],14000);self.assertEqual(r['send_queue_ms'],2000);self.assertEqual(r['required_delay_ms'],3000);self.assertEqual(r['generation_and_tools_ms'],4000)
+  self.assertNotIn('synthetic_secret',json.dumps(r));self.assertNotIn('20002',json.dumps(r))
  async def test_revoked_scope_never_routes_or_deliberates(self):
   self.valid=False;e=Event(text='帮我思考');await self.t.select(e)
   self.assertIsNone(e.get_extra('selected_provider'));self.assertFalse((await self.t.deliberate(e,'合成问题'))['ok']);self.assertFalse(self.calls)

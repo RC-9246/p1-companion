@@ -1,0 +1,11 @@
+{
+  "bound_group_reply_samples": 1,
+  "observed_input_to_local_reply_record_seconds": 16.94,
+  "not_a_network_trace": true,
+  "unbound_background_messages_excluded": true,
+  "causes_confirmed_in_source": [
+    "foreground_interest_shared_background_gate",
+    "max_selected_for_casual_automatic_messages",
+    "group_affect_gate_wait_outside_network_timeout"
+  ]
+}

@@ -45,12 +45,15 @@ class P1GroupAffect(Star):
   if not pending:
    text=scene['current']['text'];a=fallback(text)
    try:
-    if await asyncio.to_thread(groups.plugin.store.take_budget,120,bucket=5):
-     async with self.gate:
-      provider=await groups.provider(event)
-      payload={'current':text[:1000],'speaker':member,'recent':scene['messages'][-8:]}
-      out=await asyncio.wait_for(provider.client.with_options(timeout=4,max_retries=0).chat.completions.create(model=provider.get_model(),messages=[{'role':'system','content':CLASSIFIER_PROMPT+'\n这是公开群聊，只评估当前发言者对当前话题的态度；其他人的情绪不得归给当前发言者，不推断私人关系。'},{'role':'user','content':json.dumps(payload,ensure_ascii=False)}],temperature=0,max_tokens=900,response_format={'type':'json_object'},extra_body={'thinking':{'type':'disabled'}}),5)
-      a=parse_appraisal(out.choices[0].message.content,text)
+    # Bound the entire appraisal, including provider lookup and gate wait.
+    # A busy classifier uses the existing conservative fallback immediately.
+    async with asyncio.timeout(5):
+     if not self.gate.locked() and await asyncio.to_thread(groups.plugin.store.take_budget,120,bucket=5):
+      async with self.gate:
+       provider=await groups.provider(event)
+       payload={'current':text[:1000],'speaker':member,'recent':scene['messages'][-8:]}
+       out=await provider.client.with_options(timeout=4,max_retries=0).chat.completions.create(model=provider.get_model(),messages=[{'role':'system','content':CLASSIFIER_PROMPT+'\n这是公开群聊，只评估当前发言者对当前话题的态度；其他人的情绪不得归给当前发言者，不推断私人关系。'},{'role':'user','content':json.dumps(payload,ensure_ascii=False)}],temperature=0,max_tokens=900,response_format={'type':'json_object'},extra_body={'thinking':{'type':'disabled'}})
+       a=parse_appraisal(out.choices[0].message.content,text)
    except Exception as exc:logger.info('[P1 Group Affect] appraisal_fallback code='+type(exc).__name__)
    pending={'scope':scope,'member':member,'appraisal':a,'event':scene['current']['id'],'epoch':scene['epoch'],'ready':False,'ack':False,'failed':False}
    event.set_extra('_p1_group_affect_pending',pending)

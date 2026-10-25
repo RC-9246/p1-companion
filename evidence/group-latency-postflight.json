@@ -1,0 +1,45 @@
+{
+  "deployed": true,
+  "release_files_verified": 135,
+  "checkpoint_matches_production": true,
+  "database_quick_checks": {
+    "affect": true,
+    "memoria": true,
+    "groups": true,
+    "agency": true
+  },
+  "services": {
+    "astrbot": true,
+    "snowluma": true,
+    "p1-browser": true,
+    "p1-browser-egress": true,
+    "p1-leisure": true,
+    "p1-leisure-egress": true,
+    "p1-workbench": true,
+    "p1-n8n": true
+  },
+  "core_health": true,
+  "quick_provider_runtime_loaded": true,
+  "same_existing_api_account_and_destination": true,
+  "default_and_existing_provider_configuration_unchanged": true,
+  "model_daily_quotas_unchanged": true,
+  "private_configuration_backup_created": true,
+  "unit_tests": 341,
+  "neutral_core_tests": 171,
+  "native_sdk_regressions": [
+    "reply_routes",
+    "group_control",
+    "group_images",
+    "scope_matrix",
+    "latency"
+  ],
+  "real_qq_test_messages": 0,
+  "synthetic_model_requests": 4,
+  "recovery_point": "/home/p1admin/p1-agent/backups/companion-patch-v020-20261025-220344",
+  "deploy_seconds": 39.2,
+  "first_attempt_early_health_check_rolled_back": true,
+  "startup_health_check_corrected_after_provider_initialization": true,
+  "load_average_1_minute": 1.12,
+  "live_group_latency_observed_after_upgrade": false,
+  "live_group_test_not_sent": true
+}
