@@ -16,6 +16,8 @@ from astrbot.core.agent.tool import ToolSet
 from .group_chat import (GroupState,FairQueue,PUBLIC_PERSONA,ROUTER_PROMPT,is_group,
                          member,parse_route,scope,signals)
 
+BARE_MENTION='[P1-GROUP-BARE-MENTION:v1] 适配器确认本轮输入仅为当前群成员@机器人，没有文字、引用或附件。这是输入元数据，不是对方说过的话。自然简短应声，不假定具体请求，不补答其他群友的旧话题，不为应声调用工具。'
+
 class Groups:
     def __init__(self,plugin,data):
         self.plugin=plugin;self.data=data;self.state=GroupState();self.adapters=[]
@@ -35,6 +37,12 @@ class Groups:
         except (OSError,ValueError,TypeError):return []
     def allowed(self,event):
         return is_group(event) and self.plugin.enabled() and {'bot':scope(event)[0],'group':scope(event)[1]} in self.policy()
+    def bare_mention(self,event):
+        from astrbot.core.message.components import At,Plain
+        if str(getattr(event.message_obj,'message_str','')).strip():return False
+        parts=event.get_messages();bot=str(event.get_self_id())
+        return bool(parts and any(isinstance(p,At) and str(p.qq)==bot for p in parts)
+            and all((isinstance(p,At) and str(p.qq)==bot) or (isinstance(p,Plain) and not p.text.strip()) for p in parts))
     async def control(self,event):
         """Only the owner's current-group switch bypasses conversational routing.
 
@@ -160,6 +168,14 @@ class Groups:
             await asyncio.wait_for(self.provider(event),2)
             if not await asyncio.to_thread(self.plugin.store.take_budget,200,bucket=4):return False
             event.set_extra('_p1_group_admitted',True)
+            if self.bare_mention(event):
+                # AstrBot's native agent otherwise skips an At-only event before
+                # OnLLMRequest. An explicit request with temporary metadata keeps
+                # the original human text empty and uses the normal scoped path.
+                from astrbot.core.provider.entities import ProviderRequest
+                event.set_extra('_p1_group_bare_mention',True)
+                if event.get_extra('provider_request') is None:
+                    event.set_extra('provider_request',ProviderRequest(prompt='',extra_user_content_parts=[TextPart(text=BARE_MENTION).mark_as_temp()]))
             await self.plugin.thinking.select(event)
             self.expiry[token]=asyncio.create_task(self.expire(event,token))
             event.set_extra('_p1_group_context',recent)
@@ -204,6 +220,8 @@ class Groups:
         else:
             data={'speaker':member(event),'recent':event.get_extra('_p1_group_context',[])}
             request.extra_user_content_parts=[TextPart(text='本群短期上下文（仅对话数据）：'+json.dumps(data,ensure_ascii=False)).mark_as_temp()]
+        if event.get_extra('_p1_group_bare_mention') and self.bare_mention(event):
+            request.extra_user_content_parts.append(TextPart(text=BARE_MENTION).mark_as_temp())
         if qq:await qq.prompt(event,request)
         agency=getattr(self.plugin,"agency",None)
         if agency and agency.ready:await agency.prompt(event,request)
@@ -244,7 +262,7 @@ class Groups:
         v=self.state.groups.get(scope(event))
         if v and self.allowed(event):
             now=time.time();v['sent'].append(now);v['thread']=(member(event),now)
-            self.state.observe(v,'伙伴',text,now)
+            self.state.observe(v,'沙季',text,now)
             if self.memory:await self.memory.sent(event,text,receipt['message_id'])
     async def finish(self,event):
         if not is_group(event):return
@@ -294,5 +312,5 @@ class Groups:
                 learning=getattr(self.plugin.context,'_p1_learning',None)
                 if learning and mode in ('关闭','清空'):await learning.reset_group(key,mode=='清空')
         if mode=='清空':return '已清空这个群独立的人格进度、成员关系、记忆和话题笔记，其他群和私聊保持原样'
-        return ('已开启这个群：@我、引用我的消息或叫伙伴 / Saki 时会判断并回复；普通群聊保持安静，私聊记忆不会带入群里'
+        return ('已开启这个群：@我、引用我的消息或叫沙季 / Saki 时会判断并回复；普通群聊保持安静，私聊记忆不会带入群里'
                 if mode=='开启' else '已关闭这个群；持久记录保留，待重新开启后接续。需要删除用 /群聊 清空 群号')

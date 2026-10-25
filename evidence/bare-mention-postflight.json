@@ -1,0 +1,76 @@
+{
+  "deployed": true,
+  "release_files_verified": 135,
+  "checkpoint_matches": true,
+  "core_health": true,
+  "changed_production_files": [
+    "astrbot_plugin_affect/group_runtime.py"
+  ],
+  "deployment_seconds": 39.32,
+  "databases": {
+    "affect/affect.db": "ok",
+    "memoria/memoria.db": "ok",
+    "p1_groups/groups.db": "ok",
+    "affect/agency/agency.db": "ok"
+  },
+  "regression_units": 328,
+  "neutral_core_units": 161,
+  "sdk_integrations": {
+    "tests": [
+      {
+        "branch": "production_candidate",
+        "test": "integration_bare_mention.py",
+        "passed": true,
+        "seconds": 14.99
+      },
+      {
+        "branch": "production_candidate",
+        "test": "integration_groups.py",
+        "passed": true,
+        "seconds": 14.77
+      },
+      {
+        "branch": "production_candidate",
+        "test": "integration_scope_matrix.py",
+        "passed": true,
+        "seconds": 30.86
+      },
+      {
+        "branch": "neutral",
+        "test": "integration_bare_mention.py",
+        "passed": true,
+        "seconds": 16.7
+      }
+    ],
+    "all_passed": true,
+    "unit_tests": 328,
+    "qq_messages_sent": 0,
+    "production_database_modified": false
+  },
+  "native_guard": {
+    "native_empty_guard_reproduced": true,
+    "explicit_request_reaches_native_waiting_hook": true,
+    "raw_user_text_remains_empty": true,
+    "metadata_is_temporary": true,
+    "original_group_memory_preserved": true,
+    "other_mentions_empty_text_and_unenrolled_group_do_not_trigger": true,
+    "ordinary_text_path_unchanged": true,
+    "budget_and_revocation_preserved": true,
+    "qq_messages_sent": 0,
+    "model_requests": 0,
+    "production_database_modified": false
+  },
+  "synthetic_model": {
+    "synthetic_bare_mention": true,
+    "model_requests": 1,
+    "qq_messages_sent": 0,
+    "private_history_sent": false,
+    "nonempty": true,
+    "characters": 8,
+    "metadata_not_echoed": true,
+    "brief": true
+  },
+  "raw_chat_text_modified": false,
+  "test_qq_messages_sent": 0,
+  "real_new_qq_event_delivery_not_claimed": true
+}
