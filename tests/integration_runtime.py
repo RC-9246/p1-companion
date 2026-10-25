@@ -59,13 +59,14 @@ async def run():
         original_tools=ToolSet([
             FunctionTool(name='p1_browser',description='fixture',parameters={},handler=None),
             FunctionTool(name='execute_shell',description='must be unavailable',parameters={},handler=None)])
-        req=ProviderRequest(prompt='谢谢你',system_prompt='original',contexts=[],func_tool=original_tools)
+        req=ProviderRequest(prompt='谢谢你',system_prompt='[P1-COMPANION-SAKI:v3]\nSTALE_MANAGED_CORE',contexts=[],func_tool=original_tools)
         await p.inject_state_into_llm(e,req)
-        assert '[P1-COMPANION-SAKI:v3]' in req.system_prompt
+        assert req.system_prompt.startswith(p.persona)
+        assert 'STALE_MANAGED_CORE' not in req.system_prompt
         assert req.system_prompt.count('[P1-RELATIONSHIP-STYLE:generic_familiar_v1]')==1
         assert len(req.extra_user_content_parts)==4 and req.extra_user_content_parts[0]._no_save
         assert sdk_calls[0]['options']=={'timeout':4.5,'max_retries':0}
-        assert sdk_calls[1]['request']['max_tokens']==600
+        assert sdk_calls[1]['request']['max_tokens']==900
         assert sdk_calls[1]['request']['extra_body']=={'thinking':{'type':'disabled'}}
         assert sdk_calls[1]['request']['response_format']=={'type':'json_object'}
         assert [t.name for t in req.func_tool.tools]==['p1_browser']

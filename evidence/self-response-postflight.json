@@ -1,0 +1,226 @@
+{
+  "deployed": true,
+  "release_files_verified": 135,
+  "root_checkpoint_matches": true,
+  "databases": {
+    "affect/affect.db": "ok",
+    "memoria/memoria.db": "ok",
+    "p1_groups/groups.db": "ok",
+    "affect/agency/agency.db": "ok"
+  },
+  "services": {
+    "astrbot": {
+      "running": true,
+      "oom_killed": false,
+      "restart_count": 0
+    },
+    "snowluma": {
+      "running": true,
+      "oom_killed": false,
+      "restart_count": 0
+    },
+    "p1-browser": {
+      "running": true,
+      "oom_killed": false,
+      "restart_count": 0
+    },
+    "p1-browser-egress": {
+      "running": true,
+      "oom_killed": false,
+      "restart_count": 0
+    },
+    "p1-leisure": {
+      "running": true,
+      "oom_killed": false,
+      "restart_count": 0
+    },
+    "p1-leisure-egress": {
+      "running": true,
+      "oom_killed": false,
+      "restart_count": 0
+    },
+    "p1-workbench": {
+      "running": true,
+      "oom_killed": false,
+      "restart_count": 0
+    },
+    "p1-n8n": {
+      "running": true,
+      "oom_killed": false,
+      "restart_count": 0
+    }
+  },
+  "module_readiness": {
+    "reaction_store_ready": true,
+    "group_admission_ready": true,
+    "group_memory_ready": true,
+    "group_affect_ready": true,
+    "qq_plain_ready": true,
+    "learning_ready": true,
+    "qq_actions_ready": true,
+    "agency_ready": true,
+    "attachment_decoding_ready": true,
+    "thinking_router_ready": true,
+    "public_research_ready": true
+  },
+  "memory_available_mb": 1696,
+  "browser_probe_passed": true,
+  "qq_test_messages_sent": 0,
+  "private_persona_published": false,
+  "unit_tests": 328,
+  "neutral_core_tests": 161,
+  "earlier_deploy_rolled_back": true,
+  "dns_and_qq_recovered_before_successful_deploy": true,
+  "neutral_native_sdk": {
+    "tests": [
+      {
+        "test": "integration_self_response.py",
+        "passed": true,
+        "seconds": 14.73
+      },
+      {
+        "test": "integration_runtime.py",
+        "passed": true,
+        "seconds": 20.36
+      },
+      {
+        "test": "integration_scope_matrix.py",
+        "passed": true,
+        "seconds": 30.86
+      }
+    ],
+    "all_passed": true,
+    "initial_runtime_failure_fixed": "generic relationship guidance lacked its idempotence marker; marker added and test retained",
+    "qq_messages_sent": 0,
+    "real_model_calls": 0,
+    "production_database_modified": false
+  },
+  "public_browser_initial_busy": {
+    "round": 1,
+    "real_brokers": true,
+    "public_page_ok": false,
+    "public_page_status": 429,
+    "public_page_error": "browser_busy",
+    "upstream_status": null,
+    "public_page_url": null,
+    "public_page_ms": 227.2,
+    "health_during_page": [
+      {
+        "ms": 4.676,
+        "ok": true,
+        "page_pending": false
+      },
+      {
+        "ms": 3.885,
+        "ok": true,
+        "page_pending": false
+      },
+      {
+        "ms": 3.806,
+        "ok": true,
+        "page_pending": false
+      },
+      {
+        "ms": 4.002,
+        "ok": true,
+        "page_pending": false
+      },
+      {
+        "ms": 5.283,
+        "ok": true,
+        "page_pending": false
+      }
+    ],
+    "health_p50_ms": 4.002,
+    "health_max_ms": 5.283,
+    "private_address_denied": true,
+    "invalid_token_denied": true,
+    "leisure_health_ok": true,
+    "public_interaction_disabled": true,
+    "n8n_health_ok": true,
+    "actual_qq_messages": 0,
+    "model_requests": 0,
+    "private_content_sent": false,
+    "passed": false
+  },
+  "public_browser_after_wait": {
+    "round": 2,
+    "real_brokers": true,
+    "public_page_ok": true,
+    "public_page_status": 200,
+    "public_page_error": null,
+    "upstream_status": null,
+    "public_page_url": "https://docs.python.org/3/",
+    "public_page_ms": 11029.0,
+    "health_during_page": [
+      {
+        "ms": 7.199,
+        "ok": true,
+        "page_pending": true
+      },
+      {
+        "ms": 6.361,
+        "ok": true,
+        "page_pending": true
+      },
+      {
+        "ms": 6.166,
+        "ok": true,
+        "page_pending": true
+      },
+      {
+        "ms": 6.066,
+        "ok": true,
+        "page_pending": true
+      },
+      {
+        "ms": 6.529,
+        "ok": true,
+        "page_pending": true
+      }
+    ],
+    "health_p50_ms": 6.361,
+    "health_max_ms": 7.199,
+    "private_address_denied": true,
+    "invalid_token_denied": true,
+    "leisure_health_ok": true,
+    "public_interaction_disabled": true,
+    "n8n_health_ok": true,
+    "actual_qq_messages": 0,
+    "model_requests": 0,
+    "private_content_sent": false,
+    "passed": true
+  },
+  "services_and_session": {
+    "browser_health": {
+      "ok": true,
+      "mode": "read_only",
+      "sandbox_required": true
+    },
+    "leisure_health": {
+      "ok": true,
+      "site": "bilibili",
+      "browser_running": false,
+      "browser_connected": false,
+      "page_closed": false,
+      "logged_in": false,
+      "public_interactions": false
+    },
+    "actual_qq_messages": 0,
+    "public_account_interactions": 0,
+    "model_requests": 0,
+    "watch_quota": {
+      "ok": true,
+      "daily_limit_seconds": 28800,
+      "remaining_seconds": 28781
+    },
+    "bilibili_session": {
+      "ok": true,
+      "logged_in": true,
+      "challenge": false,
+      "session_saved": true
+    }
+  },
+  "deployment_seconds": 41.77,
+  "limits": "Current smoke checks and SDK isolation tests; not long-term uptime or comprehensive emotional quality proof."
+}

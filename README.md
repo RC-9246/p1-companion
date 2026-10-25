@@ -67,6 +67,8 @@ docker compose -p p1-leisure -f /srv/p1-agent/astrbot/data/companion_services/le
 
 确认服务健康后重启AstrBot，让其加载插件、MCP和原生白名单。需要max主动思考时，在AstrBot中复制已核验的DeepSeek provider，ID使用 `deepseek-max/deepseek-flash`，启用其thinking与 `reasoning_effort=max`；模型能力以实际服务返回为准，输出长度独立控制。
 
+本次有依据的角色反应、短期延续和新旧对照的结果与局限见 [连续表达说明](docs/self-response.md)。
+
 ## 图片与人格
 
 默认图库为空，文字/记忆/情绪/工具正常工作。用自己有权使用且亲自检查过的jpg/png注册图片：
@@ -87,7 +89,7 @@ B站首次登录：主人私聊发送 `/B站 登录`，用手机扫码后发送 
 
 离线中性核心检查：`python3 scripts/selftest.py`。在安装了AstrBot SDK的隔离环境可运行 `tests/integration_agency.py`、`tests/integration_scope_matrix.py` 和 `tests/integration_group_control.py`，使用临时数据库与替身传输，不发真实QQ、不调用真实模型。图片/人物专用的旧生产评测仅作参考，不用于证明中性安装已经覆盖该人物。
 
-真实模型、真实公共网站、真实登录、真实QQ分别验收。合成传输通过不能声称真实QQ已经送达。完整生产299×5轮、41项隔离故障矩阵、16种文件格式和真实模型合成评测见evidence与文档；中性核心132项另行验证；中性分支另有portable验收结果。
+真实模型、真实公共网站、真实登录、真实QQ分别验收。合成传输通过不能声称真实QQ已经送达。完整生产299×5轮、41项隔离故障矩阵、16种文件格式和真实模型合成评测见evidence与文档；历史中性核心132项另行验证；本次中性核心161项，详见连续表达说明；中性分支另有portable验收结果。
 
 ## 自修复安装
 

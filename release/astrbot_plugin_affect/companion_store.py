@@ -7,9 +7,9 @@ import time
 from contextlib import closing
 from pathlib import Path
 try:
-    from .emotion_model import seed as emotion_seed, advance as emotion_advance, react as emotion_react, project as emotion_project, TOPICS as EMOTION_TOPICS
+    from .emotion_model import seed as emotion_seed, advance as emotion_advance, react as emotion_react, project as emotion_project, TOPICS as EMOTION_TOPICS, episode_signature
 except ImportError:  # The existing native MCP process imports this file as a standalone module.
-    from emotion_model import seed as emotion_seed, advance as emotion_advance, react as emotion_react, project as emotion_project, TOPICS as EMOTION_TOPICS
+    from emotion_model import seed as emotion_seed, advance as emotion_advance, react as emotion_react, project as emotion_project, TOPICS as EMOTION_TOPICS, episode_signature
 
 BASE={'mood':0.,'energy':.5,'familiarity':0.,'trust':.25,'comfort':.4,'curiosity':.4,'concern':0.,'interaction_count':0,'last_interaction_at':0,'updated_at':0}
 LIMITS={'mood':(-1,1),'energy':(0,1),'familiarity':(0,.7),'trust':(0,1),'comfort':(0,1),'curiosity':(0,1),'concern':(0,1)}
@@ -227,10 +227,10 @@ class CompanionStore:
         # Keep the latest change visible; older salient distress cannot crowd out later recovery.
         selected=rows[:1]
         ranked=sorted(rows[1:],key=lambda x:x['intensity']*2**(-max(0,now-x['at'])/(2*86400))+(0.3 if topic!='none' and x['topic']==topic else 0),reverse=True)
-        seen={x['kind'] for x in selected}
+        seen={episode_signature(x) for x in selected}
         for row in ranked:
-            if row['kind'] in seen:continue
-            selected.append(row);seen.add(row['kind'])
+            if episode_signature(row) in seen:continue
+            selected.append(row);seen.add(episode_signature(row))
             if len(selected)>=3:break
         return selected
 

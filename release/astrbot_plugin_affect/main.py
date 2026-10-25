@@ -348,7 +348,7 @@ class AffectPlugin(Star):
                         model=provider.get_model(),messages=[
                             {'role':'system','content':CLASSIFIER_PROMPT},
                             {'role':'user','content':classifier_input(text,request.contexts)}],
-                        temperature=0,max_tokens=600,
+                        temperature=0,max_tokens=900,
                         response_format={'type':'json_object'},extra_body={'thinking':{'type':'disabled'}})
                     return response.choices[0].message.content
             raw=await asyncio.wait_for(classify(),timeout=5)
@@ -414,8 +414,9 @@ class AffectPlugin(Star):
                 # A global/default AstrBot persona may contain owner-specific settings.
                 # New contacts start from the public private-chat core, not that prompt.
                 request.system_prompt=self.friend_persona
-            elif '[P1-COMPANION-SAKI:v3]' not in request.system_prompt:
-                request.system_prompt += '\n\n'+self.persona
+            else:
+                # The managed persona file is authoritative, including after an update.
+                request.system_prompt=self.persona
             if '[P1-CHAT-STYLE:v2]' not in request.system_prompt:
                 request.system_prompt += '\n\n'+CHAT_STYLE
             if authorized(event) and '[P1-RELATIONSHIP-STYLE:' not in request.system_prompt:
@@ -509,7 +510,7 @@ class AffectPlugin(Star):
             pid=await self.context.get_current_chat_provider_id(event.unified_msg_origin)
             provider=await self.context.provider_manager.get_provider_by_id(pid);client=provider.client
             if client.base_url.scheme!='https' or client.base_url.host!='api.deepseek.com':raise ValueError('review_destination')
-            payload={'current':scrub(prompt[:1200]),'draft':scrub(text),'context':{k:appraisal.get(k) for k in ('intent','relation','interaction')}}
+            payload={'current':scrub(prompt[:1200]),'draft':scrub(text),'context':{k:appraisal.get(k) for k in ('intent','relation','interaction','self_response')}}
             out=await asyncio.wait_for(client.with_options(timeout=9,max_retries=0).chat.completions.create(model=provider.get_model(),messages=[{'role':'system','content':REVIEW_SYSTEM},{'role':'user','content':json.dumps(payload,ensure_ascii=False)}],max_tokens=2400,reasoning_effort='high',extra_body={'thinking':{'type':'enabled'}},response_format={'type':'json_object'}),10)
             reviewed=parse_review(out.choices[0].message.content,text,prompt)
             if scrub(reviewed)!=reviewed or not self.scope_for(event):raise ValueError('review_scope_or_content')

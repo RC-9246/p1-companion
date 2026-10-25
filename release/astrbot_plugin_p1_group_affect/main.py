@@ -1,4 +1,4 @@
-"""Group-specific Saki personality and affect; never opens private affect or memory rows."""
+"""Group-specific personality and affect; never opens private affect or memory rows."""
 import asyncio,base64,json,time,re
 from astrbot.api import logger
 from astrbot.api.star import Star
@@ -6,13 +6,13 @@ from astrbot.api.event import filter
 from astrbot.core.agent.message import TextPart
 try:
  from ..astrbot_plugin_affect.main import DATA
- from ..astrbot_plugin_affect.emotion_model import seed,react,describe,interaction_context,coping
+ from ..astrbot_plugin_affect.emotion_model import seed,react,describe,interaction_context,coping,perspective
  from ..astrbot_plugin_affect.appraisal import CLASSIFIER_PROMPT,parse_appraisal,fallback
  from ..astrbot_plugin_affect.reactions import eligible_context
  from ..astrbot_plugin_p1_group_memory.store import Store,scope_key
 except ImportError:
  from astrbot_plugin_affect.main import DATA
- from astrbot_plugin_affect.emotion_model import seed,react,describe,interaction_context,coping
+ from astrbot_plugin_affect.emotion_model import seed,react,describe,interaction_context,coping,perspective
  from astrbot_plugin_affect.appraisal import CLASSIFIER_PROMPT,parse_appraisal,fallback
  from astrbot_plugin_affect.reactions import eligible_context
  from astrbot_plugin_p1_group_memory.store import Store,scope_key
@@ -49,17 +49,19 @@ class P1GroupAffect(Star):
      async with self.gate:
       provider=await groups.provider(event)
       payload={'current':text[:1000],'speaker':member,'recent':scene['messages'][-8:]}
-      out=await asyncio.wait_for(provider.client.with_options(timeout=4,max_retries=0).chat.completions.create(model=provider.get_model(),messages=[{'role':'system','content':CLASSIFIER_PROMPT+'\n这是公开群聊，只评估当前发言者对当前话题的态度；其他人的情绪不得归给当前发言者，不推断私人关系。'},{'role':'user','content':json.dumps(payload,ensure_ascii=False)}],temperature=0,max_tokens=600,response_format={'type':'json_object'},extra_body={'thinking':{'type':'disabled'}}),5)
+      out=await asyncio.wait_for(provider.client.with_options(timeout=4,max_retries=0).chat.completions.create(model=provider.get_model(),messages=[{'role':'system','content':CLASSIFIER_PROMPT+'\n这是公开群聊，只评估当前发言者对当前话题的态度；其他人的情绪不得归给当前发言者，不推断私人关系。'},{'role':'user','content':json.dumps(payload,ensure_ascii=False)}],temperature=0,max_tokens=900,response_format={'type':'json_object'},extra_body={'thinking':{'type':'disabled'}}),5)
       a=parse_appraisal(out.choices[0].message.content,text)
    except Exception as exc:logger.info('[P1 Group Affect] appraisal_fallback code='+type(exc).__name__)
    pending={'scope':scope,'member':member,'appraisal':a,'event':scene['current']['id'],'epoch':scene['epoch'],'ready':False,'ack':False,'failed':False}
    event.set_extra('_p1_group_affect_pending',pending)
   group,person,profile=await asyncio.to_thread(self.store.affect,scope,member)
-  gs=react(group or seed(),now,pending['appraisal']);ps=react(person or seed(),now,pending['appraisal'])
+  public_appraisal={k:v for k,v in pending['appraisal'].items() if k!='self_response'}
+  group_state=dict(group or seed());group_state.pop('thread',None)
+  gs=react(group_state,now,public_appraisal);ps=react(person or seed(),now,pending['appraisal'])
   # Existing emotion_model returns (state,episode); persist only the state.
   if isinstance(gs,tuple):gs=gs[0]
   if isinstance(ps,tuple):ps=ps[0]
-  hint={'current_exchange':interaction_context(pending['appraisal']),'coping':coping(gs,pending['appraisal']),'stable_persona':profile or PROFILE,'this_group_simulation':describe(gs),'current_member_simulation':describe(ps),'member_delivered_interactions':(person or seed())['interactions']}
+  hint={'current_exchange':interaction_context(pending['appraisal']),'coping':coping(ps,pending['appraisal']),'own_reaction_to_current_member':perspective(ps,pending['appraisal']),'stable_persona':profile or PROFILE,'this_group_simulation':describe(gs),'current_member_simulation':describe(ps,pending['appraisal']),'member_delivered_interactions':(person or seed())['interactions']}
   request.extra_user_content_parts.append(TextPart(text='[P1-GROUP-AFFECT:v1]\n'+json.dumps(hint,ensure_ascii=False)+'\n这些是本群专属的模拟倾向，不是主观感受或用户心理事实。状态只微调表达，不盖过眼前语境；认真求助、纠错、离开和不回复都不是冒犯。不输出参数、内心独白或括号动作。不把某人的心情说成全群或自己的遭遇。').mark_as_temp())
   catalog=groups.plugin.reaction_catalog
   if catalog and eligible_context(pending['appraisal'],scene['current']['text']) and await asyncio.to_thread(self.store.can_react,scope,now):
@@ -88,7 +90,9 @@ class P1GroupAffect(Star):
   p=event.get_extra('_p1_group_affect_pending')
   if not p or not p['ready'] or not p['ack'] or p['failed'] or not groups.allowed(event):return False
   group,person,profile=await asyncio.to_thread(self.store.affect,p['scope'],p['member']);now=time.time()
-  gs=react(group or seed(),now,p['appraisal']);ps=react(person or seed(),now,p['appraisal'])
+  public_appraisal={k:v for k,v in p['appraisal'].items() if k!='self_response'}
+  group_state=dict(group or seed());group_state.pop('thread',None)
+  gs=react(group_state,now,public_appraisal);ps=react(person or seed(),now,p['appraisal'])
   if isinstance(gs,tuple):gs=gs[0]
   if isinstance(ps,tuple):ps=ps[0]
   return await asyncio.to_thread(self.store.commit_affect,p['scope'],p['event'],p['member'],gs,ps,profile or PROFILE,now,p['epoch'])

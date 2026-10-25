@@ -1,0 +1,180 @@
+{
+  "date": "2026-10-25",
+  "approved_destination": "https://api.deepseek.com",
+  "synthetic_dialogues_only": true,
+  "private_history_sent": false,
+  "production_db_modified_by_evaluation": false,
+  "qq_messages_sent_by_evaluation": 0,
+  "private_persona_and_full_outputs_distributed": false,
+  "unit_tests": 328,
+  "neutral_core_tests": 161,
+  "source_bound_state_tests": 20,
+  "native_sdk_suites": {
+    "tests": [
+      {
+        "test": "integration_self_response.py",
+        "passed": true,
+        "seconds": 14.91
+      },
+      {
+        "test": "integration_runtime.py",
+        "passed": true,
+        "seconds": 20.07
+      },
+      {
+        "test": "integration_emotional_quality.py",
+        "passed": true,
+        "seconds": 14.33
+      },
+      {
+        "test": "integration_scope_matrix.py",
+        "passed": true,
+        "seconds": 30.54
+      },
+      {
+        "test": "integration_media_grounding.py",
+        "passed": true,
+        "seconds": 13.94
+      }
+    ],
+    "all_passed": true,
+    "real_model_calls": 0,
+    "qq_messages_sent": 0,
+    "production_database_modified": false,
+    "after_context_style_fix": [
+      {
+        "test": "integration_runtime.py",
+        "passed": true,
+        "seconds": 20.19
+      },
+      {
+        "test": "integration_scope_matrix.py",
+        "passed": true,
+        "seconds": 30.85
+      }
+    ]
+  },
+  "development_model_runs": [
+    {
+      "run": 1,
+      "paired_scenes": 4,
+      "model_calls": 64,
+      "completion_tokens": 16224,
+      "reasoning_tokens_count_only": 13081,
+      "seconds": 106.93,
+      "after_source_bound_reactions": 5,
+      "classifier_failures": 0,
+      "review_failures": 0,
+      "anonymous_model_preferences": [
+        {
+          "case": "comparison",
+          "preference": "before"
+        },
+        {
+          "case": "recognition",
+          "preference": "after"
+        },
+        {
+          "case": "reciprocity",
+          "preference": "after"
+        },
+        {
+          "case": "real_correction",
+          "preference": "tie"
+        }
+      ]
+    },
+    {
+      "run": 2,
+      "paired_scenes": 4,
+      "model_calls": 65,
+      "completion_tokens": 12821,
+      "reasoning_tokens_count_only": 9957,
+      "seconds": 84.86,
+      "after_source_bound_reactions": 4,
+      "classifier_failures": 1,
+      "review_failures": 0,
+      "anonymous_model_preferences": [
+        {
+          "case": "comparison",
+          "preference": "before"
+        },
+        {
+          "case": "recognition",
+          "preference": "after"
+        },
+        {
+          "case": "reciprocity",
+          "preference": "after"
+        },
+        {
+          "case": "real_correction",
+          "preference": "before"
+        }
+      ]
+    },
+    {
+      "run": 3,
+      "paired_scenes": 4,
+      "model_calls": 64,
+      "completion_tokens": 12652,
+      "reasoning_tokens_count_only": 9911,
+      "seconds": 86.75,
+      "after_source_bound_reactions": 4,
+      "classifier_failures": 1,
+      "review_failures": 0,
+      "anonymous_model_preferences": [
+        {
+          "case": "comparison",
+          "preference": "before"
+        },
+        {
+          "case": "recognition",
+          "preference": "after"
+        },
+        {
+          "case": "reciprocity",
+          "preference": "before"
+        },
+        {
+          "case": "real_correction",
+          "preference": "after"
+        }
+      ]
+    },
+    {
+      "run": 4,
+      "paired_scenes": 1,
+      "model_calls": 13,
+      "completion_tokens": 3074,
+      "reasoning_tokens_count_only": 2486,
+      "seconds": 23.46,
+      "after_source_bound_reactions": 1,
+      "classifier_failures": 0,
+      "review_failures": 0,
+      "anonymous_model_preferences": [
+        {
+          "case": "reciprocity",
+          "preference": "after"
+        }
+      ]
+    }
+  ],
+  "successful_model_requests_total": 206,
+  "manual_findings": [
+    {
+      "run": 1,
+      "issue": "Time correction wording was ambiguous between clock time and item count; fixture made explicit."
+    },
+    {
+      "run": 2,
+      "issue": "Some plans assumed a backlog or repeated recommendations without a source; activity grounding strengthened."
+    },
+    {
+      "run": 3,
+      "issue": "One response used textual tool-call markup in a no-tools fixture; original mechanical checks missed it. Added explicit no-tools condition and check, then reran that scene."
+    }
+  ],
+  "final_targeted_no_tools_mechanical_checks": true,
+  "limits": "Development comparisons under changing fixtures; no pooled win rate, no human blinded test, no claim of comprehensive superiority. Native tests use real SDK with synthetic transports and isolated databases."
+}
