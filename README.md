@@ -122,3 +122,5 @@ sudo python3 tests/portable_leisure_install.py
 
 
 最近修复：[图片来源混淆排查](docs/image-provenance-incident.md)。当前附件、历史图片、引用、助手配图与后台视频观察分别处理；已核实错误的助手回复可按范围精确撤回，保留原始聊天记录。此检查不能保证消除所有模型幻觉。
+
+群聊本轮图与同群引用图的输入修复、验证和适用边界见 [群聊图片说明](docs/group-image-fix.md)。

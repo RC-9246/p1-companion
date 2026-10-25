@@ -1,0 +1,37 @@
+{
+  "native_request_collection_and_preparation": true,
+  "current_pixels_preserved": true,
+  "quoted_same_group_pixels_preserved": true,
+  "cross_group_private_sender_and_message_mismatches_denied": true,
+  "quoted_non_qq_hosts_denied": true,
+  "no_duplicate_image_download": true,
+  "temporary_files_tracked": true,
+  "failed_corrupt_and_oversized_images_rejected": true,
+  "history_and_cross_event_images_removed": true,
+  "image_count_bound": 4,
+  "qq_messages": 0,
+  "production_database_modified": false,
+  "synthetic_model_checks": [
+    {
+      "checks": {
+        "red": true,
+        "blue": true,
+        "rectangle": true,
+        "circle": true
+      },
+      "reply_characters": 19,
+      "passed": true
+    },
+    {
+      "checks": {
+        "red": true,
+        "blue": true,
+        "rectangle": true,
+        "circle": true
+      },
+      "reply_characters": 17,
+      "passed": true
+    }
+  ],
+  "model_requests": 2
+}

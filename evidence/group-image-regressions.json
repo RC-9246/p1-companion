@@ -1,0 +1,16 @@
+{
+  "issue": "group_request_reset_discarded_current_images",
+  "unit_tests_passed": 328,
+  "neutral_core_tests_passed": 161,
+  "native_suites_passed": [
+    "integration_groups",
+    "integration_bare_mention",
+    "integration_media_grounding",
+    "integration_scope_matrix"
+  ],
+  "new_image_cases": "integration_group_images.py",
+  "real_qq_test_messages": 0,
+  "private_history_for_synthetic_model_tests": false,
+  "no_production_database_migration": true,
+  "model_evaluation_limit": "Synthetic shapes; no claim of all image understanding or true QQ round trip."
+}

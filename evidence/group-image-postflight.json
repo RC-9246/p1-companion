@@ -1,0 +1,56 @@
+{
+  "deployed": true,
+  "production_files_verified": 135,
+  "checkpoint_matches_production": true,
+  "database_checks": {
+    "affect": true,
+    "memoria": true,
+    "groups": true,
+    "agency": true
+  },
+  "containers": {
+    "astrbot": {
+      "running": true,
+      "oom_killed": false
+    },
+    "snowluma": {
+      "running": true,
+      "oom_killed": false
+    },
+    "p1-browser": {
+      "running": true,
+      "oom_killed": false
+    },
+    "p1-browser-egress": {
+      "running": true,
+      "oom_killed": false
+    },
+    "p1-leisure": {
+      "running": true,
+      "oom_killed": false
+    },
+    "p1-leisure-egress": {
+      "running": true,
+      "oom_killed": false
+    },
+    "p1-workbench": {
+      "running": true,
+      "oom_killed": false
+    },
+    "p1-n8n": {
+      "running": true,
+      "oom_killed": false
+    }
+  },
+  "core_health": true,
+  "qq_online_check_passed": true,
+  "database_migration": false,
+  "actual_qq_test_messages": 0,
+  "synthetic_model_requests_total": 4,
+  "synthetic_model_requests_final_run": 2,
+  "unit_tests": 328,
+  "neutral_core_tests": 161,
+  "recovery_point": "/home/p1admin/p1-agent/backups/companion-patch-v020-20261025-183937",
+  "deploy_seconds": 39.05,
+  "real_qq_image_round_trip_not_claimed": true
+}
