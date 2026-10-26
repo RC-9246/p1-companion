@@ -1,0 +1,20 @@
+{
+  "native_command_parser": true,
+  "native_async_config_writer": true,
+  "cached_native_stage_uses_live_private_snapshot": true,
+  "no_restart_needed": true,
+  "ordinary_contact_not_owner": true,
+  "owner_command_also_whitelists": true,
+  "promoted_owner_can_manage_contacts": true,
+  "separate_memoria_affect_and_learning_keys": true,
+  "promotion_preserves_existing_scope": true,
+  "duplicate_is_idempotent": true,
+  "nonowner_and_webchat_cannot_grant": true,
+  "group_command_only_suggests_private_use": true,
+  "live_revocation_honored": true,
+  "astrbot_admins_unchanged": true,
+  "reply_delay_2_to_5_preserved": true,
+  "model_requests": 0,
+  "real_qq_messages": 0,
+  "production_database_modified": false
+}

@@ -129,14 +129,16 @@ class SocialController:
         recent=result[-8:];confirmed=[]
         memory = self.data.parent / 'memoria/memoria.db'
         if memory.is_file():
+            from .private_access import private_memory_keys
+            uid,sid=private_memory_keys(self.data,row['bot_id'],row['user_id'])
             def memories():
                 with closing(sqlite3.connect(memory.as_uri() + '?mode=ro', uri=True)) as c:
                     return c.execute('''SELECT content FROM memoria_records WHERE status='active' AND confidence>=.7 AND
                       ((user_id=? AND scope='user' AND scope_id=?) OR
                        (user_id=? AND scope='session' AND scope_id=?) OR
                        (user_id=? AND scope='relationship' AND scope_id=?))
-                       ORDER BY updated_at DESC LIMIT 6''', (row['user_id'], row['umo'], 'session:' + row['umo'],
-                         row['umo'], 'relationship:' + row['user_id'] + ':' + row['umo'], row['umo'])).fetchall()
+                       ORDER BY updated_at DESC LIMIT 6''', (uid, sid, 'session:' + sid,
+                         sid, 'relationship:' + uid + ':' + sid, sid)).fetchall()
             for (text,) in await asyncio.to_thread(memories):
                 if scrub(text) == text and len(text) <= 1200:
                     confirmed.append({'kind': 'confirmed_memory', 'text': text})

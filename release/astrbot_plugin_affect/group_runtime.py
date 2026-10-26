@@ -1,8 +1,8 @@
 """Version-tested group ingress, explicit owner enrollment and fail-closed routing.
 
 AstrBot 4.29 exposes config persistence but no plugin pipeline reload API. Two
-reversible method adapters scope dynamic admission to enrolled QQ groups only;
-no core files, native private whitelist entries or wake prefixes are changed.
+reversible method adapters scope group admission and copy current private QQ
+whitelist inputs into the native predicate; no core files or wake prefixes change.
 """
 import asyncio
 import json
@@ -52,6 +52,14 @@ class Groups:
         handlers. No model call, group admission token or memory write is needed.
         """
         text=str(getattr(event.message_obj,'message_str','')).strip()
+        if re.fullmatch(r'/?(?:加白|加主人)(?:\s+.*)?',text,re.S):
+            event.stop_event()
+            from .main import authorized
+            if self.allowed(event) and authorized(event,private_only=False):
+                event.set_extra('_p1_qq_send_guard',lambda:self.allowed(event) and bool(authorized(event,private_only=False)))
+                self.plugin.install_reply_delay(event)
+                await event.send(event.plain_result('账号权限命令请由现有主人私聊发送：/加白 QQ号 或 /加主人 QQ号'))
+            return True
         match=re.fullmatch(r'/?(群内主动|主动线路)(?:\s+(.*))?',text,re.S)
         if not match:return False
         event.stop_event()
@@ -79,6 +87,11 @@ class Groups:
                 if not is_group(event):
                     qq=getattr(owner.plugin,'qq',None)
                     if _kind=='whitelist' and qq and qq.private_allowed(event):return
+                    if _kind=='whitelist':
+                        from .private_access import live_private_stage
+                        try:stage=live_private_stage(stage,event,owner.plugin.context)
+                        except Exception:
+                            event.stop_event();return
                     return await _previous(stage,event)
                 if _kind=='wake':
                     if await owner.control(event):return

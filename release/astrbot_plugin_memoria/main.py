@@ -115,17 +115,18 @@ class MemoriaPlugin(Star):
         return val if val is not None else default
 
     def _memory_uid(self,event):
-        # Preserve the original owner's historical keys. New private contacts use
-        # the full platform/bot/sender identity, so future bot accounts cannot merge.
+        # Keep historical compatibility independent from mutable owner roles.
         try:
             try:
-                from ..astrbot_plugin_affect.main import authorized
+                from ..astrbot_plugin_affect.main import DATA
+                from ..astrbot_plugin_affect.private_access import private_memory_keys
                 from ..astrbot_plugin_affect.identity import identity_from_event
             except ImportError:
-                from astrbot_plugin_affect.main import authorized
+                from astrbot_plugin_affect.main import DATA
+                from astrbot_plugin_affect.private_access import private_memory_keys
                 from astrbot_plugin_affect.identity import identity_from_event
-            if authorized(event):return str(event.get_sender_id())
-            return identity_from_event(event)
+            if event.get_platform_id()!='qq_snowluma':return identity_from_event(event)
+            return private_memory_keys(DATA,event.get_self_id(),event.get_sender_id())[0]
         except (AttributeError,ValueError):raise ValueError('private_identity_required')
 
     def _memory_sid(self,event):

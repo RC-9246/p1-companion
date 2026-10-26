@@ -501,10 +501,8 @@ class QQController:
   from contextlib import closing
   path=self.data.parent/'memoria/memoria.db'
   if row['kind']!='private' or not path.is_file() or not self.allowed(row):return []
-  # Match MemoriaPlugin._memory_uid/_memory_sid: preserve owner legacy keys,
-  # use the complete bot+sender identity for every other admitted private chat.
-  uid=row['peer'] if self.owner(row['identity']) else row['identity']
-  sid='qq_snowluma:FriendMessage:'+row['peer'] if self.owner(row['identity']) else row['identity']
+  from .private_access import private_memory_keys
+  uid,sid=private_memory_keys(self.data,row['bot'],row['peer'])
   try:
    with closing(sqlite3.connect(path.as_uri()+'?mode=ro',uri=True,timeout=2)) as c:
     values=c.execute("SELECT content FROM memoria_records WHERE status='active' AND confidence>=.7 AND ((user_id=? AND scope='user' AND scope_id=?) OR (user_id=? AND scope='session' AND scope_id=?) OR (user_id=? AND scope='relationship' AND scope_id=?)) ORDER BY updated_at DESC LIMIT 4",(uid,sid,'session:'+sid,sid,'relationship:'+uid+':'+sid,sid)).fetchall()

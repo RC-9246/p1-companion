@@ -21,7 +21,7 @@ from astrbot.core.agent.message import TextPart
 from astrbot.core.agent.tool import ToolSet
 
 from .identity import identity_from_event
-from .private_access import companion_identity
+from .private_access import companion_identity,owner_identity,PrivateAccess
 from .appraisal import CLASSIFIER_PROMPT, classifier_input, fallback, parse_appraisal, scrub
 from .companion_store import CompanionStore, evolve
 from .context_style import MARKER, style_context, search_knowledge, actual_activity_context
@@ -43,17 +43,7 @@ DATA=Path(os.environ.get('P1_COMPANION_DATA','/AstrBot/data/plugin_data/affect')
 HERE=Path(__file__).parent
 
 def authorized(event,*,private_only=True):
-    try:
-        if event.get_platform_id()!='qq_snowluma' or (private_only and not event.is_private_chat()):
-            return None
-        identity=identity_from_event(event)
-        v=json.loads((DATA/'allowed_identities.json').read_text())
-        entries=v.get('allowed_identities')
-        if v.get('version')!=1 or not isinstance(entries,list) or not entries or not all(isinstance(x,str) and re.fullmatch('v1:[0-9a-f]{64}',x) for x in entries):
-            return None
-        return identity if any(hmac.compare_digest(identity,x) for x in entries) else None
-    except (OSError,ValueError,TypeError,AttributeError):
-        return None
+    return owner_identity(event,DATA,private_only=private_only)
 
 def event_key(event):
     raw=getattr(event.message_obj,'message_id',None)
@@ -77,6 +67,7 @@ class AffectPlugin(Star):
     def __init__(self,context:Context):
         super().__init__(context)
         self.context=context
+        self.access=PrivateAccess(context,DATA)
         self.store=None
         self.pending_domains={}
         self.classifier_gate=asyncio.Semaphore(1)
@@ -239,6 +230,7 @@ class AffectPlugin(Star):
     async def initialize(self):
         try:
             self.privacy_registration=install_privacy()
+            await self.access.recover()
             self.store=CompanionStore(DATA/'affect.db')
             await asyncio.to_thread(self.store.migrate)
             await asyncio.to_thread(self.thinking.migrate)
@@ -328,7 +320,8 @@ class AffectPlugin(Star):
             'qq_known_targets':len(self.qq.targets) if self.qq else 0,
             'agency_ready':self.agency.ready,'attachment_decoding_ready':self.agency.ready,
             'thinking_router_ready':hasattr(self,'thinking'),'public_research_ready':hasattr(self,'research'),
-            'quick_group_provider_ready':bool(getattr(getattr(self.context,'provider_manager',None),'inst_map',{}).get(FAST_PROVIDER))})
+            'quick_group_provider_ready':bool(getattr(getattr(self.context,'provider_manager',None),'inst_map',{}).get(FAST_PROVIDER)),
+            'private_access_commands_ready':self.access.supported()})
 
     def enabled(self):
         return self.store is not None and not (DATA/'companion.disabled').exists()
@@ -864,6 +857,34 @@ class AffectPlugin(Star):
     @filter.after_message_sent(priority=-20000)
     async def group_delivery_finished(self,event:AstrMessageEvent):
         await self.groups.finish(event)
+
+    async def grant_private_account(self,event,number,*,owner=False):
+        event.stop_event()
+        if event.get_platform_id()!='qq_snowluma' or not event.is_private_chat():
+            yield event.plain_result('请由现有QQ主人私聊发送 /加白 QQ号 或 /加主人 QQ号');return
+        actor=authorized(event)
+        if not actor:return
+        command='加主人' if owner else '加白'
+        raw=str(getattr(event.message_obj,'message_str','')).strip()
+        if not re.fullmatch(r'/?'+command+r'\s+[1-9][0-9]{4,19}',raw) or raw.split()[-1]!=str(number):
+            yield event.plain_result('用法：/'+command+' QQ号；请直接输入完整QQ号');return
+        event.set_extra('_p1_qq_send_guard',lambda:authorized(event)==actor)
+        self.install_reply_delay(event)
+        try:
+            result=await self.access.grant(event,str(number),owner=owner)
+        except Exception as exc:
+            logger.info('[P1 Access] grant_rejected code='+type(exc).__name__)
+            yield event.plain_result('未确认权限变更成功；请检查号码、白名单配置和是否使用独立配置档。失败会尝试恢复备份，不要按成功处理');return
+        role='主人，同时加入私聊白名单' if result['owner'] else '普通私聊白名单'
+        yield event.plain_result(('已将 '+str(number)+' 加入'+role if result['changed'] else str(number)+' 已有'+role+'权限')+'；独立记忆、Affect和学习按此账号接入，无需重启，不清空已有记录')
+
+    @filter.command('加白')
+    async def add_private_account(self,event:AstrMessageEvent,number:str=''):
+        async for result in self.grant_private_account(event,number):yield result
+
+    @filter.command('加主人')
+    async def add_owner_account(self,event:AstrMessageEvent,number:str=''):
+        async for result in self.grant_private_account(event,number,owner=True):yield result
 
     @filter.command('群聊')
     async def group_control(self,event:AstrMessageEvent,mode:str='状态',group:str=''):

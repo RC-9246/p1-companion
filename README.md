@@ -128,3 +128,5 @@ sudo python3 tests/portable_leisure_install.py
 原生概率接话与 P1 智能主动的独立开关：[主动线路控制](docs/reply-routes.md)。
 
 群内主动接话排队和模型参数优化：[延迟修复、复现与测量边界](docs/group-latency.md)。
+
+QQ 快捷接入：现有主人私聊 `/加白 QQ号` 或 `/加主人 QQ号`，详见[权限命令、隔离和恢复](docs/private-access-commands.md)。
