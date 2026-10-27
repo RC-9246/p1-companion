@@ -17,6 +17,14 @@ function Wsl-Command([string[]]$Arguments) {
     & wsl.exe @Arguments
     if ($LASTEXITCODE -ne 0) { throw "WSL 操作未完成（退出码 $LASTEXITCODE）。请更新 Windows / WSL，确认 BIOS 虚拟化已启用，然后重新双击安装程序。" }
 }
+function Read-WizardStateFile([ValidateSet('browser.url','completed.json')][string]$Name) {
+    $File = '/var/lib/p1-companion-installer/' + $Name
+    # An absent receipt is expected before startup/completion. Probe without
+    # stderr so PowerShell 5.1 Stop does not turn it into a fatal native error.
+    & wsl.exe --distribution P1Companion --user root --exec test -f $File | Out-Null
+    if ($LASTEXITCODE -ne 0) { return '' }
+    return (((& wsl.exe --distribution P1Companion --user root --exec cat $File) -join '').Trim())
+}
 function Test-WizardUrl([string]$Url) {
     if ($Url -notmatch '^http://127\.0\.0\.1:6191/#([A-Za-z0-9_-]+)$') { return $false }
     $SessionToken = $Matches[1]
@@ -83,7 +91,7 @@ try {
     $DistroMarker = Join-Path $StateDir 'distro-created.json'
     if ($Installed -match '(?m)^P1Companion\s*$') {
         if (-not (Test-Path -LiteralPath $DistroMarker)) { throw '已存在同名 P1Companion 发行版，但没有本程序的创建记录。为保护原有数据，停止自动接管。' }
-        $FinishedRaw = (& wsl.exe --distribution $Distro --user root --exec cat /var/lib/p1-companion-installer/completed.json 2>$null) -join ''
+        $FinishedRaw = Read-WizardStateFile -Name 'completed.json'
         if (-not $SetupAgain -and $LASTEXITCODE -eq 0 -and ($FinishedRaw | ConvertFrom-Json).cleanup_complete -and (Test-Path -LiteralPath (Join-Path $StateDir 'Start-P1Companion.ps1'))) {
             . (Join-Path $StateDir 'Start-P1Companion.ps1') -LibraryOnly
             Clear-CompanionResumeShortcut
@@ -91,7 +99,7 @@ try {
             & (Join-Path $StateDir 'Start-P1Companion.ps1'); exit 0
         }
         # Reuse a running installation without terminating it or copying its source.
-        $ExistingUrl = ((& wsl.exe --distribution $Distro --user root --exec cat /var/lib/p1-companion-installer/browser.url 2>$null) -join '').Trim()
+        $ExistingUrl = Read-WizardStateFile -Name 'browser.url'
         if (Test-WizardUrl $ExistingUrl) { Start-Process $ExistingUrl; exit 0 }
     } else {
         Write-Host '正在准备独立的 Ubuntu 24.04 环境，不修改你已有的 WSL 发行版…'
@@ -134,7 +142,7 @@ try {
     $GuiClient = Start-Process -FilePath wsl.exe -ArgumentList @('--distribution',$Distro,'--user','root','--exec','/bin/bash','/opt/p1-companion-installer/deploy/windows-bootstrap.sh','--start') -WindowStyle Hidden -PassThru
     $Url = ''
     for ($Attempt = 0; $Attempt -lt 30; $Attempt++) {
-        $Url = ((& wsl.exe --distribution $Distro --user root --exec cat /var/lib/p1-companion-installer/browser.url 2>$null) -join '').Trim()
+        $Url = Read-WizardStateFile -Name 'browser.url'
         if (Test-WizardUrl $Url) { break }
         $Url = ''; Start-Sleep -Seconds 1
     }
@@ -143,7 +151,7 @@ try {
     Start-Process $Url
     Write-Host '安装向导已在浏览器打开。完成验收后会自动清理临时向导，后台与数据保留。'
     $GuiClient.WaitForExit()
-    $CompletedRaw = (& wsl.exe --distribution $Distro --user root --exec cat /var/lib/p1-companion-installer/completed.json 2>$null) -join ''
+    $CompletedRaw = Read-WizardStateFile -Name 'completed.json'
     if ($LASTEXITCODE -eq 0 -and ($CompletedRaw | ConvertFrom-Json).cleanup_complete) {
         Clear-CompanionResumeShortcut
         Save-Phase 'completed'

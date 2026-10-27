@@ -78,8 +78,11 @@ try {
     Ensure-CompanionRuntime
     Install-CompanionRuntimeShortcut
     Clear-CompanionInstallerCache
-    $Finished = (& wsl.exe --distribution P1Companion --user root --exec cat /var/lib/p1-companion-installer/completed.json 2>$null) -join ''
-    if ($LASTEXITCODE -eq 0 -and ($Finished | ConvertFrom-Json).cleanup_complete) { Clear-CompanionResumeShortcut }
+    & wsl.exe --distribution P1Companion --user root --exec test -f /var/lib/p1-companion-installer/completed.json | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+        $Finished = (& wsl.exe --distribution P1Companion --user root --exec cat /var/lib/p1-companion-installer/completed.json) -join ''
+        if ($LASTEXITCODE -eq 0 -and ($Finished | ConvertFrom-Json).cleanup_complete) { Clear-CompanionResumeShortcut }
+    }
     Start-Process 'http://127.0.0.1:6185/'
 } catch {
     Add-Type -AssemblyName PresentationFramework

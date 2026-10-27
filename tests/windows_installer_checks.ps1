@@ -17,6 +17,13 @@ Invoke-Expression $Function.Extent.Text
 function global:wsl.exe { $script:Received = @($args); $global:LASTEXITCODE = 0 }
 Wsl-Command -Arguments @('--distribution','P1Companion','--exec','wslpath','-u','C:\A Folder\项目')
 if ($script:Received.Count -ne 6 -or $script:Received[-1] -ne 'C:\A Folder\项目') { throw 'Native argv lost a path or argument' }
+# Missing optional state is normal, and must not call cat or abort PS 5.1.
+$ReadFunction = $Ast.Find({param($Node) $Node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $Node.Name -eq 'Read-WizardStateFile'},$true)
+Invoke-Expression $ReadFunction.Extent.Text
+$script:OptionalCalls = @()
+function global:wsl.exe { $script:OptionalCalls += ($args -join ' '); $global:LASTEXITCODE = 1 }
+if ((Read-WizardStateFile -Name 'completed.json') -ne '' -or $script:OptionalCalls.Count -ne 1 -or $script:OptionalCalls[0] -match '--exec cat') { throw 'Missing optional receipt was read or accepted' }
+$global:LASTEXITCODE = 0
 Remove-Item Function:\wsl.exe
 $Runtime = Join-Path $Root 'deploy/windows-runtime.ps1'
 $RuntimeTokens = $null; $RuntimeErrors = $null
