@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "date": "2026-10-27",
+  "date": "2026-10-28",
   "feature": "retire temporary installation GUI after successful acceptance",
   "macos": {
     "cleanup_and_http_tests_passed": 18,
@@ -17,8 +17,11 @@
     "production_8_container_start_and_restart_state_unchanged": true
   },
   "windows": {
-    "new_runtime_powershell_checks": "pending CI",
-    "real_wsl_install_reboot_cleanup_acceptance": false
+    "new_runtime_powershell_checks": "passed PowerShell 5.1 and PowerShell 7",
+    "real_wsl_install_reboot_cleanup_acceptance": false,
+    "source_commit": "7f94787993a950b8cc41abd455a08e732b0ff758",
+    "ci_url": "https://github.com/RC-9246/p1-companion/actions/runs/40538960328",
+    "optional_receipt_and_native_host_identity_guards": "passed"
   },
   "boundaries": {
     "model_calls": 0,
@@ -31,5 +34,15 @@
   "private_value_scan": {
     "values_checked": 14,
     "matches": 0
-  }
+  },
+  "ci_linux": {
+    "result": "success",
+    "wizard_tests": 31,
+    "cleanup_tests": 19,
+    "original_installer_tests": 27,
+    "neutral_core_checks": 198,
+    "source_verification": true,
+    "shell_and_javascript_syntax": true
+  },
+  "test_harness_note": "The first Windows run inherited the expected failure stub exit code; reset after assertions, then both native PowerShell versions passed. No guard was removed."
 }
