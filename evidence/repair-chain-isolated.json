@@ -1,0 +1,116 @@
+{
+  "all_passed": true,
+  "cases": [
+    {
+      "case": "real_missing_maintain",
+      "passed": true
+    },
+    {
+      "case": "real_missing_resilience",
+      "passed": true
+    },
+    {
+      "case": "real_missing_watchdog",
+      "passed": true
+    },
+    {
+      "case": "real_missing_core_health",
+      "passed": true
+    },
+    {
+      "case": "real_missing_backup_dbs",
+      "passed": true
+    },
+    {
+      "case": "real_missing_backup_agency",
+      "passed": true
+    },
+    {
+      "case": "real_missing_unit_p1-companion-maintain_service",
+      "passed": true
+    },
+    {
+      "case": "real_missing_unit_p1-companion-maintain_timer",
+      "passed": true
+    },
+    {
+      "case": "real_missing_unit_p1-companion-watchdog_service",
+      "passed": true
+    },
+    {
+      "case": "real_missing_unit_p1-companion-watchdog_timer",
+      "passed": true
+    },
+    {
+      "case": "real_permission_only_drift",
+      "passed": true
+    },
+    {
+      "case": "real_disabled_timer_reenabled",
+      "passed": true
+    },
+    {
+      "case": "real_failed_oneshot_not_claimed_success",
+      "passed": true
+    },
+    {
+      "case": "real_failed_engine_resumes_once",
+      "passed": true
+    },
+    {
+      "case": "sigkill_before_file_write_resumed",
+      "passed": true
+    },
+    {
+      "case": "sigkill_after_engine_no_duplicate_start",
+      "passed": true
+    },
+    {
+      "case": "single_journal_slot_recovers_without_reset",
+      "passed": true
+    },
+    {
+      "case": "double_journal_corruption_stops_actions",
+      "passed": true
+    },
+    {
+      "case": "operator_pause_respected",
+      "passed": true
+    },
+    {
+      "case": "real_shared_lock_defers_repair",
+      "passed": true
+    },
+    {
+      "case": "poisoned_checkpoint_rejected_without_partial_repair",
+      "passed": true
+    },
+    {
+      "case": "actual_upgrade_commits_without_container_restart",
+      "passed": true
+    },
+    {
+      "case": "actual_upgrade_manual_rollback_preserves_original_checkpoint",
+      "passed": true
+    },
+    {
+      "case": "actual_failed_upgrade_automatically_rolled_back",
+      "passed": true
+    },
+    {
+      "case": "killed_upgrade_recovers_via_persisted_guard_entry",
+      "passed": true
+    },
+    {
+      "case": "production_containers_unchanged",
+      "passed": true
+    }
+  ],
+  "real_systemd_units": true,
+  "real_sigkill": true,
+  "production_mounts_into_lab": false,
+  "rate_limit_clock": "injected uptime offset; OS clock unchanged",
+  "production_before_after_equal": true,
+  "real_qq_messages": 0,
+  "model_calls": 0
+}

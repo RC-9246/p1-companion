@@ -32,9 +32,12 @@ python3 scripts/verify_source.py
 python3 scripts/selftest.py
 python3 -m unittest discover -s tests -p test_easy_deploy.py
 python3 -m unittest discover -s tests -p test_ai_access.py
+python3 -m unittest discover -s tests -p 'test_repair_*.py'
 ```
 
 Do not run broad live tests, real model calls, QQ sends, account login or root-only installation just because a test file exists. Those actions must be relevant and authorized. First-install commands are in `docs/easy-deploy.md`; nonstandard layouts and existing installations use the documented manual/patch workflow.
+
+For an existing maintenance installation, `scripts/upgrade_repair_chain.py` updates only the watchdog and its sealed copy with a private recovery point. It is not a first installer or a general code-repair tool. Read `docs/repair-chain.md`; never publish its private recovery point or reset a corrupt repair journal to bypass retry limits.
 
 When changing distributed source, follow the source-maintenance section in `docs/ai-access.md`. Review and test the change before refreshing `source-manifest.json`; explicitly add reviewed new source paths and never auto-include runtime/private files. Rebuild a distributed archive through its maintainer's packaging workflow if an archive is being delivered. Do not remove verification to make a modified package pass. `scripts/verify_source.py` checks integrity against the local list, not publisher authenticity.
 

@@ -75,14 +75,11 @@ def main():
   item('second_fault_escalates_to_verified_image_recreation',result.returncode==0 and wait_health() and run(['docker','inspect',NAME,'--format','{{.Id}}']).stdout.strip()!=old_id and run(['docker','inspect',NAME,'--format','{{.Image}}']).stdout.strip()==before_image)
   # The independent watchdog repairs its own sibling in a copied filesystem.
   from unittest.mock import patch
-  spec=importlib.util.spec_from_file_location('lab_watchdog',ROOT/'services/maintenance/p1-companion-watchdog.py');wd=importlib.util.module_from_spec(spec);spec.loader.exec_module(wd)
-  watch=sandbox/'watchdog';(watch/'fixed').mkdir(parents=True);targets={};hashes={}
-  for key in ('maintain','resilience'):
-   source=watch/'fixed'/key;source.write_text('known-good-'+key);hashes[key]=R.digest(source);targets[key]=sandbox/(key+'-broken.py');targets[key].write_text('bad code')
-  (watch/'fixed-manifest.json').write_text(json.dumps(hashes));wd.ROOT=watch;wd.FILES=targets
-  with patch.object(wd.subprocess,'run'):
-   wd.main()
-  item('independent_watchdog_repairs_repair_engine',all(R.digest(targets[k])==hashes[k] for k in targets))
+  sys.path.insert(0,str(ROOT/'tests'))
+  from test_repair_chain import Fixture
+  watch=sandbox/'watchdog';watch.mkdir();fixture=Fixture(watch)
+  fixture.damage('maintain');fixture.damage('resilience');watch_result=fixture.recover()
+  item('independent_watchdog_repairs_repair_engine',watch_result['status']=='repair_succeeded' and all(R.digest(fixture.files[k])==fixture.hashes[k] for k in ('maintain','resilience')))
   # An infinite child experiment hits the real subprocess limit; its service survives.
   code="import urllib.request,json; req=urllib.request.Request('http://127.0.0.1:8767/experiment',data=json.dumps({'code':'while True: pass'}).encode(),headers={'Authorization':'Bearer synthetic-lab-token','Content-Type':'application/json'});v=json.load(urllib.request.urlopen(req,timeout=12));print(json.dumps({'denied':not v.get('ok')}))"
   r=run(['docker','exec',NAME,'python','-c',code],20);item('infinite_experiment_bounded_service_survives',r.returncode==0 and json.loads(r.stdout)['denied'] and health())

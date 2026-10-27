@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-27",
+  "scope": "independent recovery control-plane watchdog and its upgrade coordinator",
+  "offline_full_private_branch": {
+    "passed": 407,
+    "platform": "macOS",
+    "includes_recovery_chain": 42
+  },
+  "neutral_core": {
+    "passed": 198,
+    "platforms": [
+      "macOS",
+      "Linux ARM64"
+    ]
+  },
+  "recovery_chain_unit": {
+    "passed": 42,
+    "platforms": [
+      "macOS",
+      "Linux ARM64"
+    ],
+    "real_systemd": false
+  },
+  "ai_status_unit": {
+    "passed": 28,
+    "platforms": [
+      "macOS",
+      "Linux ARM64"
+    ]
+  },
+  "isolated_real_systemd": {
+    "passed": 26,
+    "platform": "Linux ARM64",
+    "evidence": "repair-chain-isolated.json",
+    "real_sigkill": true,
+    "os_reboot_tested": false,
+    "rate_limit_time_accelerated_by_injected_uptime": true
+  },
+  "existing_isolated_recovery": {
+    "passed": 41,
+    "evidence": "isolated-repair-acceptance.json",
+    "real_disposable_container_crash_and_recreation": true
+  },
+  "production": {
+    "deployed": true,
+    "evidence": "repair-chain-production.json",
+    "plugins_unchanged": 135,
+    "production_containers_unchanged": 8,
+    "database_quick_checks_passed": 6,
+    "private_recovery_point_created": true,
+    "temporary_upgrade_guard_removed": true,
+    "bot_restart_by_upgrader": false,
+    "database_writes_by_upgrader": false,
+    "readonly_cli_recovery_summary_verified": true,
+    "deployed_source_matches_reviewed_candidate": true
+  },
+  "fault_injection_test_setup_corrections": [
+    "Explicitly start failing lab oneshot before checking failure handling.",
+    "Wait for concurrently launched persistent guard to release its lock before testing idempotence."
+  ],
+  "compatibility_correction": "Known earlier deployment lacks companion_services watchdog copy; accept its one fixed neutral staging copy.",
+  "model_calls": 0,
+  "real_qq_test_messages": 0,
+  "all_twenty_requirements_fully_complete": false,
+  "ten_year_stability_guaranteed": false,
+  "unknown_code_errors_automatically_fixed": false,
+  "root_compromise_resistance_claimed": false,
+  "private_runtime_data_published": false,
+  "private_value_scan": {
+    "values_checked": 14,
+    "matches": 0
+  }
+}

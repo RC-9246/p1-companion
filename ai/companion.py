@@ -16,6 +16,9 @@ MODULES = ('group_memory_ready','group_affect_ready','learning_ready','qq_plain_
            'agency_ready','qq_actions_ready','private_access_commands_ready')
 SERVICES = ('astrbot','snowluma','p1-browser','p1-browser-egress','p1-leisure','p1-leisure-egress','p1-workbench','p1-n8n')
 DATABASES = ('affect','memoria','groups','agency','astrbot','knowledge')
+REPAIR_STATES = frozenset(('healthy','paused','busy','checkpoint_rejected','journal_corrupt','clock_guard',
+    'repair_succeeded','repair_failed','cooldown','daily_budget_exhausted','pending_recovery_verified',
+    'pending_recovery_failed','generation_changed','unit_query_failed','deferred_verification','state_unavailable'))
 
 class AccessError(Exception):
     pass
@@ -112,24 +115,40 @@ def flags(value, names):
     value=value if isinstance(value,dict) else {}
     return {k:value[k] if type(value.get(k)) is bool else None for k in names}
 
+def recovery_summary(value, now):
+    elapsed=age(value.get('at'),now)
+    fresh=elapsed is not None and elapsed<=1200 and type(value.get('schema')) is int and value['schema']==1
+    def count(name,maximum):
+        v=value.get(name)
+        return v if fresh and type(v) is int and 0<=v<=maximum else None
+    state=value.get('status')
+    return {'age_seconds':elapsed,'fresh':fresh,
+            'status':state if fresh and isinstance(state,str) and state in REPAIR_STATES else None,
+            'pending':value.get('pending') if fresh and type(value.get('pending')) is bool else None,
+            'engine_verified':value.get('engine_verified') if fresh and type(value.get('engine_verified')) is bool else None,
+            'restored_files':count('restored_files',10),'rolling_24h_attempts':count('rolling_24h_attempts',2)}
+
 def health(root, now=None):
     root=root_path(str(root)); now=time.time() if now is None else now
     data=root/'astrbot/data/plugin_data/affect'
     start=report(data/'companion_health.json',root); maintenance=report(data/'maintenance_health.json',root)
+    watchdog=report(data/'repair_watchdog_health.json',root)
     elapsed=age(maintenance.get('at'),now); fresh=elapsed is not None and elapsed<=900
     services=flags(maintenance.get('services'),SERVICES)
     dbs=flags(maintenance.get('databases'),DATABASES)
     if not fresh: services=dict.fromkeys(SERVICES); dbs=dict.fromkeys(DATABASES)
     repairs=maintenance.get('repairs'); count=min(len(repairs),10000) if isinstance(repairs,list) else None
-    return {'ok':bool(start or maintenance),'source':'closed_local_status_files','writes':False,'network_calls':0,
+    return {'ok':bool(start or maintenance or watchdog),'source':'closed_local_status_files','writes':False,'network_calls':0,
             'startup_report':{'age_seconds':age(start.get('at'),now),'modules':flags(start,MODULES),
                               'continuous_runtime_probe':False},
             'maintenance':{'age_seconds':elapsed,'fresh':fresh,'services':services,'databases':dbs,
                            'disabled':maintenance.get('disabled') if type(maintenance.get('disabled')) is bool else None,
                            'last_repair_count':count},
+            'recovery_chain':recovery_summary(watchdog,now),
             'account_login_verified':False,'conversation_store_or_credential_files_read':False,
             'limits':['Startup flags are historical readiness, not continuous health.',
                       'Maintenance states become unknown after 15 minutes or invalid timestamps.',
+                      'Recovery-chain states become unknown after 20 minutes; they do not prove every application is healthy.',
                       'Container health does not prove QQ/Bilibili login or message delivery.']}
 
 def doctor(root, source=SOURCE):

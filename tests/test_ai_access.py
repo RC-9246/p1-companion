@@ -101,7 +101,20 @@ class HealthTests(unittest.TestCase):
    def narrow(path,*args,**kwargs):
     opened.append(Path(path).name);return original(path,*args,**kwargs)
    with patch.object(M.os,'open',side_effect=narrow):M.health(p,now=100)
-   self.assertTrue(set(opened).issubset({'companion_health.json','maintenance_health.json'}))
+   self.assertTrue(set(opened).issubset({'companion_health.json','maintenance_health.json','repair_watchdog_health.json'}))
+ def test_recovery_summary_only_publishes_closed_fields(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   p=Path(tmp).resolve();secret='synthetic-recovery-secret'
+   self.write(p,'repair_watchdog_health.json',{'schema':1,'at':1000,'status':'repair_succeeded','pending':False,'engine_verified':True,'restored_files':3,'rolling_24h_attempts':1,'private_path':secret,'traceback':secret})
+   r=M.health(p,now=1010);self.assertNotIn(secret,json.dumps(r));self.assertTrue(r['recovery_chain']['fresh']);self.assertEqual(r['recovery_chain']['status'],'repair_succeeded');self.assertEqual(r['recovery_chain']['restored_files'],3)
+ def test_recovery_summary_stale_or_invalid_schema_is_unknown(self):
+  for value in ({'schema':1,'at':1},{'schema':True,'at':1000},{'schema':2,'at':1000}):
+   r=M.recovery_summary({**value,'status':'healthy','engine_verified':True,'rolling_24h_attempts':1},1400)
+   self.assertFalse(r['fresh']);self.assertIsNone(r['status']);self.assertIsNone(r['engine_verified']);self.assertIsNone(r['rolling_24h_attempts'])
+ def test_recovery_summary_invalid_types_and_arbitrary_status_filtered(self):
+  for status in ('synthetic-secret',[],{}):
+   r=M.recovery_summary({'schema':1,'at':1000,'status':status,'engine_verified':'true','pending':1,'restored_files':11,'rolling_24h_attempts':True},1001)
+   self.assertIsNone(r['status']);self.assertIsNone(r['engine_verified']);self.assertIsNone(r['pending']);self.assertIsNone(r['restored_files']);self.assertIsNone(r['rolling_24h_attempts'])
  def test_runtime_report_symlink_does_not_expose_other_file(self):
   with tempfile.TemporaryDirectory() as tmp:
    p=Path(tmp).resolve();q=self.write(p,'maintenance_health.json',{'at':1000});q.unlink();q.symlink_to('/etc/hosts');r=M.health(p,now=1001);self.assertFalse(r['ok'])

@@ -34,6 +34,8 @@ python3 ai/companion.py handoff
 
 后两项只对实际获准的本机目标使用；不会自动 SSH，也不会接管其他设备。`status` 的 `ok` 表示状态文件可读取，不表示所有服务都健康。启动报告与定期维护分别标明时间；维护超过 15 分钟、缺少有效时间或时钟异常时，服务与数据库状态返回 unknown（JSON null）。容器状态不能证明账号在线或消息送达。
 
+`status` 另提供 `recovery_chain`：从固定看门狗报告提取状态码、待验收标记、修复文件数和滚动尝试数，超过 20 分钟返回 unknown。没有新增写入或部署工具；恢复引擎通过验收不等于所有应用均健康。[恢复链说明](repair-chain.md)
+
 需要既有服务器只读状态时，例如：
 
 ```sh
@@ -110,3 +112,5 @@ runtime/ai-venv/bin/python tests/ai_access_mcp_handshake.py
 ```
 
 检查涵盖默认不读运行数据、固定根路径、非法/过大/符号链接文件拒绝、字段去敏、过期状态、源码篡改、只读预检参数、计划不执行及交接结构。本次 25 项专项已在 macOS 与 Linux ARM64 通过；使用 mcp==1.30.0 实际核验六个工具、两个资源、一个 prompt、默认拒绝运行数据及合成目标的字段过滤。另在 P1 上用 CLI 核验只读状态摘要和既有安装拒绝，生产 135 个插件文件保持原样。真实 MCP 握手与真实生产状态检查分别记录，不互相替代；结果见 `evidence/ai-access-validation.json`。
+
+后续恢复链版本增加三个状态摘要回归，共 28 项 AI 接入离线测试，已在 macOS 与 Linux ARM64 通过；本次新增状态字段不会改变原 MCP 的工具数量、参数或权限。[恢复链版本验证](../evidence/repair-chain-validation.json)

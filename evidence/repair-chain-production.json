@@ -1,0 +1,30 @@
+{
+  "watchdog": {
+    "schema": 1,
+    "at": 1793109923.4721847,
+    "status": "healthy",
+    "pending": false,
+    "engine_verified": null,
+    "rolling_24h_attempts": 0
+  },
+  "watchdog_exit": 0,
+  "container_health_passed": true,
+  "production_containers_unchanged": true,
+  "production_plugins_unchanged": true,
+  "production_plugin_files_checked": 135,
+  "database_quick_checks": {
+    "affect": "ok",
+    "memoria": "ok",
+    "groups": "ok",
+    "agency": "ok",
+    "astrbot": "ok",
+    "knowledge": "ok"
+  },
+  "temporary_upgrade_units_removed": true,
+  "unit_query_exit": 1,
+  "deployed_watchdog_sha256": "4a158e9d17c464eb2ff91fbf828e1bb0d40a476ad4f6601aead0e337da8269ef",
+  "checkpoint_verified": true,
+  "source_copies_updated": 3,
+  "bot_restarted_by_upgrader": false,
+  "database_modified_by_upgrader": false
+}

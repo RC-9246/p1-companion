@@ -16,6 +16,7 @@
     "manual_install": "docs/deployment.md",
     "scope_isolation": "docs/memory-spaces.md",
     "recovery": "docs/recovery.md",
+    "recovery_chain": "docs/repair-chain.md",
     "feature_gaps": "docs/twenty-item-audit.md",
     "handoff_schema": "ai/handoff.schema.json"
   },
