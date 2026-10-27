@@ -21,8 +21,11 @@
   },
   "windows": {
     "launcher_added": true,
-    "ci_status": "not_yet_run",
-    "real_windows_wsl_reboot_account_acceptance": false
+    "ci_status": "passed_initial_powershell_7_check",
+    "real_windows_wsl_reboot_account_acceptance": false,
+    "ci_url": "https://github.com/RC-9246/p1-companion/actions/runs/40530174697",
+    "source_commit": "92d3034ec9691719e193134b0472a56cb1cf6133",
+    "PowerShell_5_1_check": "added_pending_run"
   },
   "gui_browser": {
     "desktop_preview_checked": true,

@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $PSScriptRoot
 $Script = Join-Path $Root 'deploy/windows-setup.ps1'
 $Tokens = $null; $ParseErrors = $null

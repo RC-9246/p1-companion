@@ -1,6 +1,6 @@
 {
   ".gitattributes": "a79691a93b46e49ce460c26ef22afcc03d6eca1e63bf2edbc20e96159510f6c9",
-  ".github/workflows/installation-wizard.yml": "3c6d23774295b161aece6cbfeec7672b8df676165960619e135360b6e9b2364f",
+  ".github/workflows/installation-wizard.yml": "54dcf2babdb5d6dc5eeebb73e3f2111b88a7b747b27c1c9fdac3d4274a22b281",
   ".gitignore": "d2d73e0c4531a342f8607c42eec84df08a243a9dd66ca2ee12210c9e0a510da1",
   "AGENTS.md": "c4a64e436172cf43d040c27e20251d3497bf35a7de4e568664689af958173727",
   "AI_DEVELOPMENT.md": "96d0ad5302478c3127ecbb833fdd80c6d8b7e482c64b1b147ced4da75e61419c",
@@ -77,7 +77,7 @@
   "evidence/group-latency-model.json": "448eb6c109b0d7b2746179c4778e03738efdc340be5242ab094b8de8470b8747",
   "evidence/group-latency-neutral.json": "daecf415f8a2ed482bd619d70b4a49429820430d084846d0edbbd0e7fd079d78",
   "evidence/group-latency-postflight.json": "03572e0f768bec9e724ba4ec00c6a2d3199ce6dc7201b414faac1c93d27dfcd5",
-  "evidence/installation-wizard-validation.json": "48db13bae5aeb8f454bd8e02cac7544d46c0c44b32e345204467d0bd0fd748b2",
+  "evidence/installation-wizard-validation.json": "732861d9ae79bab2966694d5d46405611943f9f1c444d7c717fd5ff348748d23",
   "evidence/isolated-repair-acceptance.json": "c4c27dc3203ca9027e0ee4e893c4c90f807138c5230256d26944d97525b06a23",
   "evidence/learning-before-canonical.json": "ee65c40e1628917f42ec704d4bf6379038db9fb5d89eca7b841f3d4d34efffc0",
   "evidence/live-agency-model.json": "f2dedc376e12eee4811e3d056b11389adebff0eab93459420e2737031fc6dd58",
@@ -371,6 +371,6 @@
   "tests/test_social.py": "2cc55979c0120899c113614422ff5d90e0b9049c8e24a929c11ae2272f746058",
   "tests/test_social_context.py": "262f8226f423628f2c0f9d632fee52ff0b7bb961bd40322c1432e2774ac9f622",
   "tests/test_thinking.py": "db50c30db1c580b34ca88f6361a184051af845d6865f03b02c85912d02a889e5",
-  "tests/windows_installer_checks.ps1": "4bd635fb51e402e1b83bf53cc650afbe78b74fd2b562842b138efaf12f87ecb9",
+  "tests/windows_installer_checks.ps1": "aabc8a3df793b09083d4b6e0a68cd452c857eda305d9b7f4f07f449eb8500e49",
   "开始安装.cmd": "0ac6a7c11b4a529d299b85778c1a7ef322e8924d3df05fcc5107c84d5d11b8b6"
 }

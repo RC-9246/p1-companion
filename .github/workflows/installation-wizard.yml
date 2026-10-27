@@ -24,6 +24,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Parse launcher, inspect plan, exercise argument forwarding
+      - name: Windows PowerShell 5.1 launcher checks
+        shell: powershell
+        run: ./tests/windows_installer_checks.ps1
+      - name: PowerShell 7 launcher checks
         shell: pwsh
         run: ./tests/windows_installer_checks.ps1
