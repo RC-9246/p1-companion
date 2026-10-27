@@ -1,0 +1,24 @@
+[Unit]
+Description=Bounded P1 memory pressure and orphan browser guardian
+After=docker.service
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+ExecStart=/usr/bin/python3 -B /usr/local/sbin/p1-resource-guard.py
+TimeoutStartSec=25
+Nice=10
+MemoryMax=96M
+TasksMax=16
+CPUQuota=15%
+NoNewPrivileges=yes
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/srv/p1-agent/astrbot/data/plugin_data/affect /var/lib/p1-companion-resource
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+RestrictAddressFamilies=AF_UNIX
+RestrictSUIDSGID=yes
+LockPersonality=yes
+

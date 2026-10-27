@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "unit_tests": {
+    "linux_arm64_root": 35,
+    "macos": {
+      "passed": 32,
+      "root_cases_skipped": 3
+    },
+    "native_installer_pidfd_guard_and_exact_identity": "passed",
+    "real_temp_file_rollback_preserves_newer_history": true,
+    "post_install_edits_block_restore": true
+  },
+  "isolated_real_docker": {
+    "network": "none",
+    "production_mounts": false,
+    "real_chromium_processes_before": 10,
+    "real_chromium_processes_after_cleanup": 0,
+    "synthetic_cookie_preserved": true,
+    "memory_and_pids_limits_restored": true,
+    "production_core_start_state_unchanged": true,
+    "real_accounts_used": false
+  },
+  "regression_tests": {
+    "wizard": 31,
+    "installer_cleanup": 19,
+    "agency": 29,
+    "leisure_policy": 12
+  },
+  "production_deployment": {
+    "installed": true,
+    "timer_active": true,
+    "service_result": "success",
+    "all_8_services_healthy": true,
+    "only_astrbot_and_idle_leisure_restarted": true,
+    "other_6_container_start_states_unchanged": true,
+    "core_memory_limits_mib": {
+      "astrbot": 1536,
+      "snowluma": 1792
+    },
+    "existing_soft_reservations_preserved": true,
+    "current_mode": "normal",
+    "memory_available_gib_observed": 1.84,
+    "unknown_processes_killed": 0,
+    "orphan_candidates_observed": 0,
+    "sealed_135_plugin_files_match": true,
+    "leisure_repair_source_matches": true,
+    "original_repair_chain_check": "healthy no repair needed",
+    "installer_database_writes": false
+  },
+  "real_model_calls_by_test": 0,
+  "known_limits": [
+    "No guarantee of zero OOM",
+    "Unknown processes and the QQ process are outside cleanup authority",
+    "cgroup v1 automatic limit sizing skipped",
+    "Full Windows WSL acceptance not performed"
+  ],
+  "performance_observation": {
+    "interval_seconds": 30,
+    "guardian_memory_max_mib": 96,
+    "one_pass_cpu_milliseconds": 139.58,
+    "long_term_performance_guaranteed": false
+  },
+  "private_value_scan": {
+    "values_checked": 14,
+    "matches": 0
+  },
+  "ci": "pending final source run"
+}

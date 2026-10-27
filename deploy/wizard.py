@@ -9,7 +9,7 @@ import install as I
 import gui_cleanup as G
 ASSETS=Path(__file__).resolve().parent/'wizard'
 STEPS={'tag_installed_base':'保存原始镜像','build_core_dependencies':'安装 AstrBot 扩展依赖','build_browser':'准备浏览器','build_workbench':'准备文件与实验工具','offline_neutral_checks':'运行离线检查','stop_core':'保存恢复点并切换服务','install_plugins_and_config':'安装记忆、情绪与学习模块','start_p1-companion':'启动公开浏览器','start_p1-workbench':'启动文件工具','start_p1-leisure':'启动私人浏览空间','initialize_workflows':'准备工作流','secure_workflow_setup':'保护工作流账号','start_integrated_core':'启动完整伙伴','verify_core_dependencies':'核对依赖与服务'}
-ACTIONS={'check','core','integrate','login','model_save','model_test','maintenance','monitor','rollback','stop_core','finish'}
+ACTIONS={'check','core','integrate','login','model_save','model_test','maintenance','monitor','rollback','stop_core','finish','guard'}
 class Wizard:
     def __init__(self,state,preview=False):
         self.state=Path(state);self.preview=preview;self.token=secrets.token_urlsafe(32);self.lock=threading.Lock();self.jobs=[];self.config={};self.ticket=None;self.desktop_root=None;self.retired=False;self.on_shutdown=lambda:None
@@ -76,15 +76,20 @@ class Wizard:
                         return len(text)
                     def flush(self):pass
                 with contextlib.redirect_stdout(Progress()):result=I.apply(root,v['bot'],v['owner'],social=v.get('social',False))
-            elif action in ('maintenance','monitor'):
+            elif action in ('maintenance','monitor','guard'):
                 F.need(v.get('real_chat_confirmed') is True,'real_chat_confirmation_required');point,state=self.latest_point(root);F.need(state.get('status')=='committed','integration_not_committed')
-                script='install_maintenance.py' if action=='maintenance' else 'install_monitor.py'
+                script={'maintenance':'install_maintenance.py','monitor':'install_monitor.py','guard':'install_resource_guard.py'}[action]
                 args=[sys.executable,str(point/'source/scripts'/script)]
-                if action=='maintenance':args+=['--root',str(root),'--apply']
-                emit(action,'安装自动维护' if action=='maintenance' else '安装资源面板')
-                F.command(args,240);result={'installed':True,'kind':action,'chatbot_restart_requested':False}
+                if action in ('maintenance','guard'):args+=['--root',str(root),'--apply']
+                emit(action,{'maintenance':'安装自动维护','monitor':'安装资源面板','guard':'开启内存保护'}[action])
+                F.command(args,240);result={'installed':True,'kind':action}
+                if action!='guard':result['chatbot_restart_requested']=False
             elif action=='finish':
                 point,state=self.latest_point(root)
+                G.acceptance(root,point,state,v.get('real_chat_confirmed'))
+                if v.get('resource_protection',True):
+                    emit('resource_guard','开启内存保护并保存恢复点')
+                    F.command([sys.executable,str(point/'source/scripts/install_resource_guard.py'),'--root',str(root),'--apply'],240)
                 emit('final_check','核对服务与模块，保存安装记录')
                 result=G.finish(root,point,state,self.state,v.get('real_chat_confirmed'),v.get('auto_cleanup',True))
                 if result['cleanup_complete']:self.retired=True

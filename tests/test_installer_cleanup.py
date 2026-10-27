@@ -85,7 +85,7 @@ class CleanupTests(unittest.TestCase):
         try:
             with patch.object(W.I,'verify_source'),patch.object(W.I,'inspect',return_value={'Running':True}),patch.object(G,'windows_runtime_ready'),patch.object(G,'MANAGED_SOURCE',self.source),patch.object(W.I,'SOURCE',self.source):
                 c=http.client.HTTPConnection('127.0.0.1',server.server_port,timeout=5);headers={'Content-Type':'application/json','Origin':'http://127.0.0.1:'+str(server.server_port),'X-P1-Setup-Token':app.token}
-                v={'root':str(self.root),'mode':'existing','bot':'10001','owner':'20002','real_chat_confirmed':True}
+                v={'root':str(self.root),'mode':'existing','bot':'10001','owner':'20002','real_chat_confirmed':True,'resource_protection':False}
                 c.request('POST','/api/action',json.dumps({'action':'finish','values':v}),headers);response=c.getresponse();self.assertEqual(response.status,202);response.read();c.close()
                 end=time.monotonic()+5
                 while app.lock.locked() and time.monotonic()<end:time.sleep(.02)

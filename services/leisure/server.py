@@ -231,6 +231,27 @@ class Browser:
   return {'ok':True,'logged_in':False,'local_session_removed':True}
 
 B=Browser()
+def resource_mode():
+ try:
+  v=json.loads((STATE/'resource-lease.json').read_text());remaining=v['until']-time.monotonic()
+  if v.get('version')==1 and v.get('boot')==Path('/proc/sys/kernel/random/boot_id').read_text().strip() and 0<remaining<=95 and v.get('mode') in ('pressure','critical'):return v['mode']
+ except (OSError,ValueError,TypeError,KeyError):pass
+ return 'normal'
+async def resource_cleanup():
+ mode=resource_mode()
+ if mode=='normal':return {'state':'normal','closed':False}
+ # Keep a human login scan and an in-flight private operation intact. Under
+ # sustained critical pressure only optional video viewing may be cancelled.
+ if B.qr and time.monotonic()<B.qr.get('expires',0):return {'state':'login_in_progress','closed':False}
+ if B.job and not B.job.done():
+  if mode!='critical':return {'state':'active_video_preserved','closed':False}
+  await B.stop()
+ if B.lock.locked():return {'state':'busy','closed':False}
+ async with B.lock:
+  if not B.ctx:return {'state':'already_idle','closed':False}
+  # A failed state save must not discard the only live login session.
+  await B.save();await B.close(save=False)
+  return {'state':'idle_browser_closed','closed':True}
 async def health(request):return web.json_response({'ok':True,'site':'bilibili','browser_running':B.ctx is not None,'browser_connected':bool(B.browser and B.browser.is_connected()),'page_closed':bool(B.page and B.page.is_closed()),'logged_in':B.logged,'public_interactions':False})
 async def action(request):
  if not hmac.compare_digest(request.headers.get('Authorization',''),'Bearer '+TOKEN):return web.json_response({'ok':False,'error':'forbidden'},status=403)
@@ -238,6 +259,8 @@ async def action(request):
   data=await request.json()
   if data.get('subject') not in OWNER:raise ValueError('unauthorized_subject')
   name=data.get('action')
+  if resource_mode()!='normal' and name not in ('stop','poll','quota','logout'):
+   return web.json_response({'ok':False,'error':'resource_pressure_pause','retry_after_seconds':90},status=503)
   if name=='cards':result=await B.cards(data.get('query',''))
   elif name in ('watchlater_add','watchlater_remove','favorite_add','favorite_remove'):
    result=await change_private(B,STATE,name,data.get('bvid'),data.get('folder_title',DEFAULT_FOLDER))
@@ -259,9 +282,17 @@ async def action(request):
  except Exception as exc:return web.json_response({'ok':False,'error':'browser_unavailable','code':type(exc).__name__,'phase':B.phase},status=502)
 async def janitor(app):
  while True:
-  await asyncio.sleep(30)
-  if B.ctx and (not B.job or B.job.done()) and time.monotonic()-B.last_touch>180:
-   async with B.lock:await B.close()
+  await asyncio.sleep(15)
+  try:
+   result=await asyncio.wait_for(resource_cleanup(),timeout=12)
+   if result['state']!='normal':
+    p=STATE/('resource-'+secrets.token_hex(4)+'.tmp')
+    try:
+     p.write_text(json.dumps({'at':time.time(),**result}));p.chmod(0o600);os.replace(p,STATE/'resource-status.json')
+    finally:p.unlink(missing_ok=True)
+   if B.ctx and (not B.job or B.job.done()) and not B.lock.locked() and time.monotonic()-B.last_touch>180:
+    async with B.lock:await B.close()
+  except Exception:pass # Next bounded pass retries; never include credentials in logs.
 async def start(app):app['janitor']=asyncio.create_task(janitor(app))
 async def stop(app):
  app['janitor'].cancel();await B.stop();await B.close()

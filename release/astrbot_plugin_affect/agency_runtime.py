@@ -133,6 +133,11 @@ class Agency:
    return False
   finally:await asyncio.to_thread(self.store.finish,reservation,state,time.monotonic()-started)
  def resource(self):
+  # A fresh host-guardian lease is checked before the slower local cache.
+  try:
+   guard=json.loads((self.data/'resource_guard_health.json').read_text())
+   if 0<=time.time()-guard.get('at',0)<95 and guard.get('pause_optional') is True:return False
+  except (OSError,ValueError,TypeError):pass
   if time.time()-self.last_resource<60:return self.resource_ok
   self.last_resource=time.time();available=999999
   try:

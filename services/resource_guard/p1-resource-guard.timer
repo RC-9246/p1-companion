@@ -1,0 +1,8 @@
+[Unit]
+Description=Check P1 memory pressure every 30 seconds
+[Timer]
+OnBootSec=90s
+OnUnitInactiveSec=30s
+AccuracySec=2s
+[Install]
+WantedBy=timers.target
