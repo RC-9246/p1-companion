@@ -25,7 +25,8 @@
     "wizard": 31,
     "installer_cleanup": 19,
     "agency": 29,
-    "leisure_policy": 12
+    "leisure_policy": 12,
+    "real_compose_and_astrbot_sdk": 11
   },
   "production_deployment": {
     "installed": true,
@@ -46,7 +47,18 @@
     "sealed_135_plugin_files_match": true,
     "leisure_repair_source_matches": true,
     "original_repair_chain_check": "healthy no repair needed",
-    "installer_database_writes": false
+    "installer_database_writes": false,
+    "later_observation": {
+      "mode": "normal",
+      "fresh_report_age_seconds": 3.8,
+      "memory_available_mib": 1596,
+      "cleanup_actions": 0,
+      "bindings_valid": true
+    },
+    "memory_available_gib_observed_range": [
+      1.56,
+      1.84
+    ]
   },
   "real_model_calls_by_test": 0,
   "known_limits": [
@@ -65,5 +77,13 @@
     "values_checked": 14,
     "matches": 0
   },
-  "ci": "pending final source run"
+  "ci": {
+    "result": "success",
+    "source_commit": "86bfd3f7a44aed4283c750e43d09e365d04225b9",
+    "url": "https://github.com/RC-9246/p1-companion/actions/runs/40545465827",
+    "linux_root_guard_tests": 35,
+    "windows_powershell_5_1_and_7": "passed",
+    "neutral_core_checks": 198,
+    "original_installer_tests": 27
+  }
 }
