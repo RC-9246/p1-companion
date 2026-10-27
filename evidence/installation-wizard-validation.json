@@ -1,0 +1,68 @@
+{
+  "date": "2026-10-27",
+  "release": "installation wizard beta 1",
+  "entrypoints": {
+    "windows": "开始安装.cmd",
+    "linux": "install.sh",
+    "existing_astrbot_cli_preserved": "deploy.sh"
+  },
+  "wizard_unit_tests": {
+    "macOS": 31,
+    "Linux_ARM64": 31,
+    "latest_linux_revision_accepted": true
+  },
+  "existing_integration_unit_tests": 27,
+  "native_linux": {
+    "passed": 11,
+    "evidence": "portable-installation-wizard.json",
+    "actual_astrbot_config_and_providers": true,
+    "network": "none",
+    "production_containers_unchanged": 8
+  },
+  "windows": {
+    "launcher_added": true,
+    "ci_status": "not_yet_run",
+    "real_windows_wsl_reboot_account_acceptance": false
+  },
+  "gui_browser": {
+    "desktop_preview_checked": true,
+    "mobile_checked": true,
+    "preview_has_no_install_or_account_access": true,
+    "viewport_samples": [
+      {
+        "width": 1280,
+        "height": 720
+      },
+      {
+        "width": 554,
+        "height": 822
+      }
+    ],
+    "account_form_and_navigation_checked": true
+  },
+  "upstream_image_manifests_checked": {
+    "astrbot": "soulter/astrbot:v4.29.1@sha256:a140a326163ac5f82f62153f033cddeac74e38e4ee1809c6e333e950ff19edc4",
+    "snowluma": "motricseven7/snowluma:v1.10.0@sha256:f7dbe3a8c87974c4af47118d10953c4b117d1d5d7b2f17c088709cde05d986b9",
+    "architectures": [
+      "amd64",
+      "arm64"
+    ]
+  },
+  "test_limitations": [
+    "No fresh Windows machine, WSL feature enabling, BIOS, or actual reboot was tested here.",
+    "No cold full-stack image build plus real account login accepted as one end-to-end test.",
+    "Unit tests mock host package and Docker mutations; native acceptance uses an isolated existing image."
+  ],
+  "real_account_logins": 0,
+  "real_model_calls": 0,
+  "host_packages_installed_by_tests": false,
+  "production_p1_reinstalled": false,
+  "private_credentials_published": false,
+  "cold_full_stack_install_accepted": false,
+  "novnc_public_client_asset": {
+    "http_status": 200,
+    "esm_rfb_export": true,
+    "credentials_api": true,
+    "live_account_desktop_viewed": false
+  }
+}

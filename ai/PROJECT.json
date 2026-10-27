@@ -12,6 +12,10 @@
   },
   "entrypoints": {
     "first_install": "deploy/install.py",
+    "fresh_host_gui": "deploy/wizard.py",
+    "fresh_host_setup": "deploy/firstboot.py",
+    "windows_launcher": "deploy/windows-setup.ps1",
+    "graphical_installation_guide": "docs/installation-wizard.md",
     "installation_guide": "docs/easy-deploy.md",
     "manual_install": "docs/deployment.md",
     "scope_isolation": "docs/memory-spaces.md",

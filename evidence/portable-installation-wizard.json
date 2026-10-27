@@ -1,0 +1,58 @@
+{
+  "all_passed": true,
+  "cases": [
+    {
+      "case": "astrbot_real_compose_parses_without_starting",
+      "passed": true
+    },
+    {
+      "case": "astrbot_ports_bind_loopback",
+      "passed": true
+    },
+    {
+      "case": "astrbot_immutable_image",
+      "passed": true
+    },
+    {
+      "case": "snowluma_real_compose_parses_without_starting",
+      "passed": true
+    },
+    {
+      "case": "snowluma_ports_bind_loopback",
+      "passed": true
+    },
+    {
+      "case": "snowluma_immutable_image",
+      "passed": true
+    },
+    {
+      "case": "configuration_is_private",
+      "passed": true
+    },
+    {
+      "case": "native_astrbot_accepts_generated_configuration",
+      "passed": true
+    },
+    {
+      "case": "native_astrbot_accepts_password_hash",
+      "passed": true
+    },
+    {
+      "case": "three_native_model_routes_instantiate",
+      "passed": true
+    },
+    {
+      "case": "all_production_containers_unchanged",
+      "passed": true
+    }
+  ],
+  "actual_docker_compose_parser": true,
+  "actual_astrbot_sdk": true,
+  "production_data_mounted": false,
+  "lab_network": "none",
+  "host_packages_installed": false,
+  "windows_wsl_or_reboot_tested": false,
+  "real_account_logins": 0,
+  "model_calls": 0,
+  "cold_full_stack_install_accepted": false
+}

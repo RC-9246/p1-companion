@@ -20,7 +20,7 @@ P1 Companion 把情绪状态、长期记忆、表达学习、群聊节奏和工�
 
 | 优势 | 在项目里意味着什么 |
 | :--- | :--- |
-| **少接线，一条命令集成** | 新增受检安装入口，自动检查、构建依赖镜像、安装八个插件、启动工具服务并核对就绪；原脚本与原核心 Compose 保留 |
+| **新手从零开始，跟着界面安装** | Windows 10/11 x64 双击启动，Linux 一个入口；自动准备 Docker、AstrBot、QQ 通道与 Companion，在网页填写 API、扫码并查看进度，原命令行入口保留 |
 | **方便不同 AI 接手** | 提供 AGENTS.md、机器可读项目清单、零额外依赖 JSON CLI、可选只读 MCP 桥和交接模板；不绑定某个助手品牌 |
 | **小设备，持续运行** | 已在 RK3399 / ARM64 / 4GB / Armbian 上部署验证。云端模型承担推理，本地保存状态、执行调度；重浏览与解析限制并发 |
 | **情绪有延续，表达有依据** | 21 维有界模拟状态、不同变化速度、当前关切与表达策略共同参与生成；稳定人格与可学习习惯分开 |
@@ -100,39 +100,41 @@ flowchart LR
 
 ## 快速开始
 
-**这是面向已有 AstrBot 的集成工程。** 先准备 Linux / Docker 主机，并按上游文档完成 [AstrBot](https://docs.astrbot.app/)、SnowLuma / OneBot 和 DeepSeek 的正常聊天配置。已测试环境为 AstrBot 4.29.1、MCP SDK 1.30.0；版本清单见 [requirements-tested.txt](requirements-tested.txt)。
+**不用预先安装 AstrBot。** 新安装向导把系统准备、AstrBot、QQ 接入和 Companion 串成六步；API、管理密码、QQ 与 B站扫码都在中文界面完成。当前向导为 Beta，实际验收层次与支持条件见 [完整说明](docs/installation-wizard.md)。
 
-**① 获取源码，核对完整性，运行中性核心检查**
+**Windows 10 / 11 x64：下载、解压、双击**
+
+1. [下载完整 ZIP](https://github.com/RC-9246/p1-companion/archive/refs/heads/main.zip)，先解压
+2. 双击 **开始安装.cmd**，按系统提示准备 WSL2；需要重启时保存工作，重启后双击桌面的继续安装入口
+3. 在自动打开的网页填写 QQ 号、DeepSeek API Key 与管理密码，再按步骤扫码
+
+程序创建独立的 P1Companion Ubuntu 环境，不接管原有 WSL，不需要安装 Docker Desktop。Windows 至少 8GB 内存 / 20GB 可用磁盘，推荐 16GB；CPU 虚拟化需要开启。
+
+**Linux / Station P1：一个入口打开向导**
 
 ```sh
-git clone https://github.com/RC-9246/p1-companion.git
-cd p1-companion
-python3 scripts/verify_source.py
-python3 scripts/selftest.py
+sudo bash install.sh
 ```
 
-核验在本地进行，不读取账号状态，不发送 QQ，也不调用云端模型。中性核心检查需要 Python 3.11+。
+打开程序给出的本机链接。支持 Ubuntu 24.04、Debian 12/13 及对应 Armbian，ARM64 / x86_64。无桌面设备通过 SSH 隧道访问，[复制连接方法](docs/installation-wizard.md#linux--station-p1)。
 
-**② 一条命令，集成到已有 AstrBot**
+向导自动生成 OneBot 连接、独立令牌、普通 / 快速 / 深度思考与识图配置，再构建与安装完整模块。开始安装前会明确提示合成 API 测试及其用量。账号注册、充值、扫码、安全验证与必要的 Windows 重启由本人完成；不绕过平台限制。后台自主社交默认关闭，维护与资源面板在试聊验收后按需一键安装。
 
-在目标 Linux 主机执行；交互终端会询问机器人和主人的 QQ 号：
+<details>
+<summary>已经有能正常聊天的 AstrBot？保留原命令行集成入口</summary>
 
 ```sh
+python3 scripts/verify_source.py
+python3 scripts/selftest.py
+sudo bash deploy.sh --check
 sudo bash deploy.sh --apply
 ```
 
-先做只读环境诊断，或指定安装目录与账号：
+这个旧入口专门集成到已有 AstrBot + SnowLuma + 模型；图形向导也提供“已有 AstrBot”选项。标准布局要求与回滚见 [集成说明](docs/easy-deploy.md)。已有 Companion 安装仍拒绝覆盖，升级使用专用流程。
 
-```sh
-sudo bash deploy.sh --check
-sudo bash deploy.sh --root /srv/my-agent --apply --bot-id 10001 --owner-id 20002
-```
+</details>
 
-安装器自动检查标准布局、构建依赖镜像、备份、安装八个插件、接通内部网络、启动六个辅助容器并等待就绪；失败尝试恢复原源码、配置与核心镜像。原仓库脚本和核心 Compose 保留。**已有 Companion 安装会拒绝覆盖**，现有生产升级继续走独立补丁流程。
-
-“一键集成”从已有正常聊天的 AstrBot 开始，要求 Python 3.11+、Docker Compose v2 和标准数据挂载；账号登录、验证码、模型开户及真实投递仍由本人核验。后台社交默认关闭，宿主自修复和资源面板在验收后按需安装。[支持条件、过程与回滚](docs/easy-deploy.md) · [手动部署](docs/deployment.md) · [免责条款](DISCLAIMER.md)
-
-**③ 换成你自己的角色与素材**
+**换成你自己的角色与素材**
 
 本仓库提供 **中性人格与空图库**。你可以配置角色核心、表达基线及有权使用的审核素材，复现记忆、情绪、学习、群聊和工具机制。私人角色设定、关系阶段、真实聊天、账号、密钥、登录状态和原作图片不随源码分发。[人格与素材配置 →](docs/deployment.md#图片与人格)
 
@@ -156,6 +158,7 @@ python3 ai/companion.py describe
 | 已有记录 | 能说明什么 |
 | :--- | :--- |
 | **407 项完整离线测试** | 当前生产分支的离线回归结果，包含新增 42 项恢复链专项；包含角色或素材相关检查，不能代替新机器验收 |
+| **图形向导专项** | 空白主机配置、密钥不进进度记录、真实本机 HTTP 权限检查、原有部署保护，以及 Windows 语法 / 计划 / 参数转发分别记录，见 [向导验证](evidence/installation-wizard-validation.json) |
 | **27 项安装器专项** | 启动门、互斥、校验、旧安装拒绝，以及模拟 Docker 下十个阶段的失败恢复；另有 Linux 临时目录中的真实文件与权限验收，见 [部署验证](evidence/easy-deploy-validation.json) |
 | **AI 接入专项** | 默认权限、字段过滤、过期状态、源码核验与交接格式有独立回归；MCP 真实握手另行记录，见 [验证结果](evidence/ai-access-validation.json) |
 | **198 项中性核心测试** | 可用 `python3 scripts/selftest.py` 复现的当前中性核心检查 |
@@ -174,8 +177,10 @@ browser/       公开资料浏览器与访问策略
 services/      B站、文件解析与实验、MCP、维护、资源面板
 AGENTS.md      AI 工程协作指南，不替代角色人格
 ai/            项目清单、JSON CLI、只读 MCP 与交接模板
-deploy.sh      受检一键集成入口（已有 AstrBot）
-deploy/        安装协调、依赖镜像、只读诊断与失败回滚
+开始安装.cmd   Windows 10/11 x64：准备独立 WSL2 并打开向导
+install.sh     Linux：准备 Python 并打开图形向导
+deploy.sh      原受检集成入口（已有 AstrBot）
+deploy/        图形向导、空白主机准备、安装协调与失败恢复
 scripts/       原有安装、源码核验、素材注册、检查点与恢复
 tests/         离线、原生 SDK、服务、模型与隔离故障验收
 docs/          设计、部署、控制、排障与适用边界
@@ -186,7 +191,7 @@ evidence/      去敏的测试与部署结果
 
 | 想了解 | 从这里开始 |
 | :--- | :--- |
-| 复现与定制 | [一键集成](docs/easy-deploy.md) · [部署指南](docs/deployment.md) · [操作控制](docs/controls.md) · [人格与情绪设计](docs/emotion-design.md) |
+| 复现与定制 | [图形安装](docs/installation-wizard.md) · [已有 AstrBot 集成](docs/easy-deploy.md) · [部署指南](docs/deployment.md) · [操作控制](docs/controls.md) · [人格与情绪设计](docs/emotion-design.md) |
 | AI 接手与协作 | [接入指南](docs/ai-access.md) · [工程指南](AGENTS.md) · [交接提示](ai/TAKEOVER.md) |
 | 记忆与学习 | [独立记忆空间](docs/memory-spaces.md) · [持续学习](docs/self-learning.md) · [连续表达](docs/self-response.md) |
 | 群聊与图片 | [群控制](docs/group-control-fix.md) · [主动线路](docs/reply-routes.md) · [延迟优化](docs/group-latency.md) · [图片输入](docs/group-image-fix.md) |

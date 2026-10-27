@@ -2,6 +2,8 @@
 
 [← 返回项目首页](../README.md)
 
+**什么也没安装的新用户，请使用 [Windows / Linux 图形安装向导](installation-wizard.md)**。它会安装 Docker、AstrBot 与 QQ 接入并生成配置；本文保留给已有 AstrBot 的原集成入口。
+
 新增的 `deploy.sh` / `deploy/install.py` 把现有脚本串成一个入口。适用场景是**已有 AstrBot + SnowLuma / OneBot + 模型，QQ 已能正常聊天**的新 Companion 安装；不会替代 QQ 扫码、B站登录、验证码、模型开户或 Docker 安装。旧的脚本与 Compose 模板保留，仍可按[手动指南](deployment.md)部署。
 
 ## 一条命令开始

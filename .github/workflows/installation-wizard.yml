@@ -1,0 +1,29 @@
+name: Installation wizard checks
+on:
+  push:
+    paths: ['deploy/**', 'install.sh', '开始安装.cmd', '.gitattributes', 'tests/test_installation_wizard.py', 'tests/windows_installer_checks.ps1', '.github/workflows/installation-wizard.yml']
+  pull_request:
+    paths: ['deploy/**', 'install.sh', '开始安装.cmd', '.gitattributes', 'tests/test_installation_wizard.py', 'tests/windows_installer_checks.ps1', '.github/workflows/installation-wizard.yml']
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 scripts/verify_source.py
+      - run: python3 -m unittest discover -s tests -p 'test_installation_wizard.py'
+      - run: python3 -m unittest discover -s tests -p 'test_easy_deploy.py'
+      - run: python3 scripts/selftest.py
+      - run: bash -n install.sh deploy/windows-bootstrap.sh
+      - run: node --check deploy/wizard/app.js
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse launcher, inspect plan, exercise argument forwarding
+        shell: pwsh
+        run: ./tests/windows_installer_checks.ps1

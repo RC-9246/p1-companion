@@ -5,7 +5,7 @@ This file helps a coding or operations assistant work on this repository. It is 
 ## Start here
 
 1. Read `ai/PROJECT.json` and `docs/ai-access.md`. With a terminal, run `python3 ai/companion.py describe` and `python3 ai/companion.py verify`.
-2. Identify the task: source review, first installation, existing-install diagnosis, or an authorized change. Do not treat an existing production installation as a new installation.
+2. Fresh hosts now use `install.sh` / `开始安装.cmd` and `deploy/wizard.py`; read `docs/installation-wizard.md`. `deploy.sh` remains the existing-AstrBot integration entry. Windows launcher checks are not proof of full WSL/reboot/account acceptance. Identify the task: source review, first installation, existing-install diagnosis, or an authorized change. Do not treat an existing production installation as a new installation.
 3. Use `python3 ai/companion.py plan` for command arrays and acceptance stages. A plan is not execution. Live diagnosis requires an explicit target root; no SSH credentials are bundled.
 4. Preserve the neutral export. Never commit real accounts, IDs, API keys, cookies, tokens, databases, raw chats, private persona, licensed artwork, runtime logs or private recovery points.
 
@@ -33,6 +33,7 @@ python3 scripts/selftest.py
 python3 -m unittest discover -s tests -p test_easy_deploy.py
 python3 -m unittest discover -s tests -p test_ai_access.py
 python3 -m unittest discover -s tests -p 'test_repair_*.py'
+python3 -m unittest discover -s tests -p test_installation_wizard.py
 ```
 
 Do not run broad live tests, real model calls, QQ sends, account login or root-only installation just because a test file exists. Those actions must be relevant and authorized. First-install commands are in `docs/easy-deploy.md`; nonstandard layouts and existing installations use the documented manual/patch workflow.
