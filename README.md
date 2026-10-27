@@ -147,7 +147,7 @@ B站使用独立私人浏览空间，可搜索、采样观看、整理观察笔�
 
 | 验证项目 | 已有记录 |
 | :--- | :--- |
-| **中性核心** | [198 项可复现核心检查](docs/release-report.md)，入口 `python3 scripts/selftest.py` |
+| **中性核心** | [198 项可复现核心检查](evidence/resource-guard-validation.json)，入口 `python3 scripts/selftest.py` |
 | **安装与配置** | [31 项向导检查、11 项真实 Compose / AstrBot SDK 隔离验收](evidence/installation-wizard-validation.json)；[27 项原集成安装器专项](evidence/easy-deploy-validation.json) |
 | **安装收尾** | [19 项清理与进程检查](evidence/installer-cleanup-validation.json)，包含向导退出、独立后台与文件保留边界 |
 | **内存保护** | [35 项专项及真实容器验收](evidence/resource-guard-validation.json)：10 个 Chromium 进程回收到 0、合成 Cookie 保留、内存及进程数限额恢复；另有 P1 部署核验 |
