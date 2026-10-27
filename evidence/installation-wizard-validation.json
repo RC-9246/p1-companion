@@ -21,11 +21,13 @@
   },
   "windows": {
     "launcher_added": true,
-    "ci_status": "passed_initial_powershell_7_check",
+    "ci_status": "passed",
     "real_windows_wsl_reboot_account_acceptance": false,
-    "ci_url": "https://github.com/RC-9246/p1-companion/actions/runs/40530174697",
-    "source_commit": "92d3034ec9691719e193134b0472a56cb1cf6133",
-    "PowerShell_5_1_check": "added_pending_run"
+    "ci_url": "https://github.com/RC-9246/p1-companion/actions/runs/40530600165",
+    "source_commit": "4efe1b7df9802d16b7db629ed0e4aca153a160c3",
+    "PowerShell_5_1_check": "passed",
+    "PowerShell_7_check": "passed",
+    "syntax_plan_and_argument_forwarding_only": true
   },
   "gui_browser": {
     "desktop_preview_checked": true,
@@ -41,7 +43,8 @@
         "height": 822
       }
     ],
-    "account_form_and_navigation_checked": true
+    "account_form_and_navigation_checked": true,
+    "six_step_pages_checked": true
   },
   "upstream_image_manifests_checked": {
     "astrbot": "soulter/astrbot:v4.29.1@sha256:a140a326163ac5f82f62153f033cddeac74e38e4ee1809c6e333e950ff19edc4",
@@ -67,5 +70,11 @@
     "esm_rfb_export": true,
     "credentials_api": true,
     "live_account_desktop_viewed": false
+  },
+  "neutral_core_tests": 198,
+  "ai_access_tests": 28,
+  "private_value_scan": {
+    "values_checked": 14,
+    "matches": 0
   }
 }

@@ -83,6 +83,6 @@ python3 -m unittest discover -s tests -p test_easy_deploy.py
 python3 scripts/selftest.py
 ```
 
-Windows 检查使用 `tests/windows_installer_checks.ps1`，核对真实 PowerShell 语法、只读计划及含空格 / 中文的参数转发。GitHub Actions 在 Linux / Windows 分别执行检查。**PowerShell 解析 / 计划通过不等于已经在全新 Windows 机器上完成 WSL、重启与 QQ 实号全流程。** 本次未在生产 P1 重装基础环境，也不为做演示覆盖正在使用的 QQ 账号；实际记录见 [验证结果](../evidence/installation-wizard-validation.json)。
+Windows 检查使用 `tests/windows_installer_checks.ps1`，核对真实 PowerShell 语法、只读计划及含空格 / 中文的参数转发。GitHub Actions 已在 Linux 和 Windows 的 PowerShell 5.1 / 7 通过相应检查。**PowerShell 解析 / 计划通过不等于已经在全新 Windows 机器上完成 WSL、重启与 QQ 实号全流程。** 本次未在生产 P1 重装基础环境，也不为做演示覆盖正在使用的 QQ 账号；实际记录见 [验证结果](../evidence/installation-wizard-validation.json)。
 
 上游配置依据：[AstrBot Docker 部署](https://docs.astrbot.app/deploy/astrbot/docker.html)、[AstrBot 4.29.1 配置源码](https://github.com/AstrBotDevs/AstrBot/blob/v4.29.1/astrbot/core/config/default.py)、[SnowLuma Docker](https://snowluma.github.io/en/docs/guide/deploy/docker)、[SnowLuma 配置](https://snowluma.github.io/en/docs/guide/configuration)、[Docker Debian](https://docs.docker.com/engine/install/debian/)、[Docker Ubuntu](https://docs.docker.com/engine/install/ubuntu/)、[Microsoft WSL 安装](https://learn.microsoft.com/windows/wsl/install)、[WSL 命令](https://learn.microsoft.com/windows/wsl/basic-commands)、[Ubuntu 官方 rootfs 与校验](https://cloud-images.ubuntu.com/wsl/releases/noble/current/)、[DeepSeek 模型](https://api-docs.deepseek.com/quick_start/pricing/)、[思考参数](https://api-docs.deepseek.com/guides/thinking_mode/)。
