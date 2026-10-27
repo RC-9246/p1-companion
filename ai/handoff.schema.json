@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "P1 Companion public engineering handoff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "objective", "phase", "source_manifest_sha256", "observations", "tests", "pending", "limits", "private_runtime_data_included"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "objective": {"type": "string", "maxLength": 2000},
+    "phase": {"enum": ["not_started", "investigating", "prepared", "tested", "deployed", "blocked", "complete"]},
+    "source_manifest_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+    "observations": {"type": "array", "maxItems": 100, "items": {"type": "object", "additionalProperties": false, "required": ["kind", "summary", "evidence_ref"], "properties": {"kind": {"enum": ["observed", "inferred", "unverified"]}, "summary": {"type": "string", "maxLength": 2000}, "evidence_ref": {"type": ["string", "null"], "maxLength": 300}}}},
+    "tests": {"type": "array", "maxItems": 100, "items": {"type": "object", "additionalProperties": false, "required": ["command", "result", "scope"], "properties": {"command": {"type": "array", "items": {"type": "string"}}, "result": {"enum": ["not_run", "passed", "failed"]}, "scope": {"enum": ["offline", "mocked", "isolated", "real_sdk", "real_service", "real_model", "real_qq"]}}}},
+    "pending": {"type": "array", "maxItems": 100, "items": {"type": "string", "maxLength": 2000}},
+    "limits": {"type": "array", "maxItems": 100, "items": {"type": "string", "maxLength": 2000}},
+    "private_runtime_data_included": {"const": false}
+  }
+}

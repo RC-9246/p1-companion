@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "p1_companion_engineering": {
+      "command": "/ABSOLUTE/REPO/runtime/ai-venv/bin/python",
+      "args": ["/ABSOLUTE/REPO/ai/mcp_server.py"]
+    }
+  }
+}

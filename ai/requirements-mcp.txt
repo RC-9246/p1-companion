@@ -1,0 +1,2 @@
+# Optional engineering bridge only; matches the tested runtime SDK line.
+mcp==1.30.0

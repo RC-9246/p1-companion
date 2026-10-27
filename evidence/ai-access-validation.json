@@ -1,0 +1,28 @@
+{
+  "ai_access_unit_tests": 25,
+  "unit_execution_hosts": [
+    "macOS",
+    "Linux ARM64"
+  ],
+  "sdk_handshake_accepted": true,
+  "default_live_access": "disabled",
+  "engineering_tools": 6,
+  "resources": 2,
+  "prompts": 1,
+  "runtime_mcp_unchanged": true,
+  "existing_runtime_and_installers_unchanged": true,
+  "cold_full_stack_install_accepted": false,
+  "new_external_model_destination": false,
+  "private_persona_or_conversations_included": false,
+  "evidence_limit": "Actual pinned-SDK stdio tested with public source and synthetic live root; production CLI separately tested using filtered status and readonly preflight. No named-client brand matrix or cold deployment inferred.",
+  "tested_sdk": "mcp==1.30.0",
+  "default_live_access_denied_in_handshake": true,
+  "synthetic_fixed_root_health_filtered": true,
+  "production_readonly_cli_summary_verified": true,
+  "production_readonly_first_install_refusal_verified": true,
+  "production_plugin_files_unchanged": 135,
+  "production_container_start_times_and_restarts_unchanged": true,
+  "new_network_listener": false,
+  "model_calls": 0,
+  "real_qq_messages": 0
+}
