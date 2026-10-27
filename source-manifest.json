@@ -376,6 +376,6 @@
   "tests/test_social.py": "2cc55979c0120899c113614422ff5d90e0b9049c8e24a929c11ae2272f746058",
   "tests/test_social_context.py": "262f8226f423628f2c0f9d632fee52ff0b7bb961bd40322c1432e2774ac9f622",
   "tests/test_thinking.py": "db50c30db1c580b34ca88f6361a184051af845d6865f03b02c85912d02a889e5",
-  "tests/windows_installer_checks.ps1": "5714962df39e21d1d4e9d62fc28566ea47ecb062afb8f195fe90639c9a528ab7",
+  "tests/windows_installer_checks.ps1": "672a0861c61cd533f1e25bbb8a41f087393f318c2743de363689e7f81b1d5bb5",
   "开始安装.cmd": "0ac6a7c11b4a529d299b85778c1a7ef322e8924d3df05fcc5107c84d5d11b8b6"
 }

@@ -46,6 +46,8 @@ try {
     $script:FakeCommand = 'wsl.exe --distribution P1Companion --user root --exec /bin/bash /usr/local/lib/p1-companion/wsl-runtime.sh'
     function global:wsl.exe { $global:LASTEXITCODE = 1 }
     if (Test-CompanionRuntimeHost) { throw 'Dead Linux holder accepted' }
+    # The preceding expected-failure stub must not become the CI process exit code.
+    $global:LASTEXITCODE = 0
 } finally {
     Remove-Item Function:\Get-Process,Function:\Get-CimInstance,Function:\wsl.exe -ErrorAction SilentlyContinue
     $env:LOCALAPPDATA = $SavedLocal
