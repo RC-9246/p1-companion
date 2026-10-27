@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1440" height="500" viewBox="0 0 1440 500" role="img" aria-labelledby="title desc">
   <title id="title">P1 Companion</title>
-  <desc id="desc">Memory, expression, autonomy. On a small machine. GPT-developed engineering for a self-hosted digital companion.</desc>
+  <desc id="desc">从零图形安装，独立记忆与表达，有界自主、故障恢复和内存保护。主要由 GPT 完成新增工程的自托管数字伙伴项目。</desc>
   <defs>
     <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#0b1428"/><stop offset="1" stop-color="#142b43"/></linearGradient>
     <radialGradient id="glow"><stop stop-color="#3b82f6" stop-opacity=".22"/><stop offset="1" stop-color="#3b82f6" stop-opacity="0"/></radialGradient>
@@ -10,40 +10,40 @@
   <rect width="1440" height="500" rx="24" fill="url(#bg)"/>
   <rect width="1440" height="500" rx="24" fill="url(#grid)"/>
   <ellipse cx="1030" cy="220" rx="520" ry="340" fill="url(#glow)"/>
-  <g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif">
+  <g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Noto Sans CJK SC,Helvetica,Arial,sans-serif">
     <rect x="64" y="61" width="252" height="32" rx="16" fill="#19364c" stroke="#355a70"/>
     <circle cx="83" cy="77" r="4" fill="#7de6c0"/>
     <text x="96" y="82" fill="#b3d8e8" font-size="12" letter-spacing="1.1">SELF-HOSTED · GPT-DEVELOPED</text>
     <text x="61" y="187" fill="#f2f7ff" font-size="76" font-weight="700" letter-spacing="-3">P1 Companion</text>
-    <text x="64" y="238" fill="url(#accent)" font-size="27" font-weight="500">Memory. Expression. Autonomy.</text>
-    <text x="64" y="276" fill="#a4b8ce" font-size="24">On a small machine.</text>
+    <text x="64" y="238" fill="url(#accent)" font-size="27" font-weight="500">从第一次安装，到持续的相处</text>
+    <text x="64" y="276" fill="#a4b8ce" font-size="24">有记忆 · 会接续 · 可自主 · 能恢复</text>
     <path d="M64 318H618" stroke="#2a4159"/>
-    <text x="64" y="354" fill="#e1ecf9" font-size="17" font-weight="600">4GB ARM</text>
-    <text x="64" y="379" fill="#8ea7c1" font-size="13">Tested on RK3399</text>
-    <text x="255" y="354" fill="#e1ecf9" font-size="17" font-weight="600">8 PLUGINS</text>
-    <text x="255" y="379" fill="#8ea7c1" font-size="13">One integrated system</text>
-    <text x="452" y="354" fill="#e1ecf9" font-size="17" font-weight="600">YOUR CONTROL</text>
-    <text x="452" y="379" fill="#8ea7c1" font-size="13">Scopes, budgets, recovery</text>
+    <text x="64" y="354" fill="#e1ecf9" font-size="17" font-weight="600">GUI SETUP</text>
+    <text x="64" y="379" fill="#8ea7c1" font-size="13">从零开始 · 中文向导 Beta</text>
+    <text x="255" y="354" fill="#e1ecf9" font-size="17" font-weight="600">SCOPED MEMORY</text>
+    <text x="255" y="379" fill="#8ea7c1" font-size="13">4GB ARM · 云端模型推理</text>
+    <text x="452" y="354" fill="#e1ecf9" font-size="17" font-weight="600">RUNTIME GUARD</text>
+    <text x="452" y="379" fill="#8ea7c1" font-size="13">压力降载 · 已知故障恢复</text>
     <text x="64" y="447" fill="#68849f" font-size="12" letter-spacing="1.2">QQ / ONEBOT   ·   DEEPSEEK   ·   MCP   ·   SQLITE   ·   DOCKER</text>
     <g stroke="#3c6585" stroke-width="1.5" fill="none"><path d="M892 179H1010V250H1070"/><path d="M892 321H1010V250"/><path d="M1160 200V250M1160 300V250"/></g>
     <g>
       <rect x="768" y="113" width="245" height="110" rx="16" fill="#162b42" stroke="#32526f"/>
       <circle cx="794" cy="140" r="4" fill="#91caff"/>
       <text x="810" y="145" fill="#a4c5e3" font-size="11" letter-spacing="1.5">MEMORY</text>
-      <text x="792" y="179" fill="#eff6ff" font-size="20" font-weight="600">A context of its own</text>
+      <text x="792" y="179" fill="#eff6ff" font-size="20" font-weight="600">每段关系，各自保存</text>
       <text x="792" y="201" fill="#89a5c1" font-size="12">People, groups, sources</text>
       <rect x="768" y="263" width="245" height="110" rx="16" fill="#162b42" stroke="#32526f"/>
       <circle cx="794" cy="290" r="4" fill="#b8a6f8"/>
       <text x="810" y="295" fill="#c2b8e9" font-size="11" letter-spacing="1.5">EXPRESSION</text>
-      <text x="792" y="329" fill="#eff6ff" font-size="19" font-weight="600">Carry the conversation</text>
+      <text x="792" y="329" fill="#eff6ff" font-size="20" font-weight="600">状态、关切与表达</text>
       <text x="792" y="351" fill="#89a5c1" font-size="11">Personality, state, grounded learning</text>
       <rect x="1070" y="162" width="305" height="176" rx="18" fill="#183b47" stroke="#3c766e"/>
       <rect x="1094" y="185" width="76" height="23" rx="11.5" fill="#23524e"/>
       <circle cx="1107" cy="196.5" r="3" fill="#8be0ba"/>
       <text x="1117" y="200" fill="#b1ecd3" font-size="10">BOUNDED</text>
-      <text x="1094" y="243" fill="#edfff7" font-size="25" font-weight="600">Choose. Act. Reflect.</text>
-      <text x="1094" y="270" fill="#9fc6c3" font-size="13">Real results. Explicit permissions.</text>
-      <text x="1094" y="292" fill="#9fc6c3" font-size="13">Sometimes, choose to stay quiet.</text>
+      <text x="1094" y="243" fill="#edfff7" font-size="25" font-weight="600">选择，也能保持安静</text>
+      <text x="1094" y="270" fill="#9fc6c3" font-size="13">Budgets. Receipts. Recovery.</text>
+      <text x="1094" y="292" fill="#9fc6c3" font-size="13">Memory pressure → bounded cleanup.</text>
       <path d="M1094 313H1349" stroke="#32625f"/>
     </g>
   </g>
