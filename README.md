@@ -8,7 +8,7 @@
 
 AstrBot · QQ / OneBot · DeepSeek · MCP · SQLite · Docker
 
-[项目亮点](#为什么选择-p1-companion) · [快速开始](#快速开始) · [功能与控制](#自主但始终可控) · [验证证据](#用证据说明能力) · [完整文档](#继续探索)
+[项目亮点](#为什么选择-p1-companion) · [方案对比](#相比常见部署方式优势在哪里) · [一键集成](#快速开始) · [功能与控制](#自主但始终可控) · [验证证据](#用证据说明能力) · [完整文档](#继续探索)
 
 </div>
 
@@ -20,6 +20,7 @@ P1 Companion 把情绪状态、长期记忆、表达学习、群聊节奏和工�
 
 | 优势 | 在项目里意味着什么 |
 | :--- | :--- |
+| **少接线，一条命令集成** | 新增受检安装入口，自动检查、构建依赖镜像、安装八个插件、启动工具服务并核对就绪；原脚本与原核心 Compose 保留 |
 | **小设备，持续运行** | 已在 RK3399 / ARM64 / 4GB / Armbian 上部署验证。云端模型承担推理，本地保存状态、执行调度；重浏览与解析限制并发 |
 | **情绪有延续，表达有依据** | 21 维有界模拟状态、不同变化速度、当前关切与表达策略共同参与生成；稳定人格与可学习习惯分开 |
 | **每段关系，独立保存** | 按平台、机器人、私聊对象、群及群成员派生空间。新增白名单或群按需建状态，提权仍沿用自己的记忆 |
@@ -37,6 +38,17 @@ P1 Companion 把情绪状态、长期记忆、表达学习、群聊节奏和工�
 - **从已知故障恢复**：独立于模型的宿主巡检与看门狗，使用已验证的源码、镜像和数据库快照恢复服务
 
 具体能力与未完成细节见 [二十项逐项复核](docs/twenty-item-audit.md)。例如当前检索使用本地轻量方法，经验学习不训练模型权重，自动修复仅覆盖列举并验收的恢复动作。
+
+## 相比常见部署方式，优势在哪里
+
+| 常见起点 | 原本擅长的事 | 本项目补上的整合 |
+| :--- | :--- | :--- |
+| **模型 API + 单个人格提示词** | 快速开始角色对话，调整语气 | 持久情绪状态、按对象隔离的记忆、可撤销学习，以及依据真实回执接续的互动 |
+| **AstrBot + 自选插件组合** | 消息平台、模型、插件与 MCP 的灵活扩展 | 提供经过配套验证的配置、统一权限与主动发送保护，减少逐个接线、重复调度及上下文混用的排查工作 |
+| **n8n 等工作流优先的搭建** | 连接服务、编排流程、暴露工具 | 在工作流之外接上持续的关系状态、群聊节奏和自然表达；保留 n8n 作为受控工具组件 |
+| **按文档逐步手工部署** | 自由选择每个组件，适配复杂环境 | 标准布局可用一个入口完成预检、镜像构建、插件与服务安装、就绪检查和失败回滚；复杂布局保留手动路径 |
+
+**优势集中在“配套整合与可复现默认值”。** 上游 AstrBot 本身已有便捷部署、插件和 MCP；n8n 本身支持把工具和工作流接入 MCP。本项目在这些基础上，提供面向持续数字伙伴的状态、边界、部署和验收链路。对比不代表聊天效果、性能或成本全面优于其他方案。[AstrBot 官方 MCP 说明](https://docs.astrbot.app/use/mcp.html) · [n8n 官方 MCP 说明](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-langchain.mcptrigger)
 
 ## 从一条消息，到下一次相遇
 
@@ -90,18 +102,24 @@ python3 scripts/selftest.py
 
 核验在本地进行，不读取账号状态，不发送 QQ，也不调用云端模型。中性核心检查需要 Python 3.11+。
 
-**② 在目标 Linux 主机预览安装**
+**② 一条命令，集成到已有 AstrBot**
 
-AstrBot 的持久目录需位于 `/srv/p1-agent/astrbot/data`，原生 `cmd_config.json` 已存在。将示例 QQ 号替换为自己的账号：
+在目标 Linux 主机执行；交互终端会询问机器人和主人的 QQ 号：
 
 ```sh
-python3 scripts/bootstrap.py \
-  --root /srv/p1-agent \
-  --bot-id 10001 \
-  --owner-id 20002
+sudo bash deploy.sh --apply
 ```
 
-这一步默认仅预览。安装前请阅读 [完整部署与复现指南](docs/deployment.md) 和 [免责与使用条款](DISCLAIMER.md)，再使用相同参数加 `sudo` 与 `--apply`，按指南构建工具服务、加载插件、逐层验收。后台社交默认关闭；账号登录、权限与真实投递各自核验。
+先做只读环境诊断，或指定安装目录与账号：
+
+```sh
+sudo bash deploy.sh --check
+sudo bash deploy.sh --root /srv/my-agent --apply --bot-id 10001 --owner-id 20002
+```
+
+安装器自动检查标准布局、构建依赖镜像、备份、安装八个插件、接通内部网络、启动六个辅助容器并等待就绪；失败尝试恢复原源码、配置与核心镜像。原仓库脚本和核心 Compose 保留。**已有 Companion 安装会拒绝覆盖**，现有生产升级继续走独立补丁流程。
+
+“一键集成”从已有正常聊天的 AstrBot 开始，要求 Python 3.11+、Docker Compose v2 和标准数据挂载；账号登录、验证码、模型开户及真实投递仍由本人核验。后台社交默认关闭，宿主自修复和资源面板在验收后按需安装。[支持条件、过程与回滚](docs/easy-deploy.md) · [手动部署](docs/deployment.md) · [免责条款](DISCLAIMER.md)
 
 **③ 换成你自己的角色与素材**
 
@@ -112,6 +130,7 @@ python3 scripts/bootstrap.py \
 | 已有记录 | 能说明什么 |
 | :--- | :--- |
 | **365 项完整离线测试** | 当前生产分支的离线回归结果；包含角色或素材相关检查，不能代替新机器验收 |
+| **27 项安装器专项** | 启动门、互斥、校验、旧安装拒绝，以及模拟 Docker 下十个阶段的失败恢复；另有 Linux 临时目录中的真实文件与权限验收，见 [部署验证](evidence/easy-deploy-validation.json) |
 | **198 项中性核心测试** | 可用 `python3 scripts/selftest.py` 复现的当前中性核心检查 |
 | **41 项隔离故障验收** | 临时文件、合成数据库与隔离容器上的恢复测试，见 [故障记录](evidence/isolated-repair-acceptance.json) |
 | **原生 SDK 与范围矩阵** | 在临时数据和替身传输中核对命令、权限、记忆空间、发送与撤权行为 |
@@ -125,7 +144,9 @@ python3 scripts/bootstrap.py \
 release/       八个插件：情绪、记忆、学习、群聊、表达与自主活动
 browser/       公开资料浏览器与访问策略
 services/      B站、文件解析与实验、MCP、维护、资源面板
-scripts/       安装预览、源码核验、素材注册、检查点与恢复
+deploy.sh      受检一键集成入口（已有 AstrBot）
+deploy/        安装协调、依赖镜像、只读诊断与失败回滚
+scripts/       原有安装、源码核验、素材注册、检查点与恢复
 tests/         离线、原生 SDK、服务、模型与隔离故障验收
 docs/          设计、部署、控制、排障与适用边界
 evidence/      去敏的测试与部署结果
@@ -135,7 +156,7 @@ evidence/      去敏的测试与部署结果
 
 | 想了解 | 从这里开始 |
 | :--- | :--- |
-| 复现与定制 | [部署指南](docs/deployment.md) · [操作控制](docs/controls.md) · [人格与情绪设计](docs/emotion-design.md) |
+| 复现与定制 | [一键集成](docs/easy-deploy.md) · [部署指南](docs/deployment.md) · [操作控制](docs/controls.md) · [人格与情绪设计](docs/emotion-design.md) |
 | 记忆与学习 | [独立记忆空间](docs/memory-spaces.md) · [持续学习](docs/self-learning.md) · [连续表达](docs/self-response.md) |
 | 群聊与图片 | [群控制](docs/group-control-fix.md) · [主动线路](docs/reply-routes.md) · [延迟优化](docs/group-latency.md) · [图片输入](docs/group-image-fix.md) |
 | 运行与恢复 | [实时面板](docs/resource-panel.md) · [恢复手册](docs/recovery.md) · [最终验收](docs/release-report.md) |

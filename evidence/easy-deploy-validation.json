@@ -1,0 +1,24 @@
+{
+  "installer_unit_tests": 27,
+  "simulated_docker_failure_stages": 10,
+  "neutral_core_tests": 198,
+  "real_linux_bootstrap_passed": true,
+  "installed_neutral_plugin_files_verified": 89,
+  "token_and_service_permissions_verified": true,
+  "root_remapping_and_file_rollback_verified": true,
+  "new_database_history_preserved": true,
+  "production_plugin_files_unchanged": 135,
+  "production_container_start_times_and_restarts_unchanged": true,
+  "production_existing_install_refused_readonly": true,
+  "original_runtime_and_install_scripts_modified": false,
+  "real_qq_messages": 0,
+  "model_calls": 0,
+  "docker_mutations_during_acceptance": 0,
+  "cold_full_stack_install_tested": false,
+  "limits": "Coordinator Docker stages use fake transport; Linux acceptance exercises real bootstrap, permissions and file rollback. Account login and cold full-stack install remain separate acceptance.",
+  "unit_execution_hosts": [
+    "macOS",
+    "Linux ARM64"
+  ],
+  "linux_installer_unit_tests": 27
+}
