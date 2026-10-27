@@ -15,7 +15,7 @@ Windows 至少为 10 2004 / Build 19041，或 Windows 11；仅 x64，至少 8GB 
 
 程序启用 WSL / Virtual Machine Platform、更新 WSL，并从 Ubuntu 官方下载带 SHA-256 校验的 Ubuntu 24.04 rootfs，创建独立的 **`P1Companion`** WSL2 发行版。它不接管原有 Ubuntu，不改默认发行版，不关闭其他 WSL 发行版，不安装 Docker Desktop，不改全局 `.wslconfig`，不自动重启电脑。
 
-Ubuntu 与安装源码分别存放在 Windows 用户目录 `%LOCALAPPDATA%\P1Companion`、该发行版的 `/opt/p1-companion-installer`。用该发行版的 Linux Docker 运行服务。Windows 的 WSL 启动会话保持安装网页进程运行；关闭、休眠、重启 Windows 会影响服务在线。这里没有承诺 Windows 启动后无人值守自动运行；再次双击启动程序可重新打开。需要长期在线时，推荐独立 Linux 主机。
+Ubuntu 与安装源码分别存放在 Windows 用户目录 `%LOCALAPPDATA%\P1Companion`、该发行版的 `/opt/p1-companion-installer`。用该发行版的 Linux Docker 运行服务。Windows 通过独立的无界面 `wsl.exe` 客户端维持运行，完成安装后不依赖安装网页。关闭、休眠、重启 Windows 会影响服务在线；之后双击桌面的“打开 P1 Companion”恢复后台并打开管理页。这里没有承诺 Windows 启动后无人值守自动运行。需要长期在线时，推荐独立 Linux 主机。
 
 程序保留重启后的继续入口，不设置自动登录、不绕过 Windows 登录、不自动修改 BIOS。Microsoft / Ubuntu 下载不可达时会停在对应阶段，重试不会删除既有发行版或账号数据。WSL 默认的 localhost 转发需要保持可用；管理员自定义网络配置可能需要额外适配。
 
@@ -56,6 +56,18 @@ API Key 保存在目标设备受保护的 AstrBot 配置中；不会写入浏览
 
 B站二维码在页面直接显示，扫码会登录本机的独立私人浏览空间；登录态不发给外部工程助手，公开评论和弹幕仍禁用。验证码、安全挑战、QQ / B站扫码、账号开户与充值需要本人完成，程序不绕过。
 
+## 安装完成，自动清理向导
+
+第六步默认勾选 **“完成后自动清理安装向导”**。真实试聊确认后点击 **“完成安装”**：程序重新检查 8 个服务与 5 个模块就绪标记，通过后结束安装会话，数秒后关闭 `6191` 向导服务，并将当前页面转到 AstrBot 管理页。你可以取消勾选保留向导排查；未完成或失败的安装不会触发清理。
+
+清理只处理本程序的临时内容：会话链接、浏览器中三个安装专用会话项，以及 Windows 下 `/opt/p1-companion-installer` 内经过清单哈希核对的复制文件。发现改动、额外文件或符号链接时保留对应内容，不递归删除未知目录。原下载 / 解压目录不自动删除。安装记录与日志归档到最近的私有恢复点；恢复点中的源码副本保留，供回滚与审计使用。
+
+AstrBot、SnowLuma 所需的 QQ 桌面、浏览器与工作流服务、记忆、账号登录、配置、管理页和已安装资源面板全部保留。清理向导不卸载 Docker / WSL，不清空镜像、数据库或备份。
+
+Windows 会保留 `%LOCALAPPDATA%\P1Companion\Start-P1Companion.ps1` 和发行版内 `/usr/local/lib/p1-companion/wsl-runtime.sh` 两个小型运行入口。它们没有常驻 GUI；原生 `wsl.exe` 配合持锁的 `sleep` 保持专用发行版在线。程序核对 Windows PID / 启动时间 / 命令和 Linux PID / 启动时间 / 启动标识 / 锁后，才允许结束向导；验证失败就保留向导。这个独立入口是必要的，因为 [Microsoft 明确说明 systemd 服务本身不会让 WSL 持续运行](https://learn.microsoft.com/windows/wsl/systemd#how-does-enabling-systemd-affect-wsl-architecture)。
+
+导入成功后，仅删除与本机创建记录 SHA-256 相符的 Ubuntu rootfs 下载缓存。完成后移除匹配本程序的“继续安装”快捷方式，保留“打开 P1 Companion”。不卸载发行版或删除 Windows 原始源码。需要再次打开安装工具时，从保留的完整源码运行 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\deploy\windows-setup.ps1 -SetupAgain`；Linux 仍可运行原 `sudo bash install.sh`。完成记录保留在私有状态目录 `completed.json`。
+
 ## 出错、刷新或撤回
 
 - **API 错误先拦住**：尚未改系统就提示核对 Key、余额、模型与网络
@@ -80,6 +92,7 @@ B站二维码在页面直接显示，扫码会登录本机的独立私人浏览�
 ```sh
 python3 -m unittest discover -s tests -p test_installation_wizard.py
 python3 -m unittest discover -s tests -p test_easy_deploy.py
+python3 -m unittest discover -s tests -p test_installer_cleanup.py
 python3 scripts/selftest.py
 ```
 

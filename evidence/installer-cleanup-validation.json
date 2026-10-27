@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "feature": "retire temporary installation GUI after successful acceptance",
+  "macos": {
+    "cleanup_and_http_tests_passed": 18,
+    "native_linux_holder_skipped": 1,
+    "wizard_regression_tests_passed": 31,
+    "gui_default_checked_and_layout_observed": true
+  },
+  "linux_arm64_isolated": {
+    "cleanup_and_native_process_tests_passed": 19,
+    "wizard_regression_tests_passed": 31,
+    "native_process_survived_gui_exit": true,
+    "duplicate_holder_rejected": true,
+    "forged_pid_could_not_stop_unrelated_process": true,
+    "production_8_container_start_and_restart_state_unchanged": true
+  },
+  "windows": {
+    "new_runtime_powershell_checks": "pending CI",
+    "real_wsl_install_reboot_cleanup_acceptance": false
+  },
+  "boundaries": {
+    "model_calls": 0,
+    "account_operations": 0,
+    "production_installation_or_cleanup": false,
+    "user_download_directory_removed": false,
+    "runtime_or_memory_or_backups_deleted": false,
+    "temporary_manifest_copy_removed_in_test": true
+  },
+  "private_value_scan": {
+    "values_checked": 14,
+    "matches": 0
+  }
+}

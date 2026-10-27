@@ -1,5 +1,5 @@
 ﻿#Requires -Version 5.1
-param([switch]$PlanOnly)
+param([switch]$PlanOnly,[switch]$SetupAgain)
 $ErrorActionPreference = 'Stop'
 $Distro = 'P1Companion'
 $Repo = Split-Path -Parent $PSScriptRoot
@@ -34,10 +34,18 @@ try {
     if ([int]$OS.BuildNumber -lt 19041 -or -not [Environment]::Is64BitOperatingSystem -or $env:PROCESSOR_ARCHITECTURE -eq 'ARM64' -or $env:PROCESSOR_ARCHITEW6432 -eq 'ARM64') {
         throw '支持 Windows 10 2004（Build 19041）及更新版本，或 Windows 11，x64。Windows ARM、32 位和较旧版本请先升级或使用 Linux 设备。'
     }
+    if (-not $SetupAgain -and (Test-Path -LiteralPath (Join-Path $StateDir 'setup-state.json'))) {
+        $Previous = Get-Content -LiteralPath $StatePath -Raw | ConvertFrom-Json
+        if ($Previous.phase -eq 'completed' -and (Test-Path -LiteralPath (Join-Path $StateDir 'Start-P1Companion.ps1'))) {
+            & (Join-Path $StateDir 'Start-P1Companion.ps1'); exit 0
+        }
+    }
     $Admin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
     if (-not $Admin) {
         # Run the local script as the same Windows user with a normal UAC prompt.
-        Start-Process powershell.exe -Verb RunAs -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',('"' + $PSCommandPath + '"'))
+        $ElevatedArguments = @('-NoProfile','-ExecutionPolicy','Bypass','-File',('"' + $PSCommandPath + '"'))
+        if ($SetupAgain) { $ElevatedArguments += '-SetupAgain' }
+        Start-Process powershell.exe -Verb RunAs -ArgumentList $ElevatedArguments
         exit 0
     }
     if ([long]$OS.TotalVisibleMemorySize * 1KB -lt 8GB) { throw 'Windows 至少需要 8GB 内存，推荐 16GB；Linux 独立主机可用 4GB 档设备。' }
@@ -75,6 +83,13 @@ try {
     $DistroMarker = Join-Path $StateDir 'distro-created.json'
     if ($Installed -match '(?m)^P1Companion\s*$') {
         if (-not (Test-Path -LiteralPath $DistroMarker)) { throw '已存在同名 P1Companion 发行版，但没有本程序的创建记录。为保护原有数据，停止自动接管。' }
+        $FinishedRaw = (& wsl.exe --distribution $Distro --user root --exec cat /var/lib/p1-companion-installer/completed.json 2>$null) -join ''
+        if (-not $SetupAgain -and $LASTEXITCODE -eq 0 -and ($FinishedRaw | ConvertFrom-Json).cleanup_complete -and (Test-Path -LiteralPath (Join-Path $StateDir 'Start-P1Companion.ps1'))) {
+            . (Join-Path $StateDir 'Start-P1Companion.ps1') -LibraryOnly
+            Clear-CompanionResumeShortcut
+            Save-Phase 'completed'
+            & (Join-Path $StateDir 'Start-P1Companion.ps1'); exit 0
+        }
         # Reuse a running installation without terminating it or copying its source.
         $ExistingUrl = ((& wsl.exe --distribution $Distro --user root --exec cat /var/lib/p1-companion-installer/browser.url 2>$null) -join '').Trim()
         if (Test-WizardUrl $ExistingUrl) { Start-Process $ExistingUrl; exit 0 }
@@ -104,9 +119,19 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Ubuntu 环境准备未完成，请重试。' }
     # systemd changes take effect after restarting this distro, not all WSL instances.
     & wsl.exe --terminate $Distro
-    # Keep the Windows wsl.exe session attached to the foreground wizard process.
-    # systemd services alone are not a promise that WSL stays alive.
-    Start-Process -FilePath wsl.exe -ArgumentList @('--distribution',$Distro,'--user','root','--exec','/bin/bash','/opt/p1-companion-installer/deploy/windows-bootstrap.sh','--start') -WindowStyle Hidden
+    # Keep WSL alive independently of the temporary web installer.
+    $Controller = Join-Path $StateDir 'Start-P1Companion.ps1'
+    $ControllerReceipt = Join-Path $StateDir 'runtime-controller.sha256'
+    if (Test-Path -LiteralPath $Controller) {
+        if (-not (Test-Path -LiteralPath $ControllerReceipt) -or (Get-Item -LiteralPath $Controller).Attributes -band [IO.FileAttributes]::ReparsePoint -or (Get-FileHash -LiteralPath $Controller -Algorithm SHA256).Hash -ne (Get-Content -LiteralPath $ControllerReceipt -Raw).Trim()) { throw '后台启动脚本已发生变化，请保留原文件并检查后重试。' }
+    }
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'windows-runtime.ps1') -Destination $Controller -Force
+    (Get-FileHash -LiteralPath $Controller -Algorithm SHA256).Hash | Set-Content -LiteralPath $ControllerReceipt -Encoding ASCII
+    . $Controller -LibraryOnly
+    Ensure-CompanionRuntime
+    Install-CompanionRuntimeShortcut
+    Clear-CompanionInstallerCache
+    $GuiClient = Start-Process -FilePath wsl.exe -ArgumentList @('--distribution',$Distro,'--user','root','--exec','/bin/bash','/opt/p1-companion-installer/deploy/windows-bootstrap.sh','--start') -WindowStyle Hidden -PassThru
     $Url = ''
     for ($Attempt = 0; $Attempt -lt 30; $Attempt++) {
         $Url = ((& wsl.exe --distribution $Distro --user root --exec cat /var/lib/p1-companion-installer/browser.url 2>$null) -join '').Trim()
@@ -116,7 +141,13 @@ try {
     if (-not $Url) { throw '本机向导未能启动。请检查 WSL 是否运行、6191 端口是否被占用；安装数据会保留。' }
     Save-Phase 'wizard_ready'
     Start-Process $Url
-    Write-Host '安装向导已在浏览器打开。API Key、QQ 扫码和所有配置都在那里完成。'
+    Write-Host '安装向导已在浏览器打开。完成验收后会自动清理临时向导，后台与数据保留。'
+    $GuiClient.WaitForExit()
+    $CompletedRaw = (& wsl.exe --distribution $Distro --user root --exec cat /var/lib/p1-companion-installer/completed.json 2>$null) -join ''
+    if ($LASTEXITCODE -eq 0 -and ($CompletedRaw | ConvertFrom-Json).cleanup_complete) {
+        Clear-CompanionResumeShortcut
+        Save-Phase 'completed'
+    }
 } catch {
     Show-Info ([string]$_.Exception.Message)
     exit 1

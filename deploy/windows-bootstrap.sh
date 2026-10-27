@@ -6,6 +6,7 @@ if [ "${1:-}" = --start ]; then
   [ "$(cat /proc/1/comm)" = systemd ] || { echo 'WSL systemd 尚未启动，请更新 WSL 后重试'; exit 1; }
   install -d -m 0700 "$STATE"
   cd "$DEST"
+  export PYTHONDONTWRITEBYTECODE=1
   exec python3 deploy/wizard.py --url-file "$STATE/browser.url" >"$STATE/launcher.log" 2>&1
 fi
 SOURCE=${1:?需要完整源码目录}
@@ -31,6 +32,15 @@ dest.mkdir(mode=0o755,parents=True,exist_ok=True)
 for rel,raw in {**contents,'source-manifest.json':(source/'source-manifest.json').read_bytes()}.items():
  p=dest/rel;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(raw);p.chmod(0o644)
 (dest/'.p1-wizard-source').write_text('1\n')
+# Runtime holder survives removal of the temporary installer copy. Refuse to
+# replace an unrecognized helper; never copy arbitrary paths from the browser.
+runtime=Path('/usr/local/lib/p1-companion');runtime.mkdir(mode=0o755,parents=True,exist_ok=True)
+assert not runtime.is_symlink() and runtime.stat().st_uid==0 and not runtime.stat().st_mode&0o022
+helper=runtime/'wsl-runtime.sh';receipt=runtime/'wsl-runtime.sha256'
+raw=contents['deploy/wsl-runtime.sh'];digest=hashlib.sha256(raw).hexdigest()
+if helper.exists():
+ assert not helper.is_symlink() and not receipt.is_symlink() and receipt.is_file() and hashlib.sha256(helper.read_bytes()).hexdigest()==receipt.read_text().strip(),'runtime_helper_modified'
+helper.write_bytes(raw);helper.chmod(0o700);receipt.write_text(digest+'\n');receipt.chmod(0o600)
 # Merge just the boot setting; do not overwrite automount, networking or interop.
 p=Path('/etc/wsl.conf');original=p.read_text() if p.exists() else '';lines=original.splitlines();result=[];boot=False;set_value=False;seen_boot=False
 for line in lines:

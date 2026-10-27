@@ -1,9 +1,9 @@
 name: Installation wizard checks
 on:
   push:
-    paths: ['deploy/**', 'install.sh', '开始安装.cmd', '.gitattributes', 'tests/test_installation_wizard.py', 'tests/windows_installer_checks.ps1', '.github/workflows/installation-wizard.yml']
+    paths: ['deploy/**', 'install.sh', '开始安装.cmd', '.gitattributes', 'tests/test_installation_wizard.py', 'tests/test_installer_cleanup.py', 'tests/windows_installer_checks.ps1', '.github/workflows/installation-wizard.yml']
   pull_request:
-    paths: ['deploy/**', 'install.sh', '开始安装.cmd', '.gitattributes', 'tests/test_installation_wizard.py', 'tests/windows_installer_checks.ps1', '.github/workflows/installation-wizard.yml']
+    paths: ['deploy/**', 'install.sh', '开始安装.cmd', '.gitattributes', 'tests/test_installation_wizard.py', 'tests/test_installer_cleanup.py', 'tests/windows_installer_checks.ps1', '.github/workflows/installation-wizard.yml']
 permissions:
   contents: read
 jobs:
@@ -16,9 +16,10 @@ jobs:
           python-version: '3.12'
       - run: python3 scripts/verify_source.py
       - run: python3 -m unittest discover -s tests -p 'test_installation_wizard.py'
+      - run: sudo $(which python3) -m unittest discover -s tests -p 'test_installer_cleanup.py'
       - run: python3 -m unittest discover -s tests -p 'test_easy_deploy.py'
       - run: python3 scripts/selftest.py
-      - run: bash -n install.sh deploy/windows-bootstrap.sh
+      - run: bash -n install.sh deploy/windows-bootstrap.sh deploy/wsl-runtime.sh
       - run: node --check deploy/wizard/app.js
   windows:
     runs-on: windows-latest

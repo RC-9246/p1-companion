@@ -115,10 +115,10 @@ def dashboard_hash(password):
     salt=secrets.token_hex(16);digest=hashlib.pbkdf2_hmac('sha256',password.encode(),bytes.fromhex(salt),600000).hex()
     return 'pbkdf2_sha256$600000$'+salt+'$'+digest
 def validate_input(v):
-    need(isinstance(v,dict) and set(v)<= {'root','mode','bot','owner','api_key','model','password','social','accepted','real_chat_confirmed'},'invalid_input')
+    need(isinstance(v,dict) and set(v)<= {'root','mode','bot','owner','api_key','model','password','social','accepted','real_chat_confirmed','auto_cleanup'},'invalid_input')
     root=integration.safe_root(v.get('root','/srv/p1-agent'));mode=v.get('mode','new');need(mode in ('new','existing'),'invalid_mode')
     bot=integration.identity(v.get('bot',''));owner=integration.identity(v.get('owner',''));need(bot!=owner,'bot_and_owner_must_differ')
-    for key in ('social','accepted','real_chat_confirmed'):
+    for key in ('social','accepted','real_chat_confirmed','auto_cleanup'):
         if key in v:need(type(v[key]) is bool,'invalid_input')
     model=v.get('model','deepseek-flash');need(isinstance(model,str) and re.fullmatch('[A-Za-z0-9_.:/-]{1,100}',model),'model_name_invalid')
     api=v.get('api_key','');need(isinstance(api,str) and len(api)<=1024 and not any(c.isspace() for c in api),'api_key_invalid')
