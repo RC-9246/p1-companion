@@ -130,3 +130,5 @@ sudo python3 tests/portable_leisure_install.py
 群内主动接话排队和模型参数优化：[延迟修复、复现与测量边界](docs/group-latency.md)。
 
 QQ 快捷接入：现有主人私聊 `/加白 QQ号` 或 `/加主人 QQ号`，详见[权限命令、隔离和恢复](docs/private-access-commands.md)。
+
+P1 本机每5秒更新的只读资源面板：[查看、部署与开销说明](docs/resource-panel.md)。

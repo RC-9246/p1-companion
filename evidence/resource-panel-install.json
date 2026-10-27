@@ -1,0 +1,11 @@
+{
+  "installed": true,
+  "host": "127.0.0.1",
+  "port": 6190,
+  "sample_interval_seconds": 5,
+  "history_minutes": 30,
+  "chatbot_restarted": false,
+  "existing_stack_healthy": true,
+  "recovery_point": "/home/p1admin/p1-agent/backups/resource-panel-20261027-175642",
+  "production_memory_modified": false
+}

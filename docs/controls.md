@@ -26,3 +26,5 @@ AstrBot网页ChatUI不是QQ主人身份。“群内主动”在网页只返回QQ
 原生概率接话与 P1 智能主动可分别控制：[主动线路命令、组合与边界](reply-routes.md)。
 
 新增私聊或主人：现有主人在QQ私聊使用 `/加白 QQ号` 或 `/加主人 QQ号`，无需重启；详见[私聊权限快捷命令](private-access-commands.md)。
+
+资源查看：通过 SSH 转发访问本机 `http://127.0.0.1:6190/`，显示主机、容器与维护报告；[资源面板说明](resource-panel.md)。
