@@ -31,6 +31,7 @@ The installer, QQ commands and most linked guides are currently in Chinese. This
 | **Start from a fresh machine with a guided interface** | No existing AstrBot installation required. A Chinese-language wizard prepares the environment, connects QQ and installs the components; enter your API details, scan the QR code and complete a test conversation |
 | **Choose the modules you need** | 15 declared units, four profiles and dependency handling. Start, stop or remove optional service containers while retaining memory and login data; adapted maintenance recognizes intentional shutdowns |
 | **Continuity in affect and expression** | A bounded, 21-dimensional simulated state, current concerns and recent conversation inform replies. Stable persona and learnable expression are separate, with room for disagreement and silence |
+| **Context that outlasts a single model window** | Recent conversation, rolling group notes and relevant long-term memories are assembled for each request, supporting ongoing conversations without replaying the entire archive |
 | **Separate memory for each relationship** | Spaces are derived from platform, bot, private contact, group and group member. New scopes create state on demand; access changes retain the existing memory |
 | **Proactive, with room to stay quiet** | Interest-based interjections, public research, note organization and private Bilibili activities share budgets. The companion can explore, organize, rest or choose not to send a message |
 | **Easy handoff between AI assistants** | Engineering guides, a machine-readable project map, a standard-library JSON CLI, an optional read-only MCP bridge and handoff templates |
@@ -93,6 +94,17 @@ See [existing-AstrBot integration](docs/easy-deploy.md) for the standard layout,
 - **Use everyday QQ expression:** short message chunks, plain text, reviewed sticker labels and repetition suppression; reactions, recalls and forwarding depend on actual adapter receipts
 
 Bilibili has a separate private browsing space for search, sampled viewing, observation notes, private favorites and Watch Later. Public comments and bullet comments remain disabled. Sampling video frames does not establish understanding of the full video or its audio. [Tool and account boundaries](docs/boundaries.md)
+
+## Context that continues beyond one model window
+
+**“Near-unlimited context” describes long-running conversational continuity through external memory.** The implemented layers combine recent conversation, rolling group notes and scoped memory retrieval, instead of repeatedly sending the entire chat archive to the model.
+
+- **Keep the current flow:** recent group messages retain speaker identity, quotes, mentions and timing
+- **Carry useful context forward:** rolling group notes combine new messages with previous notes and keep evidence references for topics, corrections, preferences and unfinished matters
+- **Recall what is relevant:** long-term memory and event retrieval select relevant records using local matching, freshness, confidence or source weighting, depending on the layer; deduplication and expiry checks bound what enters a request
+- **Preserve scope and continuity:** persisted memory and group notes survive service restarts; private contacts and groups use separate spaces, and revoked access or clearing a space is respected
+
+Each request still has a finite model token window and retrieval budget. Retention periods, storage limits, lossy summaries and missed retrievals apply: this is not a promise to retain every message forever or recall it verbatim. The implementation uses lightweight local retrieval, not an unlimited context-window model. [How it works and current bounds](docs/memory-spaces.md#长程上下文接续)
 
 ## What the integration adds
 
@@ -244,6 +256,7 @@ P1 Companion 是一套面向小规模自托管的数字伙伴工程：把模拟�
 | **从零开始，跟着界面安装** | 不必预装 AstrBot。中文向导准备环境、连接 QQ、安装组件；填写 API、扫码、试聊后完成 |
 | **功能模块，按需组合** | 15 个声明单元、四种模板、依赖联动；可选服务启停或移除，保留记忆与登录数据，已适配巡检不会把停用当故障 |
 | **情绪与表达有延续** | 21 维有界模拟状态、当前关切和近期对话共同参与生成；稳定人格与可学习表达分开，允许不同意见与留白 |
+| **长程上下文，跨窗口接续** | 近期对话、滚动群笔记与相关长期记忆按需组装；不必每轮重放全部历史，也能接续先前话题与共同经历 |
 | **每段关系，独立保存** | 按平台、机器人、私聊对象、群及群成员派生空间；新增范围按需建状态，权限变化沿用原记忆 |
 | **能主动，也懂得停下** | 兴趣插话、公开研究、资料整理和私人 B站活动接入预算；可以选择探索、整理、休息或不发消息 |
 | **方便不同 AI 接手** | 工程指南、机器清单、标准库 JSON CLI、可选只读 MCP 桥和交接模板一起提供 |
@@ -306,6 +319,17 @@ sudo bash deploy.sh --apply
 - **使用日常 QQ 的表达方式**：短句分段、纯文本输出、审核表情标签与重复抑制；表态、撤回和转发依据适配器真实回执
 
 B站使用独立私人浏览空间，可搜索、采样观看、整理观察笔记、私密收藏及稍后再看；公开评论、弹幕等仍禁用。视频画面采样不等于理解完整视频或音频。[工具与账号边界](docs/boundaries.md)
+
+## 把上下文延续到单次窗口之外
+
+**这里的“近乎无限上下文”，指通过外部记忆实现可持续的长程对话接续。** 已实现的近期对话、滚动群笔记和分范围记忆检索共同参与每轮生成，不要求把全部聊天历史反复塞进模型。
+
+- **接住眼前节奏**：近期群消息保留发言人、引用、@ 与时间关系，知道当前在接谁的话
+- **把有用内容带到后面**：滚动群笔记结合新消息与旧笔记，保留话题、纠正、偏好和未完成事项，并绑定来源证据
+- **需要时再想起**：长期记忆和事件检索按各层的本地匹配、新近度、置信度或来源权重筛选，结合去重与有效期控制注入体积
+- **重启后接续、不同对象分开**：已落盘的记忆和群笔记可跨服务重启保留；私聊与各群独立检索，撤销授权和清空仍然有效
+
+每次请求仍受模型 token 窗口、检索预算、保存期限和存储容量约束；摘要可能遗漏、检索可能漏召回，**不保证全部历史逐字永久记住**。当前使用本地轻量检索，不能把长程接续写成模型本身拥有无限上下文窗口。[实现方式与当前边界](docs/memory-spaces.md#长程上下文接续)
 
 ## 相比常见方案，整合在哪里
 
