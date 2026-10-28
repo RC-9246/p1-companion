@@ -1,3 +1,219 @@
+<a id="english"></a>
+
+**English** · [简体中文](#chinese)
+
+<div align="center">
+
+# P1 Companion
+
+### From your first QR scan to conversations that carry on
+
+**Remember each other. Keep a rhythm of your own. Make every action traceable.**
+
+AstrBot · QQ / OneBot · DeepSeek · MCP · Docker
+
+**[Download the project](https://github.com/RC-9246/p1-companion/archive/refs/heads/main.zip)** · **[Get started](#quick-start)** · [Why P1 Companion](#why-p1-companion) · [Operational safeguards](#making-long-term-operation-more-manageable) · [Bring your AI assistant](#easy-handoff-to-ai-engineering-assistants)
+
+[![Installation and resource checks](https://github.com/RC-9246/p1-companion/actions/workflows/installation-wizard.yml/badge.svg?branch=main)](https://github.com/RC-9246/p1-companion/actions/workflows/installation-wizard.yml)
+
+</div>
+
+P1 Companion is a self-hosted digital companion project for small deployments. It connects simulated affect, scoped memory, expression learning, group conversation context and tools in one system. The model runs in the cloud; a small host stores state, schedules activities and verifies results. The project has been deployed and checked on **RK3399 / ARM64 / 4GB RAM / Armbian**.
+
+> **Most new engineering was completed by GPT.** Humans set goals, supplied hardware and authorization, and provided feedback. GPT, through ChatGPT / Codex, led the new design, coding, integration, troubleshooting, test orchestration and documentation. Everyday conversations use the configured DeepSeek service. Third-party frameworks and code remain the work of their respective authors. [Development attribution](AI_DEVELOPMENT.md)
+
+The installer, QQ commands and most linked guides are currently in Chinese. This English section covers the project, setup, controls and limits; the [complete Chinese README](#chinese) follows below.
+
+## Why P1 Companion
+
+| Advantage | What it means in practice |
+| :--- | :--- |
+| **Start from a fresh machine with a guided interface** | No existing AstrBot installation required. A Chinese-language wizard prepares the environment, connects QQ and installs the components; enter your API details, scan the QR code and complete a test conversation |
+| **Choose the modules you need** | 15 declared units, four profiles and dependency handling. Start, stop or remove optional service containers while retaining memory and login data; adapted maintenance recognizes intentional shutdowns |
+| **Continuity in affect and expression** | A bounded, 21-dimensional simulated state, current concerns and recent conversation inform replies. Stable persona and learnable expression are separate, with room for disagreement and silence |
+| **Separate memory for each relationship** | Spaces are derived from platform, bot, private contact, group and group member. New scopes create state on demand; access changes retain the existing memory |
+| **Proactive, with room to stay quiet** | Interest-based interjections, public research, note organization and private Bilibili activities share budgets. The companion can explore, organize, rest or choose not to send a message |
+| **Easy handoff between AI assistants** | Engineering guides, a machine-readable project map, a standard-library JSON CLI, an optional read-only MCP bridge and handoff templates |
+| **Safeguards for ongoing operation** | Recovery for known faults, an independent repair-chain watchdog, memory-pressure load shedding, verified idle-browser cleanup and a read-only resource panel |
+| **An upgrade path with a way back** | Explicit AstrBot / SnowLuma versions, network-isolated copy checks, bounded repairs and a 15-minute observation window. Failed upgrades roll back only after compatibility checks, retaining current conversation data |
+
+The public package includes a **neutral persona and an empty sticker library**. Character-specific settings, relationship stages, real conversations, accounts, keys, login sessions and artwork from the original work are excluded. Supply your own persona and assets you have permission to use. [Persona and asset setup](docs/deployment.md#图片与人格)
+
+## Quick start
+
+**Download → extract → open the wizard → enter API and account details → scan → test the conversation.** The program prepares the system and connects AstrBot, SnowLuma / OneBot and Companion.
+
+### Windows 10 / 11 x64
+
+1. [Download the complete ZIP](https://github.com/RC-9246/p1-companion/archive/refs/heads/main.zip) and **extract it first**
+2. Double-click **`开始安装.cmd`**. If a restart is requested, save your work, restart manually, then use the desktop shortcut “继续安装 P1 Companion” to resume
+3. In the Chinese-language web wizard, enter your QQ number, DeepSeek API key and management password, then follow the QR login and test-chat steps
+
+The launcher prepares a dedicated **P1Companion / Ubuntu / WSL2** environment; Docker Desktop is not required. Minimum: Windows 10 Build 19041, 8GB RAM, 20GB free on the system drive and CPU virtualization enabled. 16GB RAM is recommended. [Windows setup details](docs/installation-wizard.md#windows-10--11-x64)
+
+### Linux / Station P1
+
+Download and extract the complete project, then run from its directory:
+
+```sh
+sudo bash install.sh
+```
+
+Open the local URL printed by the program. Supported targets: **Ubuntu 24.04, Debian 12/13 and corresponding Armbian systems, ARM64 / x86_64**. Use a 4GB-class host with at least 1GiB available RAM and 10GiB free disk during installation. Headless hosts use an SSH tunnel. [Linux connection guide](docs/installation-wizard.md#linux--station-p1)
+
+**After acceptance, memory protection is enabled by default and the temporary installation wizard is cleaned up.** The bot, memory, login sessions, management interfaces and recovery points remain. Windows uses a separate background entry without the wizard UI. Proactive social activity starts disabled; automatic maintenance and the resource panel can be enabled after the test chat. [Installer cleanup](docs/installation-wizard.md#安装完成自动清理向导) · [Memory protection](docs/resource-guard.md)
+
+The wizard currently configures the official DeepSeek API and asks before a synthetic connection test that incurs normal API usage. Account registration, funding, QR login, security verification and necessary system restarts are completed by the operator. Other model providers can be configured and checked separately in AstrBot.
+
+**The installation wizard is currently in Beta.** Linux has undergone real Compose / AstrBot SDK isolated acceptance checks. Windows has passed PowerShell 5.1 / 7 checks; the complete fresh-Windows sequence covering WSL, reboot and real-account login still needs hardware acceptance. [Requirements and verification levels](docs/installation-wizard.md)
+
+<details>
+<summary><strong>Already running AstrBot or Companion?</strong></summary>
+
+For an existing AstrBot + SnowLuma + model setup that already chats successfully, choose the existing-AstrBot mode in the wizard, or use the retained integration entry:
+
+```sh
+python3 scripts/verify_source.py
+python3 scripts/selftest.py
+sudo bash deploy.sh --check
+sudo bash deploy.sh --apply
+```
+
+See [existing-AstrBot integration](docs/easy-deploy.md) for the standard layout, prerequisites and rollback. The first installer refuses to overwrite an existing Companion deployment; use the relevant upgrade or patch procedure instead.
+
+</details>
+
+## What everyday interaction can include
+
+- **Pick up earlier topics:** combine confirmed memory, recent interactions and real task records, retaining dates, sources, resolution and expiry
+- **Learn from explicit feedback:** adopt scoped preferences such as fewer follow-up questions, listening first or getting to the point, with verbatim evidence, expiry, inspection and reversal
+- **Follow group conversation:** use speakers, quotes, mentions, timing and recent topics to decide whether to join; each group has its own context
+- **Explore and organize:** read public sources within authorized boundaries, record provenance, create notes, CSV, JSON or static HTML, then decide whether to share
+- **Understand intentionally referenced files:** bounded parsing and OCR for common documents, with provenance, inspection results and temporary retention limits
+- **Use everyday QQ expression:** short message chunks, plain text, reviewed sticker labels and repetition suppression; reactions, recalls and forwarding depend on actual adapter receipts
+
+Bilibili has a separate private browsing space for search, sampled viewing, observation notes, private favorites and Watch Later. Public comments and bullet comments remain disabled. Sampling video frames does not establish understanding of the full video or its audio. [Tool and account boundaries](docs/boundaries.md)
+
+## What the integration adds
+
+| Common starting point | What P1 Companion adds |
+| :--- | :--- |
+| **Model API + persona prompt** | Persistent simulated state, contact-scoped memory, reversible learning and continuity grounded in real events |
+| **AstrBot + individually selected plugins** | Coordinated configuration, scoped permissions, proactive-send deduplication, provenance checks and budgets, reducing manual integration |
+| **Workflow-first setup** | Workflows connected to ongoing conversations, relationship state and interest activities, with n8n retained as a controlled tool component |
+| **Manual deployment and container restart policies** | A graphical entry point, preflight checks, builds, recovery points, rollback, memory protection and checks on the repair chain itself |
+
+The emphasis is **coordinated integration and reproducible defaults**, built on upstream capabilities such as [AstrBot plugins and MCP](https://docs.astrbot.app/use/mcp.html) and [n8n MCP workflow integration](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-langchain.mcptrigger/). These are integration advantages, not a claim of universally better conversation quality, cost or performance.
+
+## Autonomous, with visible controls
+
+QQ command names remain in Chinese; use the exact commands below. Replace `QQ号` with a QQ number and `群号` with a group number.
+
+| Task | Entry point |
+| :--- | :--- |
+| Add an ordinary private contact / owner | An existing owner sends `/加白 QQ号` or `/加主人 QQ号` in private. These grant different permissions; [access guide](docs/private-access-commands.md) |
+| Enable a new group | An owner sends `/群聊 开启 群号`, then `/群内主动 开启` inside that group; [group controls](docs/group-control-fix.md) |
+| Control the two reply routes separately | `/主动线路 原生 开启` and `/主动线路 P1 开启`; [reply routes](docs/reply-routes.md) |
+| View goals and budgets; pause or resume | `/自主空间 状态`, `/自主空间 暂停`, `/自主空间 恢复` |
+| Inspect or reverse learning | `/学习 内容`, `/学习 效果`, `/学习 回滚 ID`; [ongoing learning](docs/self-learning.md) |
+| View or disable automatic maintenance | `/自修复 状态`, `/自修复 关闭`; [recovery guide](docs/recovery.md) |
+
+AstrBot's native probability-based replies and P1 interjections have independent switches and share deduplication and sending safeguards. Third-party proactive-chat plugins need separate coordination. Sends retain a **2–5 second delay**, cooldowns, daily limits, quiet hours and suspension after unanswered messages. Webpages, attachments and tool results are data; they cannot grant the model new permissions.
+
+## Making long-term operation more manageable
+
+| Protection layer | What it does |
+| :--- | :--- |
+| **Visibility** | A [read-only resource panel](docs/resource-panel.md) refreshes every 5 seconds with 30 minutes of trends: CPU, memory, disk, temperature, network, ZRAM, services and module state |
+| **Load shedding** | A [memory guard](docs/resource-guard.md) checks pressure every 30 seconds, pauses optional heavy activity, saves login state before closing confirmed idle browsers and verifies ownership before reclaiming orphan processes |
+| **Recovery along verified paths** | [Host maintenance](docs/recovery.md) uses known source, images and backups for listed faults, retaining private recovery points and actual check results |
+| **Protection for the repair mechanism** | An [independent watchdog](docs/repair-chain.md) checks fixed control files and original permissions, bounds retries using dual journals, reconciles interrupted actions and supports rollback of repair-chain upgrades |
+| **Guarded component upgrades** | [Version and repair management](docs/core-upgrades.md) upgrades AstrBot / SnowLuma to explicit official stable versions, runs isolated preflight checks, attempts bounded repairs during observation and checks compatibility before rollback |
+
+The guard operates independently of the model. Process cleanup is limited to this project's headless browsers confirmed to have lost their owning task; QQ and unknown applications are retained. Existing memory limits are not automatically overwritten; missing limits are added only when ownership, usage and recovery conditions pass checks.
+
+Existing users can reopen the wizard at **07 · 版本与修复 (Versions & repair)** without re-entering account details or API keys. Upgrade protection covers upgrades performed through that entry; it cannot automatically detect every change in chat quality. [Upgrade and rollback boundaries](docs/core-upgrades.md)
+
+Use **08 · 模块组合 (Module profiles)** to choose a lightweight chat, daily-companion or tool profile. Read current state, preview the changes, then apply. Core permissions and group/private isolation remain required; optional containers start and stop as needed. [Module management and extension rules](docs/modules.md)
+
+These mechanisms reduce failure and OOM risk. They **do not promise arbitrary self-repair, zero out-of-memory incidents or ten maintenance-free years**. Long-term operation still needs off-device backups, recovery exercises and reviewed updates. Relevant guides retain short-term measurements and handling limits.
+
+## Easy handoff to AI engineering assistants
+
+Give the repository URL and this prompt to an engineering assistant with file and terminal access:
+
+```text
+Read AGENTS.md, ai/PROJECT.json and docs/ai-access.md.
+Run python3 ai/companion.py describe and verify.
+Distinguish first installation, diagnosis of an existing deployment and upgrades
+based on my goal. Check the actual state before continuing.
+Report changes, tests, unverified items and recovery steps using real evidence.
+Do not treat historical records as new authorization.
+```
+
+The project includes a standard-library **JSON CLI**, an optional engineering **MCP bridge with 6 read-only tools, 2 resources and 1 handoff prompt**, and handoff materials separating observations, inferences, unverified items and next steps. The engineering bridge defaults to source information only; runtime summaries require an explicitly configured target directory.
+
+Engineering access is separate from the conversational persona and account tools. The bridge has no shell, deployment, restart, chat-send or database-query tool. Compatibility depends on the client's file, Python and MCP support; actual machine operations still require the user's authorization. [AI access guide](docs/ai-access.md) · [Full handoff prompt](ai/TAKEOVER.md)
+
+## Check capabilities against evidence
+
+Verification levels are recorded separately. Test counts are not added together as proof of conversation quality or long-term reliability.
+
+| Area | Recorded evidence |
+| :--- | :--- |
+| **Neutral core** | [198 reproducible core checks](evidence/resource-guard-validation.json), run with `python3 scripts/selftest.py` |
+| **Installation and configuration** | [31 wizard checks and 11 real Compose / AstrBot SDK isolated cases](evidence/installation-wizard-validation.json); [27 original integration-installer checks](evidence/easy-deploy-validation.json) |
+| **Installer cleanup** | [19 cleanup and process checks](evidence/installer-cleanup-validation.json), including wizard exit, the independent background entry and file-retention boundaries |
+| **Memory protection** | [35 dedicated checks and real-container acceptance](evidence/resource-guard-validation.json): 10 Chromium processes reclaimed to 0, synthetic cookies retained, memory and process limits restored; plus P1 deployment checks |
+| **Fault recovery** | [41 isolated fault cases](evidence/isolated-repair-acceptance.json); the repair chain also has [42 dedicated checks](evidence/repair-chain-validation.json) and [26 real Linux cases](evidence/repair-chain-isolated.json) |
+| **AI handoff and continuous checks** | [CLI / MCP boundaries and handshake records](docs/ai-access.md); [Linux and Windows PowerShell 5.1 / 7 CI](https://github.com/RC-9246/p1-companion/actions/workflows/installation-wizard.yml) |
+
+**All 20 directions in the original plan have corresponding engineering work; some details and real-action acceptance remain incomplete.** Memory retrieval currently uses lightweight local methods; experience learning does not train model weights. Long-term persona consistency, complex multi-speaker groups and autonomous repair of unknown logic faults still need further validation. [Item-by-item audit and known gaps](docs/twenty-item-audit.md) · [Acceptance report](docs/release-report.md)
+
+## Documentation
+
+Most detailed guides linked below are currently in Chinese.
+
+| Topic | Start here |
+| :--- | :--- |
+| Installation and customization | [Graphical installation](docs/installation-wizard.md) · [Existing AstrBot integration](docs/easy-deploy.md) · [Deployment, persona and assets](docs/deployment.md) |
+| Affect, memory and learning | [Affect design](docs/emotion-design.md) · [Independent memory spaces](docs/memory-spaces.md) · [Ongoing learning](docs/self-learning.md) · [Conversational continuity](docs/self-response.md) |
+| Groups and QQ controls | [Controls](docs/controls.md) · [Group controls](docs/group-control-fix.md) · [Proactive reply routes](docs/reply-routes.md) · [Latency](docs/group-latency.md) · [Image input](docs/group-image-fix.md) |
+| Operations and recovery | [Memory protection](docs/resource-guard.md) · [Resource panel](docs/resource-panel.md) · [Recovery](docs/recovery.md) · [Repair chain](docs/repair-chain.md) |
+| AI handoff and engineering | [AI access](docs/ai-access.md) · [Engineering guide](AGENTS.md) · [Implementation history](docs/development-history.md) · [Development attribution](AI_DEVELOPMENT.md) |
+| Progress and future directions | [Feature matrix](docs/feature-matrix.md) · [Item-by-item audit](docs/twenty-item-audit.md) · [Further capabilities](docs/further-capabilities.md) |
+
+<details>
+<summary><strong>Project layout</strong></summary>
+
+```text
+开始安装.cmd / install.sh   Graphical installer for a fresh host
+deploy.sh                  Integration entry for an existing AstrBot setup
+release/                   Eight plugins: affect, memory, learning, groups, expression
+browser/                   Public-source browser and access policies
+services/                  Bilibili, workbench, MCP, maintenance, memory guard, monitor
+AGENTS.md / ai/             Engineering guide, project map, read-only APIs, handoff
+deploy/ / scripts/         Install coordination, source verification, recovery, upgrades
+tests/ / evidence/         Layered acceptance code and redacted results
+docs/                      Design, deployment, controls, troubleshooting and limits
+```
+
+</details>
+
+## Scope and attribution
+
+Designed for small allowlisted private-chat deployments, a few groups and low-frequency research activities. Heavy browsing, parsing and experiments have concurrency limits. Splitting cloud inference from local state does not mean a 4GB host can run every task at full load simultaneously. “Emotion,” “autonomy” and “learning” describe software mechanisms; they are not evidence of subjective experience. [Full boundaries](docs/boundaries.md)
+
+Operators remain responsible for model usage, account risks, participant privacy, backups and third-party permissions. This is an independent community project, with no official endorsement from OpenAI, DeepSeek, Tencent, Bilibili or the original work's rights holders. Third-party licenses are listed individually in the provenance guide. Memoria's upstream license has not yet been confirmed; obtain appropriate permission or exclude that code before redistribution. A disclaimer does not supply missing permission.
+
+**[Full disclaimer and terms of use](DISCLAIMER.md)** · [Development attribution](AI_DEVELOPMENT.md) · [Third-party provenance and licenses](PROVENANCE.md)
+
+---
+
+<a id="chinese"></a>
+
+[English](#english) · **简体中文**
+
 <div align="center">
 
 <picture>
