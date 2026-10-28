@@ -1,3 +1,4 @@
+from .module_policy import enabled as module_on
 """Reviewed local reaction images; the model never supplies paths or download URLs."""
 from contextlib import closing
 import hashlib
@@ -100,6 +101,7 @@ class ReactionStore:
         if not isinstance(identity,str) or not IDENTITY.fullmatch(identity) or (event is not None and (not isinstance(event,str) or not EVENT.fullmatch(event))):
             raise ValueError('invalid_identity_or_event')
     def enabled(self,identity):
+        if not module_on(self.path.parent,'stickers'):return False
         self.validate(identity)
         with closing(self.connect()) as db:
             row=db.execute('SELECT enabled FROM reaction_preferences WHERE identity=?',(identity,)).fetchone()

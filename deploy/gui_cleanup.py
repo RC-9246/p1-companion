@@ -72,6 +72,7 @@ def remove_managed_source(source):
 
 def finish(root,point,state,session,confirmed,auto_cleanup=True,source=None):
     health=acceptance(root,point,state,confirmed)
+    I.atomic(root/'.p1-companion-install-accepted.json',{'schema':1,'human_confirmed':True,'at':int(time.time())})
     if not auto_cleanup:return {**health,'cleanup_complete':False,'gui_kept':True}
     windows_runtime_ready();session=protected(session)
     F.need(not (session/'browser.url').is_symlink(),'unsafe_cleanup_path')

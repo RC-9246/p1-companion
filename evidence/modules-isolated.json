@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-28",
+  "passed": 8,
+  "tests": [
+    {
+      "case": "six_optional_containers_stopped_without_core_stop",
+      "ok": true
+    },
+    {
+      "case": "remove_stopped_services_preserves_all_bind_data",
+      "ok": true
+    },
+    {
+      "case": "recreate_from_saved_image_settings_and_existing_data",
+      "ok": true
+    },
+    {
+      "case": "maintenance_recognizes_intentionally_disabled_services",
+      "ok": true
+    },
+    {
+      "case": "partial_failure_restores_original_selection_and_services",
+      "ok": true
+    },
+    {
+      "case": "sigkill_during_module_change_recovers_previous_composition",
+      "ok": true
+    },
+    {
+      "case": "all_synthetic_database_and_login_fixtures_retained",
+      "ok": true
+    },
+    {
+      "case": "native_module_recovery_timer_idle_entrypoint",
+      "ok": true
+    }
+  ],
+  "production_eight_containers_unchanged": true,
+  "real_docker": true,
+  "real_sigkill": true,
+  "real_account_or_model_calls": false,
+  "whole_host_reboot_tested": false
+}

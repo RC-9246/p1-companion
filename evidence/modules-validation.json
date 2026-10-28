@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-28",
+  "module_units": 15,
+  "profiles": 4,
+  "unit_checks": {
+    "macos": 25,
+    "linux_arm64": 25
+  },
+  "baseline_regressions_macos": 198,
+  "wizard_checks_linux_arm64": 37,
+  "real_isolated_cases": 8,
+  "isolated_evidence": "evidence/modules-isolated.json",
+  "production_evidence": "evidence/modules-production.json",
+  "runtime_gates": [
+    "native tools",
+    "runtime MCP",
+    "proactive send recheck",
+    "background scheduler and activity choice",
+    "learning/reflection",
+    "sticker eligibility"
+  ],
+  "limits": [
+    "Core shared plugins remain installed",
+    "Prepared local service images required for re-enable",
+    "Not a marketplace auto-executor",
+    "Whole-host reboot and real QQ delivery not exercised by these labs"
+  ],
+  "wizard_checks_macos": 37,
+  "repair_chain_regressions": {
+    "macos": 42,
+    "linux_arm64": 42
+  },
+  "easy_deploy_regressions_macos": 27,
+  "preview_ui_dependency_enable_disable_verified": true,
+  "preview_ui_live_mutations": false,
+  "tested_sources": {
+    "services/modules/manager.py": "dea3f5818b921baae28c4a2957cc884bf66f15d0653d2601eb7f4060e7e02627",
+    "release/astrbot_plugin_affect/module_policy.py": "f3f5c0e99857d48333f05b44e99b3ee02bf5b548590c5d00be9f4a68210d2f4f",
+    "services/maintenance/p1-companion-maintain.py": "d5857ea5ffe08568a97f2c529474685f17395e6fd9bd3a0d95fcd29989a60b85"
+  }
+}

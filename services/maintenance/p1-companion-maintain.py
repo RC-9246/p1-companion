@@ -1,10 +1,22 @@
 #!/usr/bin/env python3
 """Closed-action whole-stack recovery. Neither shell commands nor paths come from a model."""
-import fcntl,json,os,sqlite3,subprocess,sys,time,shutil
+import fcntl,hashlib,json,os,sqlite3,subprocess,sys,time,shutil
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent));sys.path.insert(0,'/usr/local/lib/p1-companion')
 from resilience import SERVICES,restore_sources,restore_database,valid_db,snapshot_database,repair_policy_file,maintenance_plan,restore_fixed,fixed_dependents
 BASE=Path('/srv/p1-agent');AST=BASE/'astrbot/data';DATA=AST/'plugin_data/affect';STATE=DATA/'maintenance_state.json';RECOVERY=Path('/var/lib/p1-companion/recovery/current')
+MODULE_POLICY_SCHEMA=1
+def module_disabled_services(base=BASE,policy_root=Path('/var/lib/p1-companion-modules')):
+ path=policy_root/hashlib.sha256(str(base).encode()).hexdigest()[:16]/'desired.json'
+ optional=set(SERVICES)-{'astrbot','snowluma'}
+ if not path.exists():return set(),True
+ try:
+  s=path.stat()
+  if any(p.is_symlink() for p in (path,*path.parents)) or s.st_uid!=0 or s.st_mode&0o077 or s.st_size>65536:raise ValueError('untrusted_module_policy')
+  v=json.loads(path.read_bytes());names=v['disabled_services']
+  if v.get('schema')!=1 or v.get('root')!=str(base) or not isinstance(names,list) or not all(isinstance(x,str) for x in names) or not set(names)<=optional:raise ValueError('invalid_module_policy')
+  return set(names),True
+ except (OSError,ValueError,KeyError,TypeError):return optional,False
 DBS={'affect':(DATA/'affect.db',('affect_state','companion_state')),'memoria':(AST/'plugin_data/memoria/memoria.db',('memoria_records',)),'groups':(AST/'plugin_data/p1_groups/groups.db',('group_meta',)),'agency':(DATA/'agency/agency.db',('scope','task')),'astrbot':(AST/'data_v4.db',('conversations',)),'knowledge':(AST/'knowledge_base/kb.db',())}
 
 COMPOSE={
@@ -118,13 +130,15 @@ def main():
   try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
   except BlockingIOError:return
   state=read(STATE,{});now=time.time();repairs=[];integrity={};request=read(DATA/'maintenance_request.json',{});(DATA/'maintenance_request.json').unlink(missing_ok=True);disabled=(DATA/'maintenance.disabled').exists()
+  module_off,module_policy_valid=module_disabled_services()
   if not disabled:
    try:
     repaired_fixed=restore_fixed(FIXED,RECOVERY/'fixed',read(RECOVERY/'fixed-manifest.json',{}),read(RECOVERY/'fixed-metadata.json',{}))
     if repaired_fixed:
      repairs.append({'module':'fixed_services','files':repaired_fixed})
      if any(k.startswith('unit_') for k in repaired_fixed):run(['systemctl','daemon-reload']);run(['systemctl','enable','--now','p1-companion-maintain.timer','p1-companion-watchdog.timer'])
-     for service in fixed_dependents(repaired_fixed):run(['docker','restart','--time','8',service],45)
+     for service in fixed_dependents(repaired_fixed):
+      if service not in module_off:run(['docker','restart','--time','8',service],45)
    except (ValueError,OSError):repairs.append({'module':'fixed_services','state':'checkpoint_rejected'})
    manifest=read(RECOVERY/'manifest.json',{})
    if manifest:
@@ -137,6 +151,7 @@ def main():
     if repair_policy_file(DATA/name,kind):repairs.append({'module':kind,'state':'recovered_with_access_closed'})
    integrity=ensure_databases(state,now,repairs)
    for name in SERVICES:
+    if name in module_off:continue
     ok=healthy(name)
     if decision(state,name,ok,now):
      point=snapshot(name,now);state[name]['last_repair']=now;state[name]['repairs'].append(now);atomic(STATE,state)
@@ -149,5 +164,5 @@ def main():
   except Exception:ttl=False
   resource=resources();atomic(DATA/'resource_health.json',{'at':now,**resource})
   # A resource stop is distinct from the user's own pause file; the AI cannot erase it.
-  atomic(STATE,state);atomic(DATA/'maintenance_health.json',{'at':now,'ttl_sweep':ttl,'diagnostic_requested':request.get('kind')=='diagnostic_only','repairs':repairs,'databases':integrity,'services':{name:healthy(name) for name in SERVICES},'resource':resource,'disabled':disabled,'repair_policy':'known_sources_or_fixed_restarts_or_verified_database_snapshot','kernel_hardware_account_captcha':'requires_external_recovery_or_human'})
+  atomic(STATE,state);atomic(DATA/'maintenance_health.json',{'at':now,'ttl_sweep':ttl,'diagnostic_requested':request.get('kind')=='diagnostic_only','repairs':repairs,'databases':integrity,'services':{name:healthy(name) for name in SERVICES if name not in module_off},'intentionally_disabled_services':sorted(module_off),'module_policy_valid':module_policy_valid,'resource':resource,'disabled':disabled,'repair_policy':'known_sources_or_fixed_restarts_or_verified_database_snapshot','kernel_hardware_account_captcha':'requires_external_recovery_or_human'})
 if __name__=='__main__':main()

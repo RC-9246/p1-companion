@@ -1,3 +1,5 @@
+from pathlib import Path
+from .module_policy import enabled as module_on
 """Scoped public research for all admitted companions, no account/browser-session access."""
 import asyncio,json,time,xml.etree.ElementTree as ET
 from .search_policy import query as checked_query,public_url
@@ -8,6 +10,7 @@ class Research:
   view=getattr(self.plugin.store,'budget_status',None)
   return view(DAILY_LIMIT,bucket=1) if callable(view) else {'limit':DAILY_LIMIT,'remaining':None,'resets_at':None}
  async def run(self,event,action,query='',url=''):
+  if not module_on(getattr(getattr(self.plugin,'thinking',None),'data',Path('/AstrBot/data/plugin_data/affect')),'public_web'):return {'ok':False,'error':'module_disabled'}
   scope=self.plugin.scope_for(event)
   if not scope or not self.plugin.enabled():return {'ok':False,'error':'forbidden'}
   if action not in ('search','read','capabilities'):return {'ok':False,'error':'public_read_only_required'}

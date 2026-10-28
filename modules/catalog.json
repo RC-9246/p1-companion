@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "modules": [
+    {"id":"core","name":"陪伴核心","kind":"core","required":true,"requires":[],"description":"情绪与人格基础、分范围记忆、群私隔离、权限、QQ 文本与发送节奏；基础插件代码保留"},
+    {"id":"learning","name":"表达与经验学习","kind":"feature","requires":["core"],"description":"自动提取和使用有证据的表达偏好；停用保留已有学习资料"},
+    {"id":"reflection","name":"交流复盘","kind":"feature","requires":["learning"],"description":"从已送达交流中生成有限的表达复盘"},
+    {"id":"stickers","name":"表情包表达","kind":"feature","requires":["core"],"description":"审核图库、表情选择与发送；停用不删除素材"},
+    {"id":"qq_actions","name":"QQ 扩展动作","kind":"feature","requires":["core"],"description":"获准的表态、撤回、转发与资料分享；普通聊天保留"},
+    {"id":"autonomy","name":"后台目标与活动","kind":"feature","requires":["core"],"description":"后台目标、兴趣活动与到期提醒；停用保留队列，暂停执行"},
+    {"id":"proactive","name":"Companion 主动交流","kind":"feature","requires":["autonomy"],"description":"兴趣插话与主动联系；不替代 AstrBot 原生主动开关，不新增联系人权限"},
+    {"id":"public_web","name":"公开搜索与浏览","kind":"service","requires":["core"],"description":"公开搜索、隔离浏览器和域名代理；停用停止两个浏览服务"},
+    {"id":"bilibili","name":"B站私人活动","kind":"service","requires":["core"],"description":"独立浏览器与私人整理；账号和登录数据保留，公开评论禁用规则不变"},
+    {"id":"workbench","name":"文件与实验工作台","kind":"service","requires":["core"],"description":"文件解析、OCR、格式处理和隔离实验"},
+    {"id":"workflows","name":"公开工作流","kind":"service","requires":["public_web"],"description":"本项目 n8n 只读公开资料工作流；停用保留数据库与凭据"},
+    {"id":"mcp","name":"运行时 MCP 工具桥","kind":"feature","requires":["core"],"description":"只开通已获准模块的运行时 MCP 工具；工程只读 MCP 独立保留"},
+    {"id":"maintenance","name":"已知故障自动维护","kind":"host","requires":["core"],"description":"启停已安装的巡检和修复链定时器；未安装时由安装向导先准备"},
+    {"id":"resource_guard","name":"内存压力保护","kind":"host","requires":["core"],"description":"启停已安装的资源守护；停用不会撤销已有内核限额"},
+    {"id":"monitor","name":"只读资源面板","kind":"host","requires":["core"],"description":"启停已安装的资源采集与本机面板"}
+  ],
+  "profiles": {
+    "chat": ["core","learning","reflection","stickers","qq_actions"],
+    "companion": ["core","learning","reflection","stickers","qq_actions","autonomy","proactive"],
+    "tools": ["core","learning","stickers","qq_actions","public_web","workbench","workflows","mcp"],
+    "full": ["core","learning","reflection","stickers","qq_actions","autonomy","proactive","public_web","bilibili","workbench","workflows","mcp"]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "at": 1793158157,
+  "tests": [
+    {
+      "case": "real_image_switch_and_commit",
+      "ok": true
+    },
+    {
+      "case": "runtime_limits_network_and_mounts_preserved",
+      "ok": true
+    },
+    {
+      "case": "manual_rollback_after_commit_keeps_new_chat",
+      "ok": true
+    },
+    {
+      "case": "bad_image_rejected_without_live_data_start",
+      "ok": true
+    },
+    {
+      "case": "real_sqlite_migration_rejected_on_copy",
+      "ok": true
+    },
+    {
+      "case": "probation_stopped_process_repaired",
+      "ok": true
+    },
+    {
+      "case": "persistent_failure_bounded_repair_then_rollback_keeps_data",
+      "ok": true
+    },
+    {
+      "case": "sigkill_before_cutover_recovers_from_persistent_journal",
+      "ok": true
+    },
+    {
+      "case": "sigkill_after_live_start_recovers_previous_runtime",
+      "ok": true
+    },
+    {
+      "case": "native_persistent_timer_and_idle_service_entrypoint",
+      "ok": true
+    }
+  ],
+  "passed": 10,
+  "production_core_unchanged": true,
+  "real_docker": true,
+  "real_process_sigkill": true,
+  "native_idle_systemd_entrypoint": true,
+  "real_upstream_upgrade": false,
+  "whole_host_reboot_tested": false,
+  "account_login_and_qq_delivery_tested": false
+}

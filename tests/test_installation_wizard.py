@@ -160,6 +160,64 @@ class JobTests(unittest.TestCase):
                 self.assertNotIn('synthetic-secret',json.dumps(app.snapshot()));self.assertEqual(app.jobs[-1]['status'],'failed')
             finally:app.lease.close()
 
+class CoreUpgradeControls(unittest.TestCase):
+    def test_module_catalog_is_available_in_preview_without_live_access(self):
+        with tempfile.TemporaryDirectory() as t:
+            app=W.Wizard(Path(t).resolve(),True)
+            try:self.assertEqual(len(app.snapshot()['module_catalog']['modules']),15)
+            finally:app.lease.close()
+    def test_module_changes_reject_commands_and_require_consent(self):
+        with tempfile.TemporaryDirectory() as t:
+            app=W.Wizard(Path(t).resolve())
+            try:
+                with self.assertRaisesRegex(F.SetupError,'review_installation'):
+                    app.start('modules_apply',{'root':'/srv/synthetic-agent','selected':['core']})
+                with self.assertRaises(F.SetupError):
+                    app.start('modules_apply',{'root':'/srv/synthetic-agent','selected':['core'],'accepted':True,'command':'id'})
+                with self.assertRaises(W.U.UpdateError):
+                    app.start('modules_plan',{'root':'/srv/synthetic-agent','selected':['shell']})
+            finally:app.lease.close()
+    def test_check_needs_no_qq_or_api_credentials(self):
+        with tempfile.TemporaryDirectory() as t:
+            app=W.Wizard(Path(t).resolve())
+            try:
+                with patch.object(W.I,'verify_source',return_value='verified'),patch.object(W.U,'catalog',return_value={'component':'astrbot','versions':[{'version':'v4.29.3'}]}):
+                    app.start('upgrade_check',{'root':'/srv/synthetic-agent','component':'astrbot'})
+                    end=time.monotonic()+2
+                    while app.lock.locked() and time.monotonic()<end:time.sleep(.01)
+                self.assertEqual(app.jobs[-1]['status'],'succeeded');self.assertEqual(app.jobs[-1]['result']['component'],'astrbot')
+                self.assertNotIn('api_key',json.dumps(app.jobs))
+            finally:app.lease.close()
+    def test_upgrade_requires_explicit_action_and_closed_fields(self):
+        with tempfile.TemporaryDirectory() as t:
+            app=W.Wizard(Path(t).resolve())
+            try:
+                with self.assertRaisesRegex(F.SetupError,'review_installation'):
+                    app.start('upgrade_apply',{'root':'/srv/synthetic-agent','component':'astrbot','version':'v4.29.3'})
+                with self.assertRaises(F.SetupError):
+                    app.start('upgrade_apply',{'root':'/srv/synthetic-agent','component':'astrbot','version':'v4.29.3','accepted':True,'command':'id'})
+                with self.assertRaises(W.U.UpdateError):
+                    app.start('upgrade_check',{'root':'/srv/synthetic-agent','component':'shell'})
+            finally:app.lease.close()
+    def test_management_mode_uses_operator_root(self):
+        with tempfile.TemporaryDirectory() as t:
+            app=W.Wizard(Path(t).resolve(),True,manage_root='/srv/synthetic-agent')
+            try:
+                v=app.snapshot();self.assertTrue(v['management']);self.assertEqual(v['defaults']['root'],'/srv/synthetic-agent');self.assertEqual(v['core_update']['state'],'preview')
+            finally:app.lease.close()
+    def test_upgrade_uses_server_source_and_no_browser_command(self):
+        with tempfile.TemporaryDirectory() as t:
+            app=W.Wizard(Path(t).resolve())
+            try:
+                with patch.object(W.I,'verify_source',return_value='verified'),patch.object(W.os,'geteuid',return_value=0),patch.object(W.sys,'platform','linux'),patch.object(W.U,'Engine') as engine:
+                    engine.return_value.apply.return_value={'state':'observing'}
+                    app.start('upgrade_apply',{'root':'/srv/synthetic-agent','component':'astrbot','version':'4.29.3','accepted':True})
+                    end=time.monotonic()+2
+                    while app.lock.locked() and time.monotonic()<end:time.sleep(.01)
+                    engine.return_value.apply.assert_called_once_with('astrbot','v4.29.3',W.I.SOURCE)
+                self.assertEqual(app.jobs[-1]['status'],'succeeded')
+            finally:app.lease.close()
+
 class HttpTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.app=W.Wizard(Path(self.temp.name).resolve(),True);self.server=W.make_server(self.app,0);self.thread=threading.Thread(target=self.server.serve_forever,daemon=True);self.thread.start();self.port=self.server.server_port

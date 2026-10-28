@@ -1,3 +1,7 @@
+try:
+ from ..astrbot_plugin_affect.module_policy import enabled as module_on
+except ImportError:
+ from astrbot_plugin_affect.module_policy import enabled as module_on
 """Scoped, evidence-backed experience learning. No persona file or model-weight writes."""
 import asyncio,json,re,time
 from functools import wraps
@@ -22,7 +26,9 @@ MARKER='[P1-LEARNING:v1]'
 def nonfatal(fn):
  @wraps(fn)
  async def call(*args,**kwargs):
-  try:return await fn(*args,**kwargs)
+  try:
+   if not module_on(DATA,'learning'):return
+   return await fn(*args,**kwargs)
   except Exception as exc:logger.info('[P1 Learning] optional_step_skipped code='+type(exc).__name__)
  return call
 
@@ -50,6 +56,7 @@ class P1Learning(Star):
   else:return None
   return group,member_scope(group,member),member
  async def active(self,scope):
+  if not module_on(DATA,'learning'):return []
   cards=await asyncio.to_thread(self.store.cards,scope)
   # Explicit behavioral corrections must not disappear under a burst of interests.
   return sorted(cards,key=lambda c:({'preference':0,'lesson':1,'correction':2}.get(c['kind'],3),-c['updated'],-c['id']))
@@ -133,6 +140,7 @@ class P1Learning(Star):
    await asyncio.to_thread(self.store.shown,used['scope'],used['ids'])
    if used['shared']:await asyncio.to_thread(self.store.shown,used['shared'],used['shared_ids'])
  def schedule(self,event,scope,urgent=False,shared=False):
+  if not module_on(DATA,'learning'):return
   if scope in self.tasks:return
   task=asyncio.create_task(self.learn(event,scope,urgent,shared));self.tasks[scope]=task
   def done(t):
@@ -140,6 +148,7 @@ class P1Learning(Star):
    if not t.cancelled() and t.exception():logger.info('[P1 Learning] retained_previous code='+type(t.exception()).__name__)
   task.add_done_callback(done)
  async def allowed_scope(self,event,scope,shared):
+  if not module_on(DATA,'learning'):return False
   identity=self.private(event)
   if identity:return not shared and identity==scope
   keys=self.group_keys(event)

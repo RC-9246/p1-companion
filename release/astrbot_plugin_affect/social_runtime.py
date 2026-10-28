@@ -1,3 +1,4 @@
+from .module_policy import enabled as module_on
 """Connect the persistent social policy to existing AstrBot APIs; a single worker only."""
 import asyncio
 from contextlib import closing
@@ -236,6 +237,7 @@ class SocialController:
         return decide(result.choices[0].message.content, facts, findings)
 
     async def send(self, row, decision):
+        if not module_on(self.data,'proactive'):return
         key = await asyncio.to_thread(self.store.reserve, row, decision, time.time())
         if not key:
             return 'cancelled'
@@ -262,6 +264,7 @@ class SocialController:
             raise
 
     async def tick(self):
+        if not module_on(self.data,'proactive'):return
         qq=getattr(self.plugin,'qq',None)
         if qq and qq.ready and (self.data/'qq_policy.json').is_file():
             await qq.tick();return
