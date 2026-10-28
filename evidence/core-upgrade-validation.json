@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-28",
+  "source": "services/updater/manager.py",
+  "tested_source_sha256": "1dc3da62e59b07c011d145f2e3e4b90a6a0e900f96fd721efe6355f8376a0be8",
+  "unit_checks": {
+    "macos": 37,
+    "linux_arm64": 37
+  },
+  "wizard_checks_macos": 37,
+  "javascript_syntax": true,
+  "native_isolated_docker": "evidence/core-upgrade-isolated.json",
+  "native_cases": 10,
+  "production_read_only_probes": {
+    "astrbot": true,
+    "snowluma": true
+  },
+  "production_versions_changed": false,
+  "real_upstream_version_upgrade_tested": false,
+  "whole_host_reboot_tested": false,
+  "real_qq_delivery_tested": false,
+  "limits": [
+    "Known restart/recreate only, not arbitrary code repair",
+    "Schema changes rejected before production cutover",
+    "Rollback preserves current data and may stop on compatibility failure",
+    "Automatic candidate rollback window is the observation period; later manual rollback requires new compatibility checks"
+  ],
+  "wizard_checks_linux_arm64": 37
+}

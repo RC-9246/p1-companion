@@ -1,5 +1,5 @@
 """Local, authenticated installation wizard. Standard library; loopback only."""
-import argparse,contextlib,fcntl,hashlib,hmac,http.client,json,os,re,secrets,select,socket,subprocess,sys,threading,time
+import argparse,contextlib,fcntl,hashlib,hmac,http.client,importlib.util,json,os,re,secrets,select,socket,subprocess,sys,threading,time
 from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
@@ -7,12 +7,16 @@ from urllib.parse import urlsplit
 import firstboot as F
 import install as I
 import gui_cleanup as G
+_update_spec=importlib.util.spec_from_file_location('p1_core_updater',Path(__file__).resolve().parents[1]/'services/updater/manager.py')
+U=importlib.util.module_from_spec(_update_spec);sys.modules[_update_spec.name]=U;_update_spec.loader.exec_module(U)
+_module_spec=importlib.util.spec_from_file_location('p1_module_manager',Path(__file__).resolve().parents[1]/'services/modules/manager.py')
+M=importlib.util.module_from_spec(_module_spec);_module_spec.loader.exec_module(M)
 ASSETS=Path(__file__).resolve().parent/'wizard'
 STEPS={'tag_installed_base':'保存原始镜像','build_core_dependencies':'安装 AstrBot 扩展依赖','build_browser':'准备浏览器','build_workbench':'准备文件与实验工具','offline_neutral_checks':'运行离线检查','stop_core':'保存恢复点并切换服务','install_plugins_and_config':'安装记忆、情绪与学习模块','start_p1-companion':'启动公开浏览器','start_p1-workbench':'启动文件工具','start_p1-leisure':'启动私人浏览空间','initialize_workflows':'准备工作流','secure_workflow_setup':'保护工作流账号','start_integrated_core':'启动完整伙伴','verify_core_dependencies':'核对依赖与服务'}
-ACTIONS={'check','core','integrate','login','model_save','model_test','maintenance','monitor','rollback','stop_core','finish','guard'}
+ACTIONS={'check','core','integrate','login','model_save','model_test','maintenance','monitor','rollback','stop_core','finish','guard','upgrade_check','upgrade_apply','upgrade_status','upgrade_rollback','modules_status','modules_plan','modules_apply','modules_remove','modules_recover'}
 class Wizard:
-    def __init__(self,state,preview=False):
-        self.state=Path(state);self.preview=preview;self.token=secrets.token_urlsafe(32);self.lock=threading.Lock();self.jobs=[];self.config={};self.ticket=None;self.desktop_root=None;self.retired=False;self.on_shutdown=lambda:None
+    def __init__(self,state,preview=False,manage_root=None):
+        self.state=Path(state);self.preview=preview;self.token=secrets.token_urlsafe(32);self.lock=threading.Lock();self.jobs=[];self.config={};self.ticket=None;self.desktop_root=None;self.retired=False;self.on_shutdown=lambda:None;self.manage_root=str(I.safe_root(manage_root)) if manage_root else None
         self.state.mkdir(mode=0o700,parents=True,exist_ok=True)
         F.need(not self.state.is_symlink() and self.state.stat().st_uid==os.geteuid() and not self.state.stat().st_mode&0o077,'untrusted_wizard_state')
         self.lease=(self.state/'server.lock').open('a');fcntl.flock(self.lease,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -29,21 +33,36 @@ class Wizard:
                 self.jobs.append(row)
     def save(self,row):I.atomic(self.state/('job-'+row['id']+'.json'),row)
     def snapshot(self):
-        defaults={'root':'/srv/p1-agent','model':'deepseek-flash'}
+        defaults={'root':self.manage_root or '/srv/p1-agent','model':'deepseek-flash'}
         if self.jobs:
             latest=self.jobs[-1].get('settings',{})
             earlier=next((j.get('settings',{}) for j in reversed(self.jobs) if j.get('root')==latest.get('root') and j.get('settings',{}).get('bot')), {})
             defaults.update(earlier);defaults.update(latest)
-        return {'project':'p1-companion-installer','preview':self.preview,'retired':self.retired,'jobs':self.jobs[-12:],'running':self.lock.locked(),'defaults':defaults,'supported':['Windows 10/11 x64 + WSL2 Ubuntu 24.04','Ubuntu 24.04 / Debian 12,13 / compatible Armbian']}
+        if self.manage_root:defaults.update(root=self.manage_root,mode='existing')
+        update={'state':'preview' if self.preview else 'idle'}
+        if not self.preview:
+            try:update=U.public_status(defaults['root'])
+            except (OSError,ValueError,U.UpdateError):update={'state':'unavailable'}
+        return {'project':'p1-companion-installer','preview':self.preview,'retired':self.retired,'management':bool(self.manage_root),'jobs':self.jobs[-12:],'running':self.lock.locked(),'defaults':defaults,'core_update':update,'module_catalog':M.registry()[0],'supported':['Windows 10/11 x64 + WSL2 Ubuntu 24.04','Ubuntu 24.04 / Debian 12,13 / compatible Armbian']}
     def emit(self,row,step,label):
         row['step']=step;row['message']=label;row['events']=(row['events']+[{'step':step,'message':label,'at':int(time.time())}])[-60:];self.save(row)
     def start(self,action,values):
         F.need(action in ACTIONS,'unknown_action');F.need(not self.preview,'preview_read_only');F.need(not self.retired,'wizard_completed')
-        if action=='check':
+        if action.startswith('modules_'):
+            F.need(isinstance(values,dict) and set(values)<={'root','selected','accepted'},'invalid_input')
+            v={'root':str(I.safe_root(values.get('root','/srv/p1-agent'))),'accepted':values.get('accepted') is True}
+            if action not in ('modules_status','modules_recover'):
+                selected=values.get('selected');F.need(isinstance(selected,list) and len(selected)<=32 and all(isinstance(k,str) for k in selected),'invalid_input')
+                M.closure(selected,M.registry()[1]);v['selected']=selected
+        elif action.startswith('upgrade_'):
+            F.need(isinstance(values,dict) and set(values)<={'root','component','version','accepted'},'invalid_input')
+            v={'root':str(I.safe_root(values.get('root','/srv/p1-agent'))),'component':U.component(values.get('component','astrbot')),'accepted':values.get('accepted') is True}
+            if action=='upgrade_apply':v['version']=U.version(values.get('version'))
+        elif action=='check':
             F.need(isinstance(values,dict) and values.get('mode','new') in ('new','existing'),'invalid_input')
             v={'root':str(I.safe_root(values.get('root','/srv/p1-agent'))),'mode':values.get('mode','new')}
         else:v=F.validate_input(values)
-        F.need(v.get('accepted') is True or action in ('check','login','finish'),'review_installation_first')
+        F.need(v.get('accepted') is True or action in ('check','login','finish','upgrade_check','upgrade_status','modules_status','modules_plan'),'review_installation_first')
         F.need(self.lock.acquire(blocking=False),'another_operation_in_progress')
         row={'id':str(time.time_ns())+'-'+secrets.token_hex(3),'action':action,'root':v['root'],'settings':{k:v[k] for k in ('root','mode','bot','owner','model','social') if k in v},'status':'running','events':[],'message':'正在准备','at':int(time.time())}
         try:self.jobs.append(row);self.save(row);threading.Thread(target=self.run,args=(row,v),daemon=True).start()
@@ -58,7 +77,25 @@ class Wizard:
         try:
             F.PRIVATE_LOG=self.state/('job-'+row['id']+'.private.log')
             I.verify_source(I.SOURCE)
-            if action=='check':
+            if action.startswith('modules_'):
+                emit(action,{'modules_status':'读取模块状态','modules_plan':'计算依赖与调整计划','modules_apply':'应用功能组合，保留数据','modules_remove':'移除未选服务容器，保留数据','modules_recover':'恢复上一次未完成的模块调整'}[action])
+                controller=M.Controller(root)
+                if action=='modules_status':result=controller.status()
+                elif action=='modules_plan':result=M.plan(v['selected'],controller.current()['enabled'])
+                elif action=='modules_recover':
+                    F.need(os.geteuid()==0 and sys.platform.startswith('linux'),'apply_requires_sudo');result=controller.recover(True)
+                else:
+                    F.need(os.geteuid()==0 and sys.platform.startswith('linux'),'apply_requires_sudo')
+                    result=controller.apply(v['selected'],action=='modules_remove')
+            elif action.startswith('upgrade_'):
+                emit(action,{'upgrade_check':'查询官方稳定版','upgrade_apply':'保存恢复点、隔离预检与切换版本','upgrade_status':'读取升级状态','upgrade_rollback':'验证当前数据并回退最近一次升级'}[action])
+                if action=='upgrade_check':result=U.catalog(v['component'])
+                elif action=='upgrade_status':result=U.public_status(root)
+                else:
+                    F.need(os.geteuid()==0 and sys.platform.startswith('linux'),'apply_requires_sudo')
+                    engine=U.Engine(root)
+                    result=engine.apply(v['component'],v['version'],I.SOURCE) if action=='upgrade_apply' else engine.tick(True)
+            elif action=='check':
                 result=F.audit(root) if v['mode']=='new' else I.doctor(root)
                 self.ticket={'root':str(root),'mode':v['mode'],'at':time.monotonic(),'ok':result['ok']}
             elif action=='core':
@@ -105,13 +142,16 @@ class Wizard:
                     F.command([sys.executable,str(I.SOURCE/'deploy/install.py'),'--root',str(root),'--rollback',str(point)],600)
                 result={'rolled_back':True,'databases_restored':False,'maintenance_timers_left_disabled':True}
             else:result=F.rollback_core(root,emit)
-            row.update(status='succeeded',result=result,message='操作完成');self.save(row)
+            row.update(status='succeeded',result=result,message='操作完成')
+            if action.startswith('upgrade_') and result.get('state') in ('rolled_back','rollback_blocked'):
+                row.update(message='升级未提交，旧版已恢复' if result['state']=='rolled_back' else '自动回滚未通过，当前数据已保留，请查看升级状态')
+            self.save(row)
             if self.retired:
                 timer=threading.Timer(8,self.on_shutdown);timer.daemon=True;timer.start()
         except BaseException as exc:
             # Do not return str(exc): vendor output or configuration can contain credentials.
             allowed={'preview_read_only','apply_requires_sudo','preflight_failed','qq_login_required','integration_preflight_failed','real_chat_confirmation_required','integration_not_committed','existing_container_not_owned','setup_identity_changed','setup_compose_changed','not_created_by_this_wizard','incomplete_setup_requires_review','api_key_required','dashboard_password_too_weak','model_destination_changed','model_connection_failed','rollback_companion_first','post_install_changes_require_manual_restore','final_health_check_failed','windows_runtime_not_ready','unsafe_cleanup_path','unmanaged_installer_source'}
-            code=str(exc) if isinstance(exc,(F.SetupError,I.DeployError)) and str(exc) in allowed else 'operation_failed'
+            code=str(exc) if (isinstance(exc,(F.SetupError,I.DeployError)) and str(exc) in allowed) or (isinstance(exc,U.UpdateError) and re.fullmatch('[a-z_]{1,80}',str(exc))) else 'operation_failed'
             row.update(status='failed',error=code,message='未完成，数据已保留；可检查原因后重试');self.save(row)
         finally:v.pop('api_key',None);v.pop('password',None);F.PRIVATE_LOG=None;self.lock.release()
 
@@ -163,7 +203,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(200,result)
             F.need(path=='/api/action' and set(body)=={'action','values'},'invalid_endpoint')
             result=self.server.app.start(body['action'],body['values']);return self.send(202,result)
-        except (ValueError,TypeError,KeyError,OSError,subprocess.SubprocessError,F.SetupError,I.DeployError):return self.send(400,{'error':'invalid_or_unavailable_request'})
+        except (ValueError,TypeError,KeyError,OSError,subprocess.SubprocessError,F.SetupError,I.DeployError,U.UpdateError):return self.send(400,{'error':'invalid_or_unavailable_request'})
     def proxy_desktop(self):
         # A single fixed loopback upstream. No configurable URL/host or generic proxy.
         root=self.server.app.desktop_root
@@ -199,10 +239,10 @@ class Handler(BaseHTTPRequestHandler):
 def make_server(app,port):
     server=Server(('127.0.0.1',port),Handler);server.app=app;server.assets={name:(ASSETS/name).read_bytes() for name in ('index.html','style.css','app.js')};server.allowed_hosts={f'127.0.0.1:{server.server_port}',f'localhost:{server.server_port}'};server.origins={'http://'+x for x in server.allowed_hosts};app.on_shutdown=server.shutdown;return server
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--preview',action='store_true');p.add_argument('--port',type=int,default=6191);p.add_argument('--state-dir',type=Path,default=Path('/var/lib/p1-companion-installer'));p.add_argument('--url-file',type=Path);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--preview',action='store_true');p.add_argument('--port',type=int,default=6191);p.add_argument('--state-dir',type=Path,default=Path('/var/lib/p1-companion-installer'));p.add_argument('--url-file',type=Path);p.add_argument('--manage-root');a=p.parse_args()
     if not a.preview:F.need(sys.platform=='linux' and os.geteuid()==0,'start_on_linux_with_sudo')
     F.need(all((ASSETS/name).is_file() and not (ASSETS/name).is_symlink() for name in ('index.html','style.css','app.js')),'download_complete_source_first')
-    os.umask(0o077);app=Wizard(a.state_dir,a.preview);server=make_server(app,a.port);url='http://127.0.0.1:'+str(server.server_port)+'/#'+app.token
+    os.umask(0o077);app=Wizard(a.state_dir,a.preview,a.manage_root);server=make_server(app,a.port);url='http://127.0.0.1:'+str(server.server_port)+'/#'+app.token
     pidfile=app.state/'server.pid';pidfile.write_text(str(os.getpid()));pidfile.chmod(0o600)
     if a.url_file:
         F.need(a.url_file.is_absolute() and not a.url_file.is_symlink(),'unsafe_url_file');a.url_file.write_text(url);a.url_file.chmod(0o600)

@@ -1,3 +1,4 @@
+from .module_policy import enabled as module_on, tool_enabled as module_tool_enabled
 """P1 Companion v0.20.0. Nonfatal hooks, no raw message/credential logging."""
 import asyncio
 import base64
@@ -307,7 +308,7 @@ class AffectPlugin(Star):
             atomic_json(DATA/'reaction_probe_result_v0103.json',{'state':state,'at':int(time.time()),'recipients':1,'actual_onebot_receipt_required':True,'shared_delay_2_to_5':True})
 
     def health(self,phase):
-        atomic_json(DATA/'companion_health.json',{'version':'0.20.0','phase':phase,'at':int(time.time()),
+        atomic_json(DATA/'companion_health.json',{'version':'0.20.0','phase':phase,'at':int(time.time()),'module_policy_schema':1,
             'reaction_assets':len(self.reaction_catalog.assets) if self.reaction_catalog else 0,
             'reaction_store_ready':self.reactions is not None,'emotion_schema':1,
             'group_admission_ready':len(self.groups.adapters)==2,'enabled_groups':len(self.groups.policy()),'group_private_context_isolated':True,
@@ -621,6 +622,7 @@ class AffectPlugin(Star):
         Args:
             query(string): 需要核实的人物、来源或能力问题
         '''
+        if not module_tool_enabled(DATA,'p1_knowledge'):return json.dumps({'ok':False,'error':'module_disabled'})
         if not self.scope_for(event) or not self.enabled():
             return json.dumps({'ok':False,'error':'forbidden'})
         result=search_knowledge(HERE/'knowledge.json',query[:500])
@@ -636,6 +638,7 @@ class AffectPlugin(Star):
             query(string): 希望表达的语气，例如微笑、好奇、告别，最多80字
             asset_id(string): use 时填写 search 返回的精确图片ID
         '''
+        if not module_tool_enabled(DATA,'p1_saki_reaction'):return json.dumps({'ok':False,'error':'module_disabled'})
         identity=companion_identity(event,self.context)
         if not identity or not self.enabled():return json.dumps({'ok':False,'error':'forbidden'})
         if not self.reactions or not self.reaction_catalog:return json.dumps({'ok':False,'error':'catalog_unavailable'})
@@ -692,6 +695,7 @@ class AffectPlugin(Star):
             url(string): open 时的公开 HTTPS URL，无查询参数或凭据
             link_id(number): click 时使用上一次返回的链接编号
         '''
+        if not module_tool_enabled(DATA,'p1_browser'):return json.dumps({'ok':False,'error':'module_disabled'})
         identity=authorized(event)
         if not identity or not self.enabled():
             return json.dumps({'ok':False,'error':'forbidden'})
@@ -734,6 +738,7 @@ class AffectPlugin(Star):
             section(string): account 页面 home、favorites、history、watchlater
             folder_title(string): 收藏夹名称，最多20字，默认伙伴的私密收藏
         '''
+        if not module_tool_enabled(DATA,'p1_bilibili'):return json.dumps({'ok':False,'error':'module_disabled'})
         identity=authorized(event)
         if not identity or not self.enabled():return json.dumps({'ok':False,'error':'forbidden'})
         if self.agency.ready:
@@ -838,6 +843,7 @@ class AffectPlugin(Star):
     @filter.on_llm_request(priority=-10000)
     async def restrict_companion_tools(self,event:AstrMessageEvent,request):
         # MCP services are global in AstrBot. Never expose personal project tools to others.
+        if request.func_tool is not None:request.func_tool=ToolSet([t for t in request.func_tool.tools if module_tool_enabled(DATA,t.name)])
         if request.func_tool is not None and not self.enabled():
             request.func_tool=ToolSet([t for t in request.func_tool.tools if not t.name.startswith(('p1_','p1-'))])
             return
@@ -999,6 +1005,7 @@ class AffectPlugin(Star):
         Args:
             question(string): 当前唯一会话的问题及已知资料，不能加入其他会话隐私或账号凭据
         '''
+        if not module_tool_enabled(DATA,'p1_deliberate'):return json.dumps({'ok':False,'error':'module_disabled'})
         return json.dumps(await self.thinking.deliberate(event,question),ensure_ascii=False)
 
     @filter.llm_tool(name='p1_public_research')
@@ -1010,6 +1017,7 @@ class AffectPlugin(Star):
             query(string): 公开主题短关键词，不得带私聊原文、个人身份或凭据
             url(string): read 的公开HTTPS地址，限定授权公开站点及其只读查询参数，无登录凭据
         '''
+        if not module_tool_enabled(DATA,'p1_public_research'):return json.dumps({'ok':False,'error':'module_disabled'})
         return json.dumps(await self.research.run(event,action,query,url),ensure_ascii=False)
 
     @filter.llm_tool(name='p1_qq_social')
@@ -1021,6 +1029,7 @@ class AffectPlugin(Star):
             target_ref(string): 工具返回的精确对象引用
             text(string): 发送的自然QQ文字，最多800字，不使用Markdown
         '''
+        if not module_tool_enabled(DATA,'p1_qq_social'):return json.dumps({'ok':False,'error':'module_disabled'})
         if not self.qq:return json.dumps({'ok':False,'error':'unavailable'})
         try:
             if action=='list':r=await self.qq.directory(event)
@@ -1039,6 +1048,7 @@ class AffectPlugin(Star):
             asset_id(string): 精确审核图片ID，或工具返回的真实图片message_ref
             target_ref(string): 发送目标；留空表示当前会话
         '''
+        if not module_tool_enabled(DATA,'p1_qq_stickers'):return json.dumps({'ok':False,'error':'module_disabled'})
         if not self.qq:return json.dumps({'ok':False,'error':'unavailable'})
         try:r=await self.qq.sticker(event,action,asset_id,target_ref)
         except Exception as exc:
@@ -1054,6 +1064,7 @@ class AffectPlugin(Star):
             target_ref(string): list时为来源会话；forward时为去向；留空当前会话
             message_refs(string): forward时填写真实消息引用，以英文逗号分隔，最多12条
         '''
+        if not module_tool_enabled(DATA,'p1_qq_records'):return json.dumps({'ok':False,'error':'module_disabled'})
         if not self.qq:return json.dumps({'ok':False,'error':'unavailable'})
         try:r=await self.qq.records(event,action,target_ref,message_refs)
         except Exception as exc:
@@ -1096,6 +1107,7 @@ class AffectPlugin(Star):
             action(string): status/search/artifacts/read_artifact/goal/update_goal/priority/preference/artifact/feedback/undo_feedback/experiment/maintenance/request_repair
             payload(string): JSON对象。goal:{title,kind:research|reading|organize|reflection|experiment|reminder,priority:1到5,due:提醒必填上海时区换算Unix秒}；update_goal:{id,state:queued|paused|done|abandoned,notes}；priority:{id,priority:1到5}；search:{query}；artifact:{title,body,format:md|txt|csv|json|html,document_ids:所有附件来源ID}；read_artifact:{id}；preference:{key:pace_minutes|exploration|expression,value}；feedback:{rule:brief|detailed|listen_first|fewer_questions|no_images|plain_qq}仅限当前逐字证据支持的表达偏好，不能记角色/权限规则；undo_feedback:{id}；experiment:{code}只限无生产访问的数学/数据小实验
         """
+        if not module_tool_enabled(DATA,'p1_agency'):return json.dumps({'ok':False,'error':'module_disabled'})
         try:r=await self.agency.tool(event,action,payload)
         except Exception as exc:
             logger.info('[P1 Agency] tool_denied code='+type(exc).__name__);r={'ok':False,'error':'invalid_or_unavailable'}
@@ -1110,6 +1122,7 @@ class AffectPlugin(Star):
             ref(string): list返回的精确attachment_ref或document_id
             offset(int): read时字符偏移，默认0，每次最多7000字
         """
+        if not module_tool_enabled(DATA,'p1_documents'):return json.dumps({'ok':False,'error':'module_disabled'})
         try:r=await self.agency.docs.run(event,action,ref,offset)
         except Exception as exc:
             logger.info('[P1 Documents] unavailable code='+type(exc).__name__);r={'ok':False,'error':'document_unavailable_or_denied'}
@@ -1213,6 +1226,7 @@ class AffectPlugin(Star):
             message_ref(string): react/recall_own使用p1_qq_records返回的精确message_ref；share_artifact或share_file使用当前范围artifact id
             value(string): react的已批准表态ID：14微笑，66爱心，76赞，124OK；share_artifact或share_file可填已获准target_ref，普通会话只允许当前范围
         """
+        if not module_tool_enabled(DATA,'p1_qq_detail'):return json.dumps({'ok':False,'error':'module_disabled'})
         from .qq_details import detail
         try:r=await detail(self,event,action,message_ref,value)
         except Exception as exc:

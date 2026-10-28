@@ -1,3 +1,4 @@
+from .module_policy import enabled as module_on
 """QQ social tools and autonomous turns; one existing scheduler, actual OneBot receipts."""
 import asyncio,base64,hashlib,json,re,secrets,time
 from pathlib import Path
@@ -180,6 +181,8 @@ class QQController:
   if not row or not self.allowed(row) or (not row['enabled'] and row['ref']!=actor['ref']) or (not actor['owner'] and row['ref']!=actor['ref']):raise ValueError('recipient_not_authorized')
   return row
  async def perform(self,row,event,kind,action,params,*,proactive=False,text='',guard=None,verify=None,preflight=None,auto_lane='background'):
+  def modules_allowed():return (module_on(self.data,'autonomy') and (auto_lane=='reminder' or module_on(self.data,'proactive'))) if proactive else module_on(self.data,'qq_actions')
+  if not modules_allowed():return {'ok':False,'error':'module_disabled'}
   p=self.policy()
   agency=getattr(self.plugin,'agency',None)
   if agency and agency.ready:
@@ -193,7 +196,7 @@ class QQController:
    async with self.plugin.reply_gate:
     await self.plugin.reply_pause(secrets.SystemRandom().uniform(2,5))
     current=await asyncio.to_thread(self.store.target,row['ref'])
-    if (agency and agency.ready and (agency.store.ensure(row['identity'])['paused'] or agency.store.ensure(row['identity'])['level']<3)) or (not current or (proactive and not current['enabled']) or not current['alive'] or current['generation']!=row['generation'] or not self.allowed(current) or (proactive and quiet(time.time(),self.policy())) or (guard and not guard()) or (proactive and not self.autonomy_allowed(current,auto_lane))):
+    if not modules_allowed() or (agency and agency.ready and (agency.store.ensure(row['identity'])['paused'] or agency.store.ensure(row['identity'])['level']<3)) or (not current or (proactive and not current['enabled']) or not current['alive'] or current['generation']!=row['generation'] or not self.allowed(current) or (proactive and quiet(time.time(),self.policy())) or (guard and not guard()) or (proactive and not self.autonomy_allowed(current,auto_lane))):
      await asyncio.to_thread(self.store.finish,id,'cancelled');return {'ok':False,'state':'cancelled'}
     if preflight:
      await asyncio.wait_for(preflight(),FORWARD_PREFLIGHT_TIMEOUT)
@@ -431,6 +434,7 @@ class QQController:
   if d.get('contact') and any(d['message'].strip().rstrip('。.!！?？')==x['content'].strip().rstrip('。.!！?？') for x in data['previous']):return {'contact':False}
   return d
  async def tick(self):
+  if not module_on(self.data,'proactive'):return
   if not self.active() or quiet(time.time(),self.policy()) or self.lock.locked():return
   async with self.lock:
    await self.refresh()

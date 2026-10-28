@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-28",
+  "rollout_committed": true,
+  "module_policy_schema": 1,
+  "companion_phase": "ready",
+  "reaction_assets": 46,
+  "services_running": 8,
+  "services_total": 8,
+  "plugin_checkpoint_entries": 136,
+  "plugin_sources_match": true,
+  "fixed_seal_valid": true,
+  "watchdog_check_ok": true,
+  "watchdog_planned_files": 0,
+  "changed_core_image_versions": false,
+  "changed_feature_selection": false,
+  "database_restore_performed": false,
+  "private_persona_preserved": true,
+  "real_qq_test_sent": false
+}

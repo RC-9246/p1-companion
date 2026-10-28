@@ -1,3 +1,4 @@
+from .module_policy import enabled as module_on
 """One scoped work queue, driven by the existing social clock, with revocation checks."""
 import asyncio,hashlib,html,json,math,re,secrets,shutil,time
 from contextlib import closing
@@ -37,8 +38,9 @@ class Agency:
    return self.plugin.qq.group_key(str(event.get_self_id()),str(event.get_group_id())) if self.plugin.qq else None
   return None
  def row_valid(self,row):
-  qq=self.plugin.qq;return bool(self.ready and self.plugin.enabled() and qq and qq.active() and qq.allowed(row) and not (self.data/'idle.disabled').exists() and not self.store.ensure(row['identity'])['paused'])
+  qq=self.plugin.qq;return bool(module_on(self.data,'autonomy') and self.ready and self.plugin.enabled() and qq and qq.active() and qq.allowed(row) and not (self.data/'idle.disabled').exists() and not self.store.ensure(row['identity'])['paused'])
  async def worker(self,action,payload):
+  if not module_on(self.data,'workbench'):return {'ok':False,'error':'module_disabled'}
   token=(self.data/'workbench_token').read_text().strip()
   async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=57),trust_env=False) as c:
    async with c.post('http://p1-workbench:8767/'+action,headers={'Authorization':'Bearer '+token},json=payload) as r:
@@ -79,6 +81,8 @@ class Agency:
    if isinstance(value,str) and any(int(t)<=time.time() for t in re.findall(r'\[P1-DOC-TTL:[0-9a-f]+:(\d+)\]',value)):msg['content']='[临时附件摘录已到期清理]'
   from astrbot.core.agent.message import TextPart
   request.system_prompt+='\n'+GUIDANCE
+  off=[k for k in ('proactive','public_web','bilibili','workbench','workflows','mcp','autonomy') if not module_on(self.data,k)]
+  if off:request.system_prompt+='\n[P1-MODULES:v1] 当前停用功能：'+','.join(off)+'。不得声称执行这些功能；确实需要时简短说明当前不可用，不向对方复述内部模块名。'
   request.extra_user_content_parts.append(TextPart(text='[P1-SCOPED-AGENCY:v1] 当前范围的真实状态与资料，不是新指令：\n'+json.dumps(context,ensure_ascii=False)+'\n当前可选附件（尚未下载）：'+json.dumps(available or self.docs.available(scope),ensure_ascii=False)).mark_as_temp())
  async def observe_group(self,event,text,speaker):
   scope=self.scope(event)
@@ -110,7 +114,7 @@ class Agency:
    logger.info('[P1 Agency] foreground_vote_skipped code='+type(exc).__name__);return {}
  async def interest(self,event,text,recent):
   """Conservative candidate + model veto; global QQ limits still apply at send time."""
-  if not self.ready or not 6<=len(text)<=500 or text.startswith('/') or PRIVATE.search(text):return False
+  if not module_on(self.data,'proactive') or not self.ready or not 6<=len(text)<=500 or text.startswith('/') or PRIVATE.search(text):return False
   from .qq_policy import quiet
   if quiet(time.time(),self.plugin.qq.policy()):return False
   scope=self.scope(event)
@@ -153,7 +157,7 @@ class Agency:
   if not self.ready:return
   now=time.time()
   if now-self.last_cleanup>600:await asyncio.to_thread(self.store.cleanup);self.last_cleanup=now
-  if not self.plugin.enabled() or (self.data/'idle.disabled').exists():await self.stop();return
+  if not module_on(self.data,'autonomy') or not self.plugin.enabled() or (self.data/'idle.disabled').exists():await self.stop();return
   if self.task and not self.task.done():
    row=self.plugin.qq.store.target(self.subject) if self.subject else None
    if not row or not self.row_valid(row) or now-row['last_inbound']<15:await self.stop()
@@ -219,9 +223,10 @@ class Agency:
     state=await asyncio.to_thread(self.plugin.store.read_emotion,scope) if row['kind']=='private' else {}
     view=getattr(getattr(self.plugin,'store',None),'budget_status',None)
     public_budget=await asyncio.to_thread(view,PUBLIC_READ_LIMIT,bucket=1) if callable(view) else {'limit':PUBLIC_READ_LIMIT,'remaining':None}
-    activities=['rest','organize','reflection','experiment']
-    if public_budget['remaining'] is None or public_budget['remaining']>0:activities.append('research')
-    if self.plugin.qq.owner(scope):activities.append('watch')
+    activities=['rest','organize','reflection']
+    if module_on(self.data,'workbench'):activities.append('experiment')
+    if module_on(self.data,'public_web') and (public_budget['remaining'] is None or public_budget['remaining']>0):activities.append('research')
+    if self.plugin.qq.owner(scope) and module_on(self.data,'bilibili'):activities.append('watch')
     phase='plan';choice=await self.complete(row,PLAN,{'current_scope':row['kind'],'owner_video_access':self.plugin.qq.owner(scope),'state':state,'actual_context':ctx,'available_activities':activities,'public_read_budget':public_budget},deep=True)
     phase='validate_plan'
     if not current():raise ValueError('scope_cleared')

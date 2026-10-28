@@ -1,9 +1,9 @@
 name: Installation wizard checks
 on:
   push:
-    paths: ['deploy/**', 'services/resource_guard/**', 'services/leisure/server.py', 'release/astrbot_plugin_affect/agency_runtime.py', 'scripts/install_resource_guard.py', 'tests/test_resource_guard.py', 'install.sh', '开始安装.cmd', '.gitattributes', 'tests/test_installation_wizard.py', 'tests/test_installer_cleanup.py', 'tests/windows_installer_checks.ps1', '.github/workflows/installation-wizard.yml']
+    paths: ['deploy/**', 'services/resource_guard/**', 'services/updater/**', 'services/modules/**', 'modules/**', 'release/**', 'tests/test_core_updater.py', 'tests/test_modules.py', 'services/leisure/server.py', 'release/astrbot_plugin_affect/agency_runtime.py', 'scripts/install_resource_guard.py', 'tests/test_resource_guard.py', 'install.sh', '开始安装.cmd', '.gitattributes', 'tests/test_installation_wizard.py', 'tests/test_installer_cleanup.py', 'tests/windows_installer_checks.ps1', '.github/workflows/installation-wizard.yml']
   pull_request:
-    paths: ['deploy/**', 'services/resource_guard/**', 'services/leisure/server.py', 'release/astrbot_plugin_affect/agency_runtime.py', 'scripts/install_resource_guard.py', 'tests/test_resource_guard.py', 'install.sh', '开始安装.cmd', '.gitattributes', 'tests/test_installation_wizard.py', 'tests/test_installer_cleanup.py', 'tests/windows_installer_checks.ps1', '.github/workflows/installation-wizard.yml']
+    paths: ['deploy/**', 'services/resource_guard/**', 'services/updater/**', 'services/modules/**', 'modules/**', 'release/**', 'tests/test_core_updater.py', 'tests/test_modules.py', 'services/leisure/server.py', 'release/astrbot_plugin_affect/agency_runtime.py', 'scripts/install_resource_guard.py', 'tests/test_resource_guard.py', 'install.sh', '开始安装.cmd', '.gitattributes', 'tests/test_installation_wizard.py', 'tests/test_installer_cleanup.py', 'tests/windows_installer_checks.ps1', '.github/workflows/installation-wizard.yml']
 permissions:
   contents: read
 jobs:
@@ -16,6 +16,8 @@ jobs:
           python-version: '3.12'
       - run: python3 scripts/verify_source.py
       - run: python3 -m unittest discover -s tests -p 'test_installation_wizard.py'
+      - run: python3 -m unittest discover -s tests -p 'test_core_updater.py'
+      - run: python3 -m unittest discover -s tests -p 'test_modules.py'
       - run: sudo $(which python3) -m unittest discover -s tests -p 'test_installer_cleanup.py'
       - run: sudo $(which python3) -m unittest discover -s tests -p 'test_resource_guard.py'
       - run: python3 -m unittest discover -s tests -p 'test_easy_deploy.py'

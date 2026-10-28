@@ -1,3 +1,4 @@
+from .module_policy import enabled as module_on
 """Idle choices run from the existing social clock; no independent sender or scheduler."""
 import asyncio,hashlib,json,secrets,sqlite3,time
 from contextlib import closing
@@ -25,7 +26,7 @@ class IdleController:
 CREATE TABLE IF NOT EXISTS companion_idle_runs(id TEXT PRIMARY KEY,identity TEXT NOT NULL,day INTEGER NOT NULL,at REAL NOT NULL,status TEXT NOT NULL,activity TEXT NOT NULL,topic TEXT NOT NULL,charged REAL NOT NULL,details TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS companion_video_notes(identity TEXT,bvid TEXT,topic TEXT,title TEXT,url TEXT,at REAL,details TEXT,PRIMARY KEY(identity,bvid));
 CREATE INDEX IF NOT EXISTS companion_idle_by_subject ON companion_idle_runs(identity,at);''')
- def enabled(self):return self.plugin.enabled() and not (self.data/'idle.disabled').exists()
+ def enabled(self):return module_on(self.data,'autonomy') and module_on(self.data,'bilibili') and self.plugin.enabled() and not (self.data/'idle.disabled').exists()
  def recent_context(self,identity,now):
   with closing(self.db()) as c:
    rows=c.execute("SELECT at,activity,topic,details FROM companion_idle_runs WHERE identity=? AND status='complete' AND at>? ORDER BY at DESC LIMIT 4",(identity,now-7*86400)).fetchall()

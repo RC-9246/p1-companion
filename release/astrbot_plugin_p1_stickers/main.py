@@ -1,3 +1,7 @@
+try:
+ from ..astrbot_plugin_affect.module_policy import enabled as module_on
+except ImportError:
+ from astrbot_plugin_affect.module_policy import enabled as module_on
 """MemeManagerLite adaptation; AGPL-3.0; see UPSTREAM.md and LICENSE."""
 import asyncio,re,json
 from pathlib import Path
@@ -26,6 +30,7 @@ class P1Stickers(Star):
   logger.info('[P1 Stickers] READY reviewed='+str(len(self.catalog.assets)))
  @filter.on_llm_request(priority=-20)
  async def describe(self,event,req):
+  if not module_on(DATA,'stickers'):return
   identity=companion_identity(event,self.context)
   if not identity or not self.catalog or not self.catalog.assets or (DATA/'companion.disabled').exists():return
   p=event.get_extra('_p1_companion_pending')
@@ -40,7 +45,7 @@ class P1Stickers(Star):
   text,selected=extract(str(getattr(resp,'completion_text','') or ''),self.catalog.assets)
   resp.completion_text=text
   pending=event.get_extra('_p1_companion_pending')
-  if selected and pending and eligible_context(pending['appraisal'],event.message_obj.message_str):
+  if module_on(DATA,'stickers') and selected and pending and eligible_context(pending['appraisal'],event.message_obj.message_str):
    if not event.get_extra('_p1_saki_reaction'):event.set_extra('_p1_saki_reaction',selected)
    # AstrBot skips empty final replies. Keep a natural text carrier for the unified image transport.
    if not text:resp.completion_text='嗯。'
