@@ -154,6 +154,10 @@ CREATE TABLE IF NOT EXISTS group_affect_events(scope TEXT NOT NULL,event TEXT NO
             rows=c.execute('SELECT at,turn FROM group_reactions WHERE scope=? AND at>? ORDER BY at DESC',(scope,now-86400)).fetchall()
             row=c.execute('SELECT state FROM group_persona WHERE scope=?',(scope,)).fetchone();turns=json.loads(row[0])['interactions'] if row else 0
         return len(rows)<4 and (not rows or (now-rows[0]['at']>=REACTION_COOLDOWN_SECONDS and turns-rows[0]['turn']>=REACTION_MIN_TURNS))
+    def recent_reactions(self,scope,limit=4):
+        checked(scope)
+        if type(limit) is not int or not 1<=limit<=8:raise ValueError('invalid_recent_limit')
+        with self.db() as c:return [r[0] for r in c.execute('SELECT asset FROM group_reactions WHERE scope=? ORDER BY at DESC LIMIT ?',(scope,limit))]
     def reserve_reaction(self,scope,event,asset,now):
         checked(scope)
         with self.db() as c:

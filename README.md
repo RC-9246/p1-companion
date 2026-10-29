@@ -22,7 +22,9 @@ P1 Companion is a self-hosted digital companion project for small deployments. I
 
 > **Most new engineering was completed by GPT.** Humans set goals, supplied hardware and authorization, and provided feedback. GPT, through ChatGPT / Codex, led the new design, coding, integration, troubleshooting, test orchestration and documentation. Everyday conversations use the configured DeepSeek service. Third-party frameworks and code remain the work of their respective authors. [Development attribution](AI_DEVELOPMENT.md)
 
-**v0.21 focuses on verifiable continuity and recovery:** source-bound concerns and positions, temporary expression preferences, separate real-time participation budgets, clearing that survives recovery, and independently checked repair proposals. [Design verification and remaining limits](docs/design-verification-20261029.md) · [Bounded repair proposals](docs/repair-candidates.md) · [Five-round results and honest limits](docs/verification-results-20261029.md)
+**v0.22 focuses on conversations with a point of view:** distinguish expression preferences from ending a conversation, retrieve the companion's source-backed interests, keep operational counters out of casual replies, and review risky wording through local edits. [Conversation design](docs/conversation-quality.md) · [Native evaluation and results](docs/verification-results-0.22.md)
+
+v0.21 established source-bound continuity and bounded recovery. [Design verification and remaining limits](docs/design-verification-20261029.md) · [Bounded repair proposals](docs/repair-candidates.md) · [Earlier five-round results](docs/verification-results-20261029.md)
 
 The installer, QQ commands and most linked guides are currently in Chinese. This English section covers the project, setup, controls and limits; the [complete Chinese README](#chinese) follows below.
 
@@ -251,7 +253,9 @@ P1 Companion 是一套面向小规模自托管的数字伙伴工程：把模拟�
 
 > **新增工程主要由 GPT 完成。** 人类提出目标、提供设备与授权、反馈体验；GPT 通过 ChatGPT / Codex 主导新增设计、编码、集成、排障、测试编排与文档。日常对话使用已配置的 DeepSeek，第三方框架与代码归相应作者。[开发来源](AI_DEVELOPMENT.md)
 
-**v0.21：把延续感和恢复能力做成可验证的链路。** 增加有来源的关注与立场、临时表达偏好、独立的实时参与额度、恢复后仍有效的清空和独立验收的修复提案。[逐项设计核对与未证明项](docs/design-verification-20261029.md) · [受控自修复](docs/repair-candidates.md) · [五轮验收与效果限制](docs/verification-results-20261029.md)
+**v0.22：让表达有自己的重心。** 区分表达偏好与结束聊天，找回有来源的自身关注，减少闲聊中的运行参数，并让审校以局部修改保留观点和语气。[本轮对话设计](docs/conversation-quality.md) · [原生流程评测与验收](docs/verification-results-0.22.md)
+
+v0.21 已建立有来源的延续感与受控恢复链。[逐项设计核对与未证明项](docs/design-verification-20261029.md) · [受控自修复](docs/repair-candidates.md) · [此前五轮验收](docs/verification-results-20261029.md)
 
 ## 为什么选择 P1 Companion
 

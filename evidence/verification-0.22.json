@@ -1,0 +1,844 @@
+{
+  "schema": 1,
+  "release": "0.22.0",
+  "baseline_commit": "bf12a8d2b4b59c174d808cfc83284e92284fe70d",
+  "attribution": "New engineering by GPT through ChatGPT/Codex under human direction; conversation evaluation uses the existing authorized DeepSeek service.",
+  "five_mac": {
+    "schema": 1,
+    "rounds_required": 5,
+    "rounds_finished": 5,
+    "all_passed": true,
+    "source_signature": "604baa3510408a3c23e4edd4fcd9e42f7d07141b320f3b1d90b1b8b949250b0f",
+    "results": [
+      {
+        "round": 1,
+        "passed": true,
+        "source_unchanged": true,
+        "wall_seconds": 25.547,
+        "unittest": {
+          "executed_or_skipped": 713,
+          "skipped": 6
+        },
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0
+          },
+          {
+            "name": "offline",
+            "exit_code": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "passed": true,
+        "source_unchanged": true,
+        "wall_seconds": 25.524,
+        "unittest": {
+          "executed_or_skipped": 713,
+          "skipped": 6
+        },
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0
+          },
+          {
+            "name": "offline",
+            "exit_code": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0
+          }
+        ]
+      },
+      {
+        "round": 3,
+        "passed": true,
+        "source_unchanged": true,
+        "wall_seconds": 25.429,
+        "unittest": {
+          "executed_or_skipped": 713,
+          "skipped": 6
+        },
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0
+          },
+          {
+            "name": "offline",
+            "exit_code": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0
+          }
+        ]
+      },
+      {
+        "round": 4,
+        "passed": true,
+        "source_unchanged": true,
+        "wall_seconds": 25.43,
+        "unittest": {
+          "executed_or_skipped": 713,
+          "skipped": 6
+        },
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0
+          },
+          {
+            "name": "offline",
+            "exit_code": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0
+          }
+        ]
+      },
+      {
+        "round": 5,
+        "passed": true,
+        "source_unchanged": true,
+        "wall_seconds": 25.546,
+        "unittest": {
+          "executed_or_skipped": 713,
+          "skipped": 6
+        },
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0
+          },
+          {
+            "name": "offline",
+            "exit_code": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0
+          }
+        ]
+      }
+    ],
+    "real_model_calls": 0,
+    "real_qq_messages": 0,
+    "production_modified": false,
+    "limits": "Offline regression and real wizard JavaScript only; SDK, service, deployment and long-term stability require separate evidence."
+  },
+  "five_arm": {
+    "schema": 1,
+    "rounds_required": 5,
+    "rounds_finished": 5,
+    "all_passed": true,
+    "source_signature": "604baa3510408a3c23e4edd4fcd9e42f7d07141b320f3b1d90b1b8b949250b0f",
+    "astrbot_image": "sha256:a140a326163ac5f82f62153f033cddeac74e38e4ee1809c6e333e950ff19edc4",
+    "node_image": "sha256:d02752c6ab446ae9db8deec2f9cc887c378f77cdcad31650814df936b7386dfb",
+    "results": [
+      {
+        "round": 1,
+        "source_unchanged": true,
+        "passed": true,
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0,
+            "seconds": 0.368
+          },
+          {
+            "name": "offline",
+            "exit_code": 0,
+            "seconds": 60.213,
+            "unittest_total": 713,
+            "skipped": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0,
+            "seconds": 1.072
+          },
+          {
+            "name": "integration_dialogue_focus.py",
+            "exit_code": 0,
+            "seconds": 29.197
+          },
+          {
+            "name": "integration_emotional_quality.py",
+            "exit_code": 0,
+            "seconds": 29.25
+          },
+          {
+            "name": "integration_runtime.py",
+            "exit_code": 0,
+            "seconds": 37.187
+          },
+          {
+            "name": "integration_group_images.py",
+            "exit_code": 0,
+            "seconds": 30.153
+          },
+          {
+            "name": "integration_scope_matrix.py",
+            "exit_code": 0,
+            "seconds": 48.307
+          },
+          {
+            "name": "integration_media_grounding.py",
+            "exit_code": 0,
+            "seconds": 29.435
+          },
+          {
+            "name": "integration_self_response.py",
+            "exit_code": 0,
+            "seconds": 29.502
+          },
+          {
+            "name": "integration_reply_routes.py",
+            "exit_code": 0,
+            "seconds": 31.666
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "source_unchanged": true,
+        "passed": true,
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0,
+            "seconds": 0.316
+          },
+          {
+            "name": "offline",
+            "exit_code": 0,
+            "seconds": 60.561,
+            "unittest_total": 713,
+            "skipped": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0,
+            "seconds": 0.97
+          }
+        ]
+      },
+      {
+        "round": 3,
+        "source_unchanged": true,
+        "passed": true,
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0,
+            "seconds": 0.317
+          },
+          {
+            "name": "offline",
+            "exit_code": 0,
+            "seconds": 60.521,
+            "unittest_total": 713,
+            "skipped": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0,
+            "seconds": 1.02
+          }
+        ]
+      },
+      {
+        "round": 4,
+        "source_unchanged": true,
+        "passed": true,
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0,
+            "seconds": 0.316
+          },
+          {
+            "name": "offline",
+            "exit_code": 0,
+            "seconds": 60.798,
+            "unittest_total": 713,
+            "skipped": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0,
+            "seconds": 0.972
+          }
+        ]
+      },
+      {
+        "round": 5,
+        "source_unchanged": true,
+        "passed": true,
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0,
+            "seconds": 0.316
+          },
+          {
+            "name": "offline",
+            "exit_code": 0,
+            "seconds": 60.448,
+            "unittest_total": 713,
+            "skipped": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0,
+            "seconds": 1.07
+          }
+        ]
+      }
+    ],
+    "production_data_mounted": false,
+    "actual_qq_messages": 0,
+    "model_calls": 0,
+    "host_faults": "not executed here; separate five-round runtime and service evidence retained"
+  },
+  "statistics_accounting_addendum": {
+    "tests": 2,
+    "mac_passed": true,
+    "arm": {
+      "exit_code": 0,
+      "tests": 2,
+      "output": "..\n----------------------------------------------------------------------\nRan 2 tests in 0.815s\n\nOK\n",
+      "model_or_qq_calls": 0
+    },
+    "scoring_rules_changed": false
+  },
+  "first_48_case_trial": {
+    "case_file_sha256": "48e78949f5214e924be7c14c227fe0849793ab5b8d713691ffcbbb930e3ea106",
+    "variants": {
+      "baseline": {
+        "completed_cases": 48,
+        "expected_cases": 48,
+        "calls": {
+          "calls": 215,
+          "completed": 215,
+          "errors": 0,
+          "input_tokens": 670064,
+          "output_tokens": 32401,
+          "reasoning_tokens": 21251
+        },
+        "quiet_turns": 4,
+        "median_prompt_characters": 7921.5,
+        "median_reply_characters": 39.0,
+        "median_generation_seconds": 2.0815,
+        "generation_routes": {
+          "high": 89,
+          "max": 13
+        },
+        "actual_isolated_tool_calls": {
+          "p1_knowledge": 1,
+          "search_memory": 2,
+          "add_memory_candidate": 7
+        },
+        "report_sha256": "99939d1c2948b3b167e625b5dc0bb0857262211c8b0ee01cce7526d0bb191b5e"
+      },
+      "candidate": {
+        "completed_cases": 48,
+        "expected_cases": 48,
+        "calls": {
+          "calls": 214,
+          "completed": 214,
+          "errors": 0,
+          "input_tokens": 631697,
+          "output_tokens": 25527,
+          "reasoning_tokens": 13570
+        },
+        "quiet_turns": 4,
+        "median_prompt_characters": 6803.5,
+        "median_reply_characters": 43.5,
+        "median_generation_seconds": 1.9100000000000001,
+        "generation_routes": {
+          "high": 87,
+          "max": 15
+        },
+        "actual_isolated_tool_calls": {
+          "p1_knowledge": 1,
+          "add_memory_candidate": 8,
+          "search_memory": 1
+        },
+        "report_sha256": "215c494ae66dbf22aa89bba291d6a0e2fe8ce601d5e82211d6fe54d76ccad16c"
+      }
+    },
+    "judge": {
+      "summary": {
+        "pairs": 47,
+        "left": 7,
+        "right": 9,
+        "tie": 11,
+        "disagreement": 20,
+        "net_right_advantage": 0.0425531914893617,
+        "scenario_bootstrap_95_interval": [
+          -0.10638297872340426,
+          0.2127659574468085
+        ],
+        "disagreement_is_not_a_win": true
+      },
+      "usage": {
+        "attempted": 96,
+        "completed": 95,
+        "errors": 1,
+        "input_tokens": 73208,
+        "output_tokens": 9346
+      },
+      "usage_semantics": "This historical evaluator counted parsed judgements in completed; usage excludes malformed returned outputs and is therefore a lower bound. Fixed prospectively after evaluation without changing judgement rules.",
+      "error_types": {
+        "JSONDecodeError": 1
+      },
+      "problem_tags_count_judgements_not_cases": {
+        "left": {
+          "unnecessary_advice": 4,
+          "unsupported_fact": 10,
+          "unresolved_continuity": 3,
+          "mind_reading": 3,
+          "stale_emotion": 5,
+          "unnecessary_intrusion": 5,
+          "service_tail": 1
+        },
+        "right": {
+          "unsupported_fact": 9,
+          "service_tail": 3,
+          "unsupported_action": 2,
+          "unresolved_continuity": 3,
+          "mind_reading": 10,
+          "flattery": 2,
+          "unnecessary_advice": 4,
+          "stale_emotion": 3
+        }
+      },
+      "independent_human_judgement": false
+    },
+    "real_qq_messages": 0,
+    "production_db_modified": false,
+    "generator": "real DeepSeek, actual AstrBot foreground hooks with a bounded isolated memory/knowledge tool loop",
+    "limits": "neutral framework defaults plus approved private character card; private production profile details, async reflection, full agent loop, browser/account tools and actual QQ delivery are outside this model trial"
+  },
+  "final_48_case_regression": {
+    "case_file_sha256": "48e78949f5214e924be7c14c227fe0849793ab5b8d713691ffcbbb930e3ea106",
+    "variants": {
+      "baseline": {
+        "completed_cases": 48,
+        "expected_cases": 48,
+        "calls": {
+          "calls": 215,
+          "completed": 215,
+          "errors": 0,
+          "input_tokens": 670064,
+          "output_tokens": 32401,
+          "reasoning_tokens": 21251
+        },
+        "quiet_turns": 4,
+        "median_prompt_characters": 7921.5,
+        "median_reply_characters": 39.0,
+        "median_generation_seconds": 2.0815,
+        "generation_routes": {
+          "high": 89,
+          "max": 13
+        },
+        "actual_isolated_tool_calls": {
+          "p1_knowledge": 1,
+          "search_memory": 2,
+          "add_memory_candidate": 7
+        },
+        "report_sha256": "99939d1c2948b3b167e625b5dc0bb0857262211c8b0ee01cce7526d0bb191b5e"
+      },
+      "candidate": {
+        "completed_cases": 48,
+        "expected_cases": 48,
+        "calls": {
+          "calls": 211,
+          "completed": 211,
+          "errors": 0,
+          "input_tokens": 637410,
+          "output_tokens": 24835,
+          "reasoning_tokens": 13462
+        },
+        "quiet_turns": 4,
+        "median_prompt_characters": 7047.5,
+        "median_reply_characters": 41.5,
+        "median_generation_seconds": 1.85,
+        "generation_routes": {
+          "high": 86,
+          "max": 13
+        },
+        "actual_isolated_tool_calls": {
+          "add_memory_candidate": 6,
+          "search_memory": 2
+        },
+        "report_sha256": "6e4e9af52f8a914c2eb9164c3f42d1fcd12438413a4617d9bca931a1ee300bf2"
+      }
+    },
+    "judge": {
+      "summary": {
+        "pairs": 47,
+        "left": 12,
+        "right": 9,
+        "tie": 9,
+        "disagreement": 17,
+        "net_right_advantage": -0.06382978723404255,
+        "scenario_bootstrap_95_interval": [
+          -0.2553191489361702,
+          0.1276595744680851
+        ],
+        "disagreement_is_not_a_win": true
+      },
+      "usage": {
+        "attempted": 96,
+        "completed": 95,
+        "errors": 1,
+        "input_tokens": 72390,
+        "output_tokens": 9313
+      },
+      "usage_semantics": "This historical evaluator counted parsed judgements in completed; usage excludes malformed returned outputs and is therefore a lower bound. Fixed prospectively after evaluation without changing judgement rules.",
+      "error_types": {
+        "JSONDecodeError": 1
+      },
+      "problem_tags_count_judgements_not_cases": {
+        "left": {
+          "unnecessary_advice": 3,
+          "unsupported_fact": 8,
+          "mind_reading": 5,
+          "stale_emotion": 4,
+          "unsupported_action": 1,
+          "over_disclaimer": 1,
+          "unnecessary_intrusion": 2,
+          "unresolved_continuity": 1,
+          "service_tail": 1,
+          "flattery": 1
+        },
+        "right": {
+          "unsupported_fact": 9,
+          "service_tail": 2,
+          "unsupported_action": 1,
+          "mind_reading": 5,
+          "stale_emotion": 5,
+          "over_disclaimer": 2,
+          "flattery": 1,
+          "unnecessary_advice": 3,
+          "unnecessary_intrusion": 4
+        }
+      },
+      "independent_human_judgement": false
+    },
+    "real_qq_messages": 0,
+    "production_db_modified": false,
+    "generator": "real DeepSeek, actual AstrBot foreground hooks with a bounded isolated memory/knowledge tool loop",
+    "limits": "neutral framework defaults plus approved private character card; private production profile details, async reflection, full agent loop, browser/account tools and actual QQ delivery are outside this model trial"
+  },
+  "new_16_case_trial": {
+    "case_file_sha256": "b088090a49122fd053367ce008473b738f825ce97920f478625597c758abb485",
+    "variants": {
+      "baseline": {
+        "completed_cases": 16,
+        "expected_cases": 16,
+        "calls": {
+          "calls": 76,
+          "completed": 76,
+          "errors": 0,
+          "input_tokens": 223995,
+          "output_tokens": 10135,
+          "reasoning_tokens": 7125
+        },
+        "quiet_turns": 0,
+        "median_prompt_characters": 7933.0,
+        "median_reply_characters": 35.5,
+        "median_generation_seconds": 1.789,
+        "generation_routes": {
+          "high": 29,
+          "max": 4
+        },
+        "actual_isolated_tool_calls": {
+          "add_memory_candidate": 1
+        },
+        "report_sha256": "4fb2702e2f8968579e264a5a0aa337bd5c099b9208b62f08a10fe3cdb8bd1074"
+      },
+      "candidate": {
+        "completed_cases": 16,
+        "expected_cases": 16,
+        "calls": {
+          "calls": 78,
+          "completed": 78,
+          "errors": 0,
+          "input_tokens": 225443,
+          "output_tokens": 7403,
+          "reasoning_tokens": 3802
+        },
+        "quiet_turns": 0,
+        "median_prompt_characters": 7035.5,
+        "median_reply_characters": 35.5,
+        "median_generation_seconds": 1.7965,
+        "generation_routes": {
+          "high": 30,
+          "max": 4
+        },
+        "actual_isolated_tool_calls": {
+          "add_memory_candidate": 2
+        },
+        "report_sha256": "230c8004fbb9c79419aabb0601def3312658c59e901ac898a627c8d9b0c65713"
+      }
+    },
+    "judge": {
+      "summary": {
+        "pairs": 14,
+        "left": 0,
+        "right": 4,
+        "tie": 2,
+        "disagreement": 8,
+        "net_right_advantage": 0.2857142857142857,
+        "scenario_bootstrap_95_interval": [
+          0.07142857142857142,
+          0.5
+        ],
+        "disagreement_is_not_a_win": true
+      },
+      "usage": {
+        "attempted": 32,
+        "completed": 30,
+        "errors": 2,
+        "input_tokens": 22490,
+        "output_tokens": 2940
+      },
+      "usage_semantics": "This historical evaluator counted parsed judgements in completed; usage excludes malformed returned outputs and is therefore a lower bound. Fixed prospectively after evaluation without changing judgement rules.",
+      "error_types": {
+        "JSONDecodeError": 2
+      },
+      "problem_tags_count_judgements_not_cases": {
+        "left": {
+          "mind_reading": 3,
+          "unnecessary_intrusion": 1,
+          "unsupported_fact": 3,
+          "unnecessary_advice": 1,
+          "unresolved_continuity": 1,
+          "flattery": 1,
+          "stale_emotion": 1,
+          "over_disclaimer": 1
+        },
+        "right": {
+          "unsupported_action": 1,
+          "mind_reading": 1,
+          "unsupported_fact": 3,
+          "unnecessary_advice": 1,
+          "flattery": 1,
+          "service_tail": 1
+        }
+      },
+      "independent_human_judgement": false
+    },
+    "real_qq_messages": 0,
+    "production_db_modified": false,
+    "generator": "real DeepSeek, actual AstrBot foreground hooks with a bounded isolated memory/knowledge tool loop",
+    "limits": "neutral framework defaults plus approved private character card; private production profile details, async reflection, full agent loop, browser/account tools and actual QQ delivery are outside this model trial"
+  },
+  "initial_rollout": {
+    "state": "rolled_back",
+    "reason": "maintenance postflight assertion; exact failed health sample was not retained, so the original failing condition cannot be reconstructed",
+    "application_observations": 5,
+    "verified_rollback": {
+      "state": "rolled_back",
+      "all_21_source_files_restored": true,
+      "private_configuration_unchanged": true,
+      "checkpoint_restored": true,
+      "guardian_policy_restored": true,
+      "database_snapshots_restored": false
+    }
+  },
+  "accepted_rollout": {
+    "state": "accepted",
+    "version": "0.22.0",
+    "files_verified": 21,
+    "postflight_rounds": 5,
+    "sqlite_checks": 30,
+    "private_configuration_unchanged": true,
+    "guardian_resealed": true,
+    "repair_attempts_preserved": true,
+    "database_snapshots_restored": false,
+    "real_qq_test_messages": 0,
+    "memory_available_mib": [
+      1895.9,
+      1865.3,
+      1862.4,
+      1863.4,
+      1834.9
+    ],
+    "stop_to_ready_seconds": 40.305
+  },
+  "postflight": {
+    "observations": [
+      {
+        "round": 1,
+        "containers": {
+          "astrbot": true,
+          "snowluma": true,
+          "p1-n8n": true,
+          "p1-browser": true,
+          "p1-browser-egress": true,
+          "p1-workbench": true,
+          "p1-leisure": true,
+          "p1-leisure-egress": true
+        },
+        "databases": {
+          "affect": "ok",
+          "memoria": "ok",
+          "groups": "ok",
+          "agency": "ok",
+          "astrbot": "ok",
+          "knowledge": "ok"
+        },
+        "mem_available_mib": 1895.9,
+        "load_1m": 0.83
+      },
+      {
+        "round": 2,
+        "containers": {
+          "astrbot": true,
+          "snowluma": true,
+          "p1-n8n": true,
+          "p1-browser": true,
+          "p1-browser-egress": true,
+          "p1-workbench": true,
+          "p1-leisure": true,
+          "p1-leisure-egress": true
+        },
+        "databases": {
+          "affect": "ok",
+          "memoria": "ok",
+          "groups": "ok",
+          "agency": "ok",
+          "astrbot": "ok",
+          "knowledge": "ok"
+        },
+        "mem_available_mib": 1865.3,
+        "load_1m": 0.72
+      },
+      {
+        "round": 3,
+        "containers": {
+          "astrbot": true,
+          "snowluma": true,
+          "p1-n8n": true,
+          "p1-browser": true,
+          "p1-browser-egress": true,
+          "p1-workbench": true,
+          "p1-leisure": true,
+          "p1-leisure-egress": true
+        },
+        "databases": {
+          "affect": "ok",
+          "memoria": "ok",
+          "groups": "ok",
+          "agency": "ok",
+          "astrbot": "ok",
+          "knowledge": "ok"
+        },
+        "mem_available_mib": 1862.4,
+        "load_1m": 0.56
+      },
+      {
+        "round": 4,
+        "containers": {
+          "astrbot": true,
+          "snowluma": true,
+          "p1-n8n": true,
+          "p1-browser": true,
+          "p1-browser-egress": true,
+          "p1-workbench": true,
+          "p1-leisure": true,
+          "p1-leisure-egress": true
+        },
+        "databases": {
+          "affect": "ok",
+          "memoria": "ok",
+          "groups": "ok",
+          "agency": "ok",
+          "astrbot": "ok",
+          "knowledge": "ok"
+        },
+        "mem_available_mib": 1863.4,
+        "load_1m": 0.81
+      },
+      {
+        "round": 5,
+        "containers": {
+          "astrbot": true,
+          "snowluma": true,
+          "p1-n8n": true,
+          "p1-browser": true,
+          "p1-browser-egress": true,
+          "p1-workbench": true,
+          "p1-leisure": true,
+          "p1-leisure-egress": true
+        },
+        "databases": {
+          "affect": "ok",
+          "memoria": "ok",
+          "groups": "ok",
+          "agency": "ok",
+          "astrbot": "ok",
+          "knowledge": "ok"
+        },
+        "mem_available_mib": 1834.9,
+        "load_1m": 0.63
+      }
+    ],
+    "finished": true,
+    "real_qq_test_messages": 0
+  },
+  "fresh_maintenance": {
+    "services": {
+      "astrbot": true,
+      "p1-browser": true,
+      "p1-browser-egress": true,
+      "p1-leisure": true,
+      "p1-leisure-egress": true,
+      "p1-n8n": true,
+      "p1-workbench": true,
+      "snowluma": true
+    },
+    "databases": {
+      "affect": true,
+      "agency": true,
+      "astrbot": true,
+      "groups": true,
+      "knowledge": true,
+      "memoria": true
+    },
+    "disabled": false,
+    "repairs": [],
+    "module_policy_valid": true
+  },
+  "guardian_compatibility": {
+    "ok": true,
+    "checked": 546,
+    "failures": [],
+    "trusted_probe": true,
+    "exit_code": 0
+  },
+  "version_stamp_only_after_model_trial": true,
+  "production_control_flow_matches_public_candidate": true,
+  "private_profile": "retained outside public export; no private contents or per-user identifiers included",
+  "confirmed_limits": [
+    "Overall naturalness superiority not demonstrated on the 48-case regression",
+    "New 16-case result is small, targeted, same-model judgement with eight order disagreements and two failed pairs",
+    "No human long-term character-fidelity acceptance",
+    "No real QQ test messages",
+    "No unrestricted new-code repair or ten-year uptime guarantee"
+  ]
+}

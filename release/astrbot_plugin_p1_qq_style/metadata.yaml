@@ -1,6 +1,6 @@
 name: astrbot_plugin_p1_qq_style
 display_name: P1 QQ 自然表达
 desc: QQ纯文本转换与代码保真
-version: v0.21.0
+version: v0.22.0
 author: p1-local
 astrbot_version: ">=4.29,<5"
