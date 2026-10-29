@@ -38,9 +38,10 @@ def interval():
 def requested_pause(text,appraisal):
     """Only reduce contact permission from a direct, semantically confirmed human boundary."""
     if (not isinstance(text,str) or appraisal.get('confidence',0)<.75
-            or appraisal.get('intent')!='boundary' or appraisal.get('interaction',{}).get('need')!='space'):
+            or appraisal.get('intent')!='boundary' or appraisal.get('target')!='self' or appraisal.get('interaction',{}).get('need')!='space'):
         return None
-    if any(x in text for x in ('“','”','「','」','"','例如','假设','翻译','台词','引用','如果','假如','如何','怎么','```')):return None
+    from .dialogue import FRAME
+    if FRAME.search(text) or any(x in text for x in ('“','”','「','」','"','例如','假设','翻译','台词','引用','如果','假如','如何','怎么','```')):return None
     if not re.search(r'(?:不用|不要|别|不必).{0,8}(?:找我|联系我|打扰我|给我发消息|主动发消息)',text):return None
     for words,hours in ((('两天','2天'),48),(('三天','3天'),72),(('一周','7天'),168),(('今天','今晚','一天','1天'),24)):
         if any(x in text for x in words):return hours*3600

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "project": "P1 Companion",
-  "source_version": "0.21.0",
+  "source_version": "0.22.0",
   "maturity": "experimental",
   "purpose": "Model-neutral engineering context for a scoped self-hosted AI companion",
   "start_here": [

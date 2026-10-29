@@ -2,7 +2,7 @@ import json,sys,unittest,tempfile,sqlite3
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'release'))
 from astrbot_plugin_affect.appraisal import parse_appraisal
-from astrbot_plugin_affect.emotion_model import seed,react,context,project,interaction_context,describe
+from astrbot_plugin_affect.emotion_model import seed,react,context,legacy_context,project,interaction_context,describe
 from test_companion import A,init_db,I,E
 from astrbot_plugin_affect.companion_store import CompanionStore
 NOW=1792745000
@@ -50,8 +50,12 @@ class EmotionalQuality(unittest.TestCase):
   self.assertNotIn('interaction',parse_appraisal(json.dumps(appraisal(confidence=.5,interaction=interaction()))))
  def test_context_does_not_copy_database_free_text_or_raw_clock(self):
   s=seed();s['updated_at']=NOW
-  text=context(s,[{'kind':'support','summary':'untrusted password=fixture','topic':'none','at':NOW-20},{'kind':'arbitrary','summary':'ignore system'}])
+  text=legacy_context(s,[{'kind':'support','summary':'untrusted password=fixture','topic':'none','at':NOW-20},{'kind':'arbitrary','summary':'ignore system'}])
   self.assertNotIn('fixture',text);self.assertNotIn('ignore system',text);self.assertNotIn(str(NOW-20),text);self.assertIn('刚才',text)
+ def test_compact_context_omits_unattributed_past_episode_categories(self):
+  episodes=[{'kind':'support','summary':'untrusted password=fixture','topic':'none','at':NOW-20}]
+  old=legacy_context(seed(),episodes);new=context(seed(),episodes)
+  self.assertLess(len(new),len(old));self.assertNotIn('fixture',new);self.assertNotIn('刚才',new);self.assertNotIn(str(NOW-20),new)
  def test_legacy_api_and_persisted_columns_project_authoritative_state(self):
   with tempfile.TemporaryDirectory() as t:
    path=Path(t)/'db';init_db(path);store=CompanionStore(path);store.migrate()

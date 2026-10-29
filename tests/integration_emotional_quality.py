@@ -20,7 +20,7 @@ async def main():
     self.calls.append(kw)
     if kw['messages'][0]['content'].startswith('核对一条即将发送'):
      if self.mode=='fail':raise TimeoutError('synthetic_review_timeout')
-     return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content='{"reply":"嗯，是四点，刚才记错了"}'))])
+     return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps({'issues':['time_guess'],'edits':[{'before':'四点开会，那还有时间','after':'嗯，是四点，刚才记错了'}]},ensure_ascii=False)))])
     if self.mode=='fail':raise TimeoutError('synthetic')
     return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps({'relationship_summary':'平时简短、少叮嘱休息；需要解释时可详细。','impression':'先听清这次想要什么。','confidence':self.mode},ensure_ascii=False)))])
   ai=Client()

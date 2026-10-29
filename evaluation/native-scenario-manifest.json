@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "created_date": "2026-10-29",
+  "development_count": 12,
+  "holdout_count": 48,
+  "turns_per_case": 2,
+  "data": "original synthetic; no real chats",
+  "holdout": "frozen before candidate model evaluation; author knows implementation, not independent human blind validation",
+  "sha256": {
+    "native-development.json": "95a9257b28bedf8fd5cf71380150424049425a92fb383c8c9ea31959202fef84",
+    "native-holdout.json": "48e78949f5214e924be7c14c227fe0849793ab5b8d713691ffcbbb930e3ea106",
+    "native-fresh.json": "b088090a49122fd053367ce008473b738f825ce97920f478625597c758abb485"
+  },
+  "fresh_count": 16,
+  "fresh_purpose": "new original scenarios after first 48-case comparison; frozen before round-two calls; first 48 now regression only"
+}

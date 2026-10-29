@@ -2,7 +2,7 @@
 
 import math
 
-def review_evidence(request,media=None):
+def review_evidence(request,media=None,scope_records=None,group_scene=None):
     """Give a selective factual reviewer the same bounded, scoped text evidence.
 
     This is transient event state, never an audit log. No images, hidden model
@@ -19,7 +19,18 @@ def review_evidence(request,media=None):
     for part in getattr(request,'extra_user_content_parts',[]) or []:
         text=getattr(part,'text','')
         if isinstance(text,str) and text.startswith(('[P1-MEMORY-DATA]','[P1-CONTINUITY:','本群短期上下文')):facts.append(scrub(text)[:1800])
-    return {'recent':recent,'scoped_facts':facts[:3],'media':media or {},'visual_pixels_supplied_to_reviewer':False}
+    from .experience import Experience
+    records=Experience.for_prompt([row for row in (scope_records or [])[:3]
+        if isinstance(row,dict) and row.get('kind') in ('concern','stance','episode')])
+    # Public requests deliberately clear private contexts. Carry the actual
+    # same-group speaker bindings instead of handing the reviewer an empty past.
+    group={}
+    if isinstance(group_scene,dict):
+        def row(value):
+            return {k:scrub(str(value[k]))[:size] for k,size in (('id',100),('speaker',40),('display',24),('text',400),('role',16),('recipient',40),('sent_at',40),('source',60)) if isinstance(value,dict) and k in value}
+        group={'current':row(group_scene.get('current',{})),
+               'messages':[row(v) for v in group_scene.get('messages',[])[-4:] if isinstance(v,dict)]}
+    return {'recent':recent,'scoped_facts':facts[:3],'continuity':records,'group':group,'media':media or {},'visual_pixels_supplied_to_reviewer':False}
 
 
 CONTEXT_MARKER = "[P1-AFFECT-CONTEXT:v1]"

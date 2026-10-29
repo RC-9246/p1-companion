@@ -1,5 +1,5 @@
 name: astrbot_plugin_memoria
 display_name: Memoria 长期记忆系统
 desc: 四层画像长期记忆，支持做梦、持续追踪、LLM 工具、自动做梦
-version: v0.21.0
+version: v0.22.0
 author: fttawa

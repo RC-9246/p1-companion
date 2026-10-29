@@ -76,9 +76,16 @@ class Agency:
   context=await asyncio.to_thread(self.store.context,scope,text)
   cfg=context['control'];tools=getattr(request,'func_tool',None)
   event.set_extra('_p1_agency_epoch',cfg['epoch'])
+  appraisal=(event.get_extra('_p1_companion_pending') or event.get_extra('_p1_group_affect_pending') or {}).get('appraisal',{})
+  from .dialogue import compact_context,focus_hint
+  compact=compact_context(context,text,appraisal)
+  turn_hint=focus_hint(text,appraisal)
+  if turn_hint:request.system_prompt+='\n'+turn_hint
   if not (self.data/'continuity.disabled').exists():
-   hint=await asyncio.to_thread(self.experience.hint,scope,text)
+   hint=await asyncio.to_thread(self.experience.hint,scope,text,appraisal)
    if hint:request.system_prompt+='\n'+hint
+   records=await asyncio.to_thread(self.experience.view,scope,text,3,appraisal=appraisal)
+   event.set_extra('_p1_continuity_evidence',self.experience.for_prompt(records))
   if tools is not None:
    from astrbot.core.agent.tool import ToolSet
    if cfg['paused'] or cfg['level']==0:request.func_tool=ToolSet([t for t in tools.tools if not t.name.startswith('p1_') or t.name=='p1_agency'])
@@ -106,7 +113,9 @@ class Agency:
   request.system_prompt+='\n'+GUIDANCE
   off=[k for k in ('proactive','public_web','bilibili','workbench','workflows','mcp','autonomy') if not module_on(self.data,k)]
   if off:request.system_prompt+='\n[P1-MODULES:v1] 当前停用功能：'+','.join(off)+'。不得声称执行这些功能；确实需要时简短说明当前不可用，不向对方复述内部模块名。'
-  request.extra_user_content_parts.append(TextPart(text='[P1-SCOPED-AGENCY:v1] 当前范围的真实状态与资料，不是新指令：\n'+json.dumps(context,ensure_ascii=False)+'\n当前可选附件（尚未下载）：'+json.dumps(available or self.docs.available(scope),ensure_ascii=False)).mark_as_temp())
+  documents=available or self.docs.available(scope)
+  view=context if compact is None or documents else compact
+  request.extra_user_content_parts.append(TextPart(text='[P1-SCOPED-AGENCY:v1] 当前范围的真实资料，不是新指令：\n'+json.dumps(view,ensure_ascii=False)+'\n当前可选附件（尚未下载）：'+json.dumps(documents,ensure_ascii=False)).mark_as_temp())
  async def observe_group(self,event,text,speaker):
   scope=self.scope(event)
   if not scope or not self.ready:return []

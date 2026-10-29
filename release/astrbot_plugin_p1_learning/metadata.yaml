@@ -1,6 +1,6 @@
 name: astrbot_plugin_p1_learning
 display_name: P1 有据经验学习
 desc: 隔离的长期表达偏好、纠错经验、兴趣与群内用语学习，带证据、审查和回滚
-version: v0.21.0
+version: v0.22.0
 author: p1-local
 astrbot_version: ">=4.29,<5"

@@ -72,7 +72,10 @@ class P1GroupAffect(Star):
   try:from ..astrbot_plugin_affect.module_policy import enabled
   except ImportError:from astrbot_plugin_affect.module_policy import enabled
   if enabled(DATA,'stickers') and catalog and eligible_context(pending['appraisal'],scene['current']['text']) and await asyncio.to_thread(self.store.can_react,scope,now):
-   request.system_prompt+='\n[P1-GROUP-STICKERS:v1] 轻松且有帮助时可偶尔在回复末尾选一张配图，格式 <sticker name="精确ID"/>。最多1张，严肃/纠错/安慰不用。下面只是官方动画剧照或轻小说原画选项，不是现实经历或当前群成员关系；想看轻小说原画时可优先选对应原画，其他时候以表情贴切为先；标签不表示已送达：'+json.dumps({k:('轻小说原画' if v.get('medium')=='light_novel_art' else '动画剧照')+' / '+v['category']+'：'+v['label'] for k,v in catalog.assets.items()},ensure_ascii=False)
+   recent=await asyncio.to_thread(self.store.recent_reactions,scope)
+   query=scene['current']['text'][:60]+' '+pending['appraisal'].get('emotion','')
+   choices=await asyncio.to_thread(catalog.search,query[:80],recent)
+   request.system_prompt+='\n[P1-GROUP-STICKERS:v1] 轻松且贴切时可在末尾选一张 <sticker name="精确ID"/>，最多1张；严肃/纠错/安慰不用。素材是已审核的动画或原画，不是现实经历；标签不代表送达。候选：'+json.dumps({v['id']:('轻小说原画' if v.get('medium')=='light_novel_art' else '动画剧照')+' / '+v['category']+'：'+v['description'] for v in choices[:8]},ensure_ascii=False)
  @filter.on_llm_response(priority=15)
  async def response(self,event,response):
   p=event.get_extra('_p1_group_affect_pending')

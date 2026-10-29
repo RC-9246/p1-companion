@@ -41,17 +41,24 @@ CREATE TABLE IF NOT EXISTS cognitive_seen(scope TEXT NOT NULL,event TEXT NOT NUL
    cap=500 if kind=='episode' else 50
    c.execute("DELETE FROM cognitive_item WHERE scope=? AND kind=? AND id NOT IN (SELECT id FROM cognitive_item WHERE scope=? AND kind=? ORDER BY (status='open') DESC,updated DESC LIMIT ?)",(scope,kind,scope,kind,cap))
    return key
- def view(self,scope,query='',limit=4,*,now=None,actor=None):
+ def view(self,scope,query='',limit=4,*,now=None,actor=None,appraisal=None):
   now=time.time() if now is None else now;cfg=self.store.ensure(scope);wanted=tokens(query)
   # Per-kind caps bound this to 600 rows. A run of recent episodes must not hide
   # an older unresolved concern before relevance scoring can examine it.
   with closing(self.store.db()) as c:rows=[dict(r) for r in c.execute('SELECT * FROM cognitive_item WHERE scope=? AND epoch=? AND expires>? ORDER BY updated DESC',(scope,cfg['epoch'],now))]
-  if actor is not None:rows=[r for r in rows if r['kind']!='concern' or any(e.get('actor','')==actor for e in json.loads(r['sources']))]
+  from .dialogue import focus
+  own=focus(query,appraisal) in ('self_choice','self_status')
+  def own_record(row):
+   evidence=json.loads(row['sources'])
+   return (any(e.get('kind')=='tool_receipt' and e.get('actor')=='self' for e in evidence)
+       or row['kind']=='stance' and any(e.get('kind')=='delivered_reply' for e in evidence))
+  if own:rows=[r for r in rows if own_record(r)]
+  elif actor is not None:rows=[r for r in rows if r['kind']!='concern' or any(e.get('actor','')==actor for e in json.loads(r['sources']))]
   def rank(r):
    overlap=len(wanted&tokens(r['subject']+' '+r['summary']))
    return overlap*2+(1 if r['status']=='open' else 0)+.2*2**(-(now-r['updated'])/604800)
   generic=bool(re.fullmatch(r'\s*(?:最近呢|后来呢|后来怎么样了|那件事呢|说到哪了|接着说|怎么样了)[？?。\s]*',query))
-  if wanted and not generic:rows=[r for r in rows if wanted&tokens(r['subject']+' '+r['summary'])]
+  if wanted and not generic and not own:rows=[r for r in rows if wanted&tokens(r['subject']+' '+r['summary'])]
   rows.sort(key=rank,reverse=True)
   return [{'id':r['id'],'kind':r['kind'],'subject':r['subject'],'summary':r['summary'],'status':r['status'],'updated_at':r['updated'],'version':r['version'],'sources':json.loads(r['sources'])} for r in rows[:max(1,min(limit,12))]]
  def observe(self,scope,event,text,appraisal,epoch,actor=''):
@@ -72,10 +79,16 @@ CREATE TABLE IF NOT EXISTS cognitive_seen(scope TEXT NOT NULL,event TEXT NOT NUL
   result=self.put(scope,'concern',subject,quote,status,evidence,epoch,actor=actor)
   with closing(self.store.db()) as c,c:c.execute('INSERT OR IGNORE INTO cognitive_seen VALUES(?,?,?)',(scope,event,epoch))
   return result
- def hint(self,scope,query=''):
-  rows=self.view(scope,query,3)
+ def hint(self,scope,query='',appraisal=None):
+  rows=self.view(scope,query,3,appraisal=appraisal)
   if not rows:return ''
-  return '[P1-CONTINUITY:v1]\n'+json.dumps(rows,ensure_ascii=False)+'\n这是本范围有来源的在意事项与可修正看法，只在相关时自然承接，不背诵状态。已解决的不要继续当作待办；没有新进展不反复追问。角色立场、用户原话、实际工具观察与原作知识互不冒充。可以保留具体意见，也可根据新证据改变；不必每轮补邀约或问句。'
+  return '[P1-CONTINUITY:v1]\n'+json.dumps(self.for_prompt(rows),ensure_ascii=False)+'\n这是本范围有来源的事项与看法。区分自己的观察和对方的经历；只在相关时承接，已解决的不当待办，没有新进展不反复追问。'
+ @staticmethod
+ def for_prompt(rows):
+  """Keep evidence and dates while avoiding whole-ledger prompt serialization."""
+  return [{**{k:clean(str(r[k]),size) for k,size in (('id',40),('kind',20),('subject',80),('status',20)) if k in r},
+      'updated_at':r.get('updated_at'),'summary':clean(str(r.get('summary','')),280),
+      'sources':[{k:clean(str(e[k]),size) for k,size in (('kind',24),('ref',120),('quote',160),('coverage',60),('actor',80)) if k in e} for e in r.get('sources',[])[-2:]]} for r in rows[:3]]
  def activity(self,scope,receipt,topic,note,coverage,sources,epoch,*,question='',opinion=''):
   """Only a caller holding a real tool result may record activity, never a plan."""
   if not receipt or coverage not in ('visited_page','search_snippet_not_full_page','sampled_video_frames_only_not_audio','experiment_output'):raise ValueError('activity_receipt_or_coverage')

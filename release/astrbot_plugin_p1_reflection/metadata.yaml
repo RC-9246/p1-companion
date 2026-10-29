@@ -1,6 +1,6 @@
 name: astrbot_plugin_p1_reflection
 display_name: P1 周期复盘 · CompanionLite 适配
 desc: 已送达对话的低频语境复盘，与统一情感库协作
-version: v0.21.0
+version: v0.22.0
 author: p1-local / 6TBWhite
 astrbot_version: ">=4.29,<5"

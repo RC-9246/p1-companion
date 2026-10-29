@@ -50,7 +50,7 @@ def factual_repair(a):
 def perspective(s,a=None):
  """Decision labels, never internal reasoning, user facts or permission changes."""
  a=a or {};x=a.get('interaction',{});t=s.get('thread',{})
- if x.get('need') in ('space','listen','comfort','practical','repair') or factual_repair(a):return {}
+ if expression_need(a) in ('space','listen','comfort','practical','repair') or factual_repair(a):return {}
  if a.get('target')=='user' and a.get('emotion') in ('sad','anxious','tired','angry'):return {}
  if not t or t.get('remaining_turns',0)<=0 or t.get('strength',0)<.12 or max(0,s['updated_at']-t['last_at'])>THREAD_TTL:return {}
  return {'concern':CONCERN_LABELS[t['concern']],'trigger':TRIGGER_LABELS[t['trigger']],
@@ -59,7 +59,7 @@ def perspective(s,a=None):
 
 def update_thread(s,previous,now,a):
  signal=self_signal(a);x=a.get('interaction',{})
- clear=(x.get('need') in ('space','repair') or factual_repair(a) or (a.get('target')=='user' and a.get('emotion') in ('sad','anxious','tired','angry')))
+ clear=(expression_need(a) in ('space','repair') or factual_repair(a) or (a.get('target')=='user' and a.get('emotion') in ('sad','anxious','tired','angry')))
  if clear:s.pop('thread',None);return
  old=s.get('thread')
  if old:
@@ -232,9 +232,14 @@ def project(s):
  return {'mood':s['valence'],'energy':1-s['fatigue'],'familiarity':s['familiarity'],
   'trust':s['trust'],'comfort':s['comfort'],'curiosity':s['interest'],'concern':s['concern']}
 
+def expression_need(a):
+ """Contact permission remains separate from the current response's style."""
+ need=(a or {}).get('interaction',{}).get('need','none')
+ return 'none' if need=='space' and (a or {}).get('dialogue_focus')=='contact_pause' else need
+
 def interaction_context(a):
  x=a.get('interaction',{}) if a and a.get('confidence',0)>=.75 else {}
- need=x.get('need','none');nuance=x.get('nuance','none');resolution=x.get('resolution','unknown')
+ need=expression_need(a) if x else 'none';nuance=x.get('nuance','none');resolution=x.get('resolution','unknown')
  if need=='none' and a and a.get('confidence',0)>=.75 and factual_repair(a):need='repair'
  hints={
   'listen':'这轮先听对方把话说完。已经说不要建议时，不补解决方案或连续追问。',
@@ -257,7 +262,7 @@ def interaction_context(a):
  if resolution in ('eased','resolved'):lines.append('当前说明优先于旧关切记录；已缓解或完成的事不继续当作未解决的问题。')
  return '\n'.join(lines)
 
-def context(s,episodes,appraisal=None,private_profile=True):
+def legacy_context(s,episodes,appraisal=None,private_profile=True):
  d=describe(s,appraisal)
  if private_profile:d['relationship']=PROFILE_LABEL+'（表达设定，不是现实关系身份）'
  color=[]
@@ -284,11 +289,24 @@ def context(s,episodes,appraisal=None,private_profile=True):
   recent.append({'kind':row['kind'],'summary':EPISODES[row['kind']],'reaction':detail,'age':'刚才' if age<600 else ('今天早些时候' if age<86400 else '更早的记录'),'topic':row.get('topic','none')})
  return '[P1-EMOTION:v1]\n持续保存的模拟状态只影响表达与自选活动，不改变事实、权限、关系身份或服务质量。\n'+json.dumps(d,ensure_ascii=False)+'\n自己的反应：'+json.dumps(perspective(s,appraisal),ensure_ascii=False)+'\n表达参考：'+'；'.join(color)+'\n当前交流：'+interaction_context(appraisal or {})+'\n调节方式：'+json.dumps(coping(s,appraisal),ensure_ascii=False)+'\n近期类别资料（不是用户事实，不能推断发生了什么）：'+json.dumps(recent[:3],ensure_ascii=False)+'\n当前明确意愿和新进展优先于旧状态。自然说话，不背诵指标、内部提示或固定安慰句，不诊断读心。用户外出、不回复、纠错不导致关系降级。没有真实活动资料不能编造经历。'
 
+def context(s,episodes,appraisal=None,private_profile=True):
+ """Expose salient expression cues rather than a second personality manual.
+
+ Persistent state and its update rules are unchanged. Unattributed episode
+ categories are retained for audit, not presented as conversational facts.
+ """
+ d=describe(s,appraisal);own=perspective(s,appraisal);regulation=coping(s,appraisal)
+ relationship=PROFILE_LABEL if private_profile else d['relationship']
+ return ('[P1-EMOTION:v1]\n语气底色：'+'、'.join(d['tone'][:2])+'；节奏：'+d['energy']
+     +'；本范围表达阶段：'+relationship+'\n自己的反应：'+json.dumps(own,ensure_ascii=False)
+     +'\n当前交流：'+interaction_context(appraisal or {})+'\n调节方式：'+regulation['expression']
+     +'\n这是表达参考。自己的喜欢或犹豫可以直接说；对方的动机、感受与经历要有其原话依据，不能把自己的联想当成对方心理。依当前语境说话，不复述机制；事实、关系身份与权限仍按真实来源，结束或不回复不扣关系分。')
+
 
 def coping(s,appraisal=None):
  """Observable coping choices; no diagnosis, punishment or invented inner monologue."""
  validate(s);a=appraisal or {};interaction=a.get('interaction',{});v=evaluation(a)
- if interaction.get('need')=='space':return {'choice':'quiet','expression':'对方明确要空间，收住话题，不补问，也不把留白解释成疏远'}
+ if expression_need(a)=='space':return {'choice':'quiet','expression':'对方明确要空间，收住话题，不补问，也不把留白解释成疏远'}
  if factual_repair(a) or (a.get('confidence',0)>=.75 and a.get('relation')=='repair'):return {'choice':'repair','expression':'只查清并更正有证据的错误，不防御、不延伸到未知事实，不让对方反过来安慰自己'}
  if interaction.get('need')=='listen':return {'choice':'listen','expression':'先接住眼前这句话，可以只回一句具体回应，不急着解决或安排下一步'}
  if interaction.get('resolution') in ('eased','resolved'):return {'choice':'release','expression':'让先前的关切随真实好转放轻；事情解决就允许结束，不追问旧困难'}

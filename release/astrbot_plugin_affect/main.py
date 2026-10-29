@@ -1,6 +1,6 @@
 from .module_policy import enabled as module_on, tool_enabled as module_tool_enabled
 from .budget_policy import PUBLIC_READ_LIMIT,FREE_LEISURE_ACTIONS
-"""P1 Companion v0.21.0. Nonfatal hooks, no raw message/credential logging."""
+"""P1 Companion v0.22.0. Nonfatal hooks, no raw message/credential logging."""
 import asyncio
 import base64
 import hashlib
@@ -274,7 +274,7 @@ class AffectPlugin(Star):
             await self.social.start()
             self.context._p1_companion=self
             self.health('ready')
-            logger.info('[P1 Companion] READY version=0.21.0')
+            logger.info('[P1 Companion] READY version=0.22.0')
             if (DATA/'reaction_probe_v0103').exists():
                 self.image_probe_task=asyncio.create_task(self.operator_image_probe())
         except Exception as exc:
@@ -331,7 +331,7 @@ class AffectPlugin(Star):
             atomic_json(DATA/'reaction_probe_result_v0103.json',{'state':state,'at':int(time.time()),'recipients':1,'actual_onebot_receipt_required':True,'shared_delay_2_to_5':True})
 
     def health(self,phase):
-        atomic_json(DATA/'companion_health.json',{'version':'0.21.0','phase':phase,'at':int(time.time()),'module_policy_schema':1,
+        atomic_json(DATA/'companion_health.json',{'version':'0.22.0','phase':phase,'at':int(time.time()),'module_policy_schema':1,
             'reaction_assets':len(self.reaction_catalog.assets) if self.reaction_catalog else 0,
             'reaction_store_ready':self.reactions is not None,'emotion_schema':1,
             'group_admission_ready':len(self.groups.adapters)==2,'enabled_groups':len(self.groups.policy()),'group_private_context_isolated':True,
@@ -461,7 +461,7 @@ class AffectPlugin(Star):
             episodes=await asyncio.to_thread(self.store.emotional_episodes,identity,topic=pending['appraisal'].get('evaluation',{}).get('topic','none'))
             # All expression hints follow one continuous state, avoiding contradictory legacy mood/energy.
             preview.update(emotion_projection(emotion))
-            parts.append(TextPart(text=style_context(preview,pending['appraisal'])+'\n'+emotion_context(emotion,episodes,pending['appraisal'],private_profile=bool(authorized(event)))+contact_hint).mark_as_temp())
+            parts.append(TextPart(text=style_context(preview,pending['appraisal'],private_profile=bool(authorized(event)))+'\n'+emotion_context(emotion,episodes,pending['appraisal'],private_profile=bool(authorized(event)))+contact_hint).mark_as_temp())
             parts.append(TextPart(text='[P1-CURRENT-TIME] '+datetime.now(ZoneInfo('Asia/Shanghai')).isoformat(timespec='minutes')+'。这是当前本地时间。历史消息没有可靠时间时，不补称昨天、刚才或已经过了几天；不把旧计划自动当成仍未完成。').mark_as_temp())
             observations=await asyncio.to_thread(self.leisure.recent,identity) if authorized(event) else []
             activities=await asyncio.to_thread(self.social.idle.recent_context,identity,time.time()) if self.social and authorized(event) else []
@@ -519,7 +519,7 @@ class AffectPlugin(Star):
     async def trace_model_start(self,event:AstrMessageEvent,request):
         if self.scope_for(event):
             from .prompt_context import review_evidence
-            event.set_extra('_p1_review_evidence',review_evidence(request,event.get_extra('_p1_media_evidence')))
+            event.set_extra('_p1_review_evidence',review_evidence(request,event.get_extra('_p1_media_evidence'),event.get_extra('_p1_continuity_evidence'),event.get_extra('_p1_group_scene')))
             try:await asyncio.to_thread(self.thinking.trace,event,'prepared')
             except Exception as exc:logger.info('[P1 Thinking] trace_unavailable code='+type(exc).__name__)
 
@@ -560,14 +560,29 @@ class AffectPlugin(Star):
         if not needs_review(text,appraisal,prompt) or event.get_extra('_p1_reply_review_done') or not self.scope_for(event):return text
         event.set_extra('_p1_reply_review_done',True)
         try:
+            async def current():
+                scope=self.scope_for(event)
+                if not scope:return False
+                guard=event.get_extra('_p1_qq_send_guard')
+                if guard and not guard():return False
+                epoch=event.get_extra('_p1_agency_epoch')
+                if epoch is not None:
+                    agency=getattr(self,'agency',None)
+                    agency_scope=agency.scope(event) if agency and agency.ready else None
+                    if not agency_scope or (await asyncio.to_thread(agency.store.ensure,agency_scope))['epoch']!=epoch:return False
+                memory=getattr(self.context,'_p1_memoria',None);memory_epoch=event.get_extra('_p1_memoria_epoch')
+                if memory and memory_epoch is not None and await memory.db.scope_epoch(memory._memory_uid(event))!=memory_epoch:return False
+                return True
+            if not await current():return text
             if not await asyncio.to_thread(self.store.take_reply_review_budget):return text
             pid=await self.context.get_current_chat_provider_id(event.unified_msg_origin)
             provider=await self.context.provider_manager.get_provider_by_id(pid);client=provider.client
             if client.base_url.scheme!='https' or client.base_url.host!='api.deepseek.com':raise ValueError('review_destination')
             payload={'current':scrub(prompt[:1200]),'draft':scrub(text),'context':{k:appraisal.get(k) for k in ('intent','relation','interaction','self_response')},'shared_generation_evidence':event.get_extra('_p1_review_evidence',{})}
-            out=await asyncio.wait_for(client.with_options(timeout=9,max_retries=0).chat.completions.create(model=provider.get_model(),messages=[{'role':'system','content':REVIEW_SYSTEM},{'role':'user','content':json.dumps(payload,ensure_ascii=False)}],max_tokens=2400,reasoning_effort='high',extra_body={'thinking':{'type':'enabled'}},response_format={'type':'json_object'}),10)
-            reviewed=parse_review(out.choices[0].message.content,text,prompt)
-            if scrub(reviewed)!=reviewed or not self.scope_for(event):raise ValueError('review_scope_or_content')
+            if not await current():return text
+            out=await asyncio.wait_for(client.with_options(timeout=6,max_retries=0).chat.completions.create(model=provider.get_model(),messages=[{'role':'system','content':REVIEW_SYSTEM},{'role':'user','content':json.dumps(payload,ensure_ascii=False)}],max_tokens=1200,extra_body={'thinking':{'type':'disabled'}},response_format={'type':'json_object'}),7)
+            reviewed=parse_review(out.choices[0].message.content,text,prompt,allow_legacy=False)
+            if scrub(reviewed)!=reviewed or not await current():raise ValueError('review_scope_or_content')
             reviewed=natural_reply(reviewed,appraisal,prompt)
             await asyncio.to_thread(self.store.audit,'reply_review','kept' if reviewed==text else 'revised')
             return reviewed
@@ -625,7 +640,7 @@ class AffectPlugin(Star):
         try:
             s=await asyncio.to_thread(self.store.read,identity)
             values='、'.join(k+'='+format(s[k],'.3f') for k in ('mood','energy','familiarity','trust','comfort','curiosity','concern'))
-            yield event.plain_result('P1 Companion v0.21.0，'+('启用' if self.enabled() else '暂停')+'。以下是模拟参数：'+values+'；已确认发送的互动数='+str(s['interaction_count'])+'。')
+            yield event.plain_result('P1 Companion v0.22.0，'+('启用' if self.enabled() else '暂停')+'。以下是模拟参数：'+values+'；已确认发送的互动数='+str(s['interaction_count'])+'。')
         except Exception:
             yield event.plain_result('状态库暂不可读，普通对话可以继续。')
 

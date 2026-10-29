@@ -39,7 +39,8 @@ class P1Stickers(Star):
   store=ReactionStore(DATA/'affect.db')
   if not p or not eligible_context(p['appraisal'],event.message_obj.message_str) or not await asyncio.to_thread(store.can_use,identity,__import__('time').time()):return
   recent=await asyncio.to_thread(store.recent,identity)
-  req.system_prompt+='\n[P1-STICKERS:v2] 经审核图库：'+json.dumps({x:('轻小说原画' if a.get('medium')=='light_novel_art' else '动画剧照')+' / '+a['category']+'：'+a['label'] for x,a in self.catalog.assets.items()},ensure_ascii=False)+'。最近已尝试或发送的图片ID：'+json.dumps(recent)+'。轻松且表情有帮助时，可以在自然回复末尾附一个 <sticker name="精确ID"/> 标签，由系统安全发送；也可以使用 p1_saki_reaction 工具，两者选其一。最多一张，不要每次都用。按当前语气选择；用户想看轻小说原画时优先选择标注轻小说原画的选项，平时仍以表情贴切和缩略图清楚为先，封面图带书名且可能包含悠太，不要强行用作单人表情。合适时优先换一张近期没用过的；用户明确指定时可以沿用。剧照和原画不是当前真实经历或关系，不得据图声称自己刚睡觉、出门或和用户共同经历原作剧情。安慰、严肃问题或纠错不用图。标签不是已送达回执。'
+  choices=await asyncio.to_thread(self.catalog.search,str(event.message_obj.message_str)[:80],recent)
+  req.system_prompt+='\n[P1-STICKERS:v2] 经审核的相关候选：'+json.dumps({a['id']:('轻小说原画' if a.get('medium')=='light_novel_art' else '动画剧照')+' / '+a['category']+'：'+a['description'] for a in choices[:8]},ensure_ascii=False)+'。轻松且贴切时可在末尾选一张 <sticker name="精确ID"/>，也可用 p1_saki_reaction 搜索完整图库，两者选其一。最多1张，严肃/纠错/安慰不用。素材不是现实经历或当前关系；封面不强作单人表情。标签不表示送达。'
  @filter.on_llm_response(priority=20)
  async def select(self,event,resp):
   if not companion_identity(event,self.context) or not self.catalog or not self.catalog.assets or (DATA/'companion.disabled').exists():return
