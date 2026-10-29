@@ -153,7 +153,7 @@ def main():
    checked_systemctl(['systemctl','daemon-reload']);checked_systemctl(['systemctl','reset-failed',service,watch_service])
  item('production_containers_unchanged',before==production())
  summary={'all_passed':all(r['passed'] for r in records),'cases':records,'real_systemd_units':True,'real_sigkill':True,'production_mounts_into_lab':False,'rate_limit_clock':'injected uptime offset; OS clock unchanged','production_before_after_equal':True,'real_qq_messages':0,'model_calls':0}
- (R/'evidence/repair-chain-isolated.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n');print(json.dumps(summary,ensure_ascii=False))
+ Path(os.environ.get('P1_ACCEPTANCE_OUTPUT',str(R/'evidence/repair-chain-isolated.json'))).write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n');print(json.dumps(summary,ensure_ascii=False))
 if __name__=='__main__':
  if len(sys.argv)>1 and sys.argv[1]=='--child':child(sys.argv[2],sys.argv[3])
  else:main()

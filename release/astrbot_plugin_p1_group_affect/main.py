@@ -52,6 +52,8 @@ class P1GroupAffect(Star):
       async with self.gate:
        provider=await groups.provider(event)
        payload={'current':text[:1000],'speaker':member,'recent':scene['messages'][-8:]}
+       agency=getattr(groups.plugin,'agency',None)
+       if agency and agency.ready and not (DATA/'continuity.disabled').exists():payload['concerns']=await asyncio.to_thread(agency.experience.view,scope,'',5,actor=member)
        out=await provider.client.with_options(timeout=4,max_retries=0).chat.completions.create(model=provider.get_model(),messages=[{'role':'system','content':CLASSIFIER_PROMPT+'\n这是公开群聊，只评估当前发言者对当前话题的态度；其他人的情绪不得归给当前发言者，不推断私人关系。'},{'role':'user','content':json.dumps(payload,ensure_ascii=False)}],temperature=0,max_tokens=900,response_format={'type':'json_object'},extra_body={'thinking':{'type':'disabled'}})
        a=parse_appraisal(out.choices[0].message.content,text)
    except Exception as exc:logger.info('[P1 Group Affect] appraisal_fallback code='+type(exc).__name__)
@@ -67,7 +69,9 @@ class P1GroupAffect(Star):
   hint={'current_exchange':interaction_context(pending['appraisal']),'coping':coping(ps,pending['appraisal']),'own_reaction_to_current_member':perspective(ps,pending['appraisal']),'stable_persona':profile or PROFILE,'this_group_simulation':describe(gs),'current_member_simulation':describe(ps,pending['appraisal']),'member_delivered_interactions':(person or seed())['interactions']}
   request.extra_user_content_parts.append(TextPart(text='[P1-GROUP-AFFECT:v1]\n'+json.dumps(hint,ensure_ascii=False)+'\n这些是本群专属的模拟倾向，不是主观感受或用户心理事实。状态只微调表达，不盖过眼前语境；认真求助、纠错、离开和不回复都不是冒犯。不输出参数、内心独白或括号动作。不把某人的心情说成全群或自己的遭遇。').mark_as_temp())
   catalog=groups.plugin.reaction_catalog
-  if catalog and eligible_context(pending['appraisal'],scene['current']['text']) and await asyncio.to_thread(self.store.can_react,scope,now):
+  try:from ..astrbot_plugin_affect.module_policy import enabled
+  except ImportError:from astrbot_plugin_affect.module_policy import enabled
+  if enabled(DATA,'stickers') and catalog and eligible_context(pending['appraisal'],scene['current']['text']) and await asyncio.to_thread(self.store.can_react,scope,now):
    request.system_prompt+='\n[P1-GROUP-STICKERS:v1] 轻松且有帮助时可偶尔在回复末尾选一张配图，格式 <sticker name="精确ID"/>。最多1张，严肃/纠错/安慰不用。下面只是官方动画剧照或轻小说原画选项，不是现实经历或当前群成员关系；想看轻小说原画时可优先选对应原画，其他时候以表情贴切为先；标签不表示已送达：'+json.dumps({k:('轻小说原画' if v.get('medium')=='light_novel_art' else '动画剧照')+' / '+v['category']+'：'+v['label'] for k,v in catalog.assets.items()},ensure_ascii=False)
  @filter.on_llm_response(priority=15)
  async def response(self,event,response):
@@ -80,12 +84,16 @@ class P1GroupAffect(Star):
    if not response.completion_text:response.completion_text='嗯'
   p['ready']=(getattr(response,'role',None)=='assistant' and bool(response.completion_text) and not getattr(response,'tools_call_name',[]))
  async def image(self,event,message,groups):
+  try:from ..astrbot_plugin_affect.module_policy import enabled
+  except ImportError:from astrbot_plugin_affect.module_policy import enabled
+  if not enabled(DATA,'stickers'):return message,False
   p=event.get_extra('_p1_group_affect_pending');asset=event.get_extra('_p1_group_sticker');catalog=groups.plugin.reaction_catalog
   if event.get_extra('_p1_learning_no_images'):return message,False
   if not p or not p['ready'] or not asset or not catalog or event.get_extra('_p1_group_image_attempted'):return message,False
   if asset not in catalog.assets:return message,False
   from astrbot.core.message.components import Image
   data=await asyncio.to_thread(catalog.read,asset)
+  if not enabled(DATA,'stickers') or not groups.allowed(event):return message,False
   if not await asyncio.to_thread(self.store.reserve_reaction,p['scope'],p['event'],asset,time.time()):return message,False
   event.set_extra('_p1_group_image_attempted',True)
   return message.derive([*message.chain,Image.fromBase64(base64.b64encode(data).decode())]),True

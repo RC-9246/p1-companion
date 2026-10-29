@@ -22,6 +22,8 @@ P1 Companion is a self-hosted digital companion project for small deployments. I
 
 > **Most new engineering was completed by GPT.** Humans set goals, supplied hardware and authorization, and provided feedback. GPT, through ChatGPT / Codex, led the new design, coding, integration, troubleshooting, test orchestration and documentation. Everyday conversations use the configured DeepSeek service. Third-party frameworks and code remain the work of their respective authors. [Development attribution](AI_DEVELOPMENT.md)
 
+**v0.21 focuses on verifiable continuity and recovery:** source-bound concerns and positions, temporary expression preferences, separate real-time participation budgets, clearing that survives recovery, and independently checked repair proposals. [Design verification and remaining limits](docs/design-verification-20261029.md) · [Bounded repair proposals](docs/repair-candidates.md) · [Five-round results and honest limits](docs/verification-results-20261029.md)
+
 The installer, QQ commands and most linked guides are currently in Chinese. This English section covers the project, setup, controls and limits; the [complete Chinese README](#chinese) follows below.
 
 ## Why P1 Companion
@@ -35,7 +37,7 @@ The installer, QQ commands and most linked guides are currently in Chinese. This
 | **Separate memory for each relationship** | Spaces are derived from platform, bot, private contact, group and group member. New scopes create state on demand; access changes retain the existing memory |
 | **Proactive, with room to stay quiet** | Interest-based interjections, public research, note organization and private Bilibili activities share budgets. The companion can explore, organize, rest or choose not to send a message |
 | **Easy handoff between AI assistants** | Engineering guides, a machine-readable project map, a standard-library JSON CLI, an optional read-only MCP bridge and handoff templates |
-| **Safeguards for ongoing operation** | Recovery for known faults, an independent repair-chain watchdog, memory-pressure load shedding, verified idle-browser cleanup and a read-only resource panel |
+| **Safeguards for ongoing operation** | Recovery for known faults, optional independently tested pure-function repair proposals, an independent repair-chain watchdog, memory-pressure load shedding, verified idle-browser cleanup and a read-only resource panel |
 | **An upgrade path with a way back** | Explicit AstrBot / SnowLuma versions, network-isolated copy checks, bounded repairs and a 15-minute observation window. Failed upgrades roll back only after compatibility checks, retaining current conversation data |
 
 The public package includes a **neutral persona and an empty sticker library**. Character-specific settings, relationship stages, real conversations, accounts, keys, login sessions and artwork from the original work are excluded. Supply your own persona and assets you have permission to use. [Persona and asset setup](docs/deployment.md#图片与人格)
@@ -249,6 +251,8 @@ P1 Companion 是一套面向小规模自托管的数字伙伴工程：把模拟�
 
 > **新增工程主要由 GPT 完成。** 人类提出目标、提供设备与授权、反馈体验；GPT 通过 ChatGPT / Codex 主导新增设计、编码、集成、排障、测试编排与文档。日常对话使用已配置的 DeepSeek，第三方框架与代码归相应作者。[开发来源](AI_DEVELOPMENT.md)
 
+**v0.21：把延续感和恢复能力做成可验证的链路。** 增加有来源的关注与立场、临时表达偏好、独立的实时参与额度、恢复后仍有效的清空和独立验收的修复提案。[逐项设计核对与未证明项](docs/design-verification-20261029.md) · [受控自修复](docs/repair-candidates.md) · [五轮验收与效果限制](docs/verification-results-20261029.md)
+
 ## 为什么选择 P1 Companion
 
 | 优势 | 在项目里意味着什么 |
@@ -260,7 +264,7 @@ P1 Companion 是一套面向小规模自托管的数字伙伴工程：把模拟�
 | **每段关系，独立保存** | 按平台、机器人、私聊对象、群及群成员派生空间；新增范围按需建状态，权限变化沿用原记忆 |
 | **能主动，也懂得停下** | 兴趣插话、公开研究、资料整理和私人 B站活动接入预算；可以选择探索、整理、休息或不发消息 |
 | **方便不同 AI 接手** | 工程指南、机器清单、标准库 JSON CLI、可选只读 MCP 桥和交接模板一起提供 |
-| **给持续运行补上保护** | 已知故障恢复、修复链看门狗、内存压力降载、确认空闲后的浏览器回收，以及只读资源面板 |
+| **给持续运行补上保护** | 已知故障恢复、可选纯函数补丁独立验收、修复链看门狗、内存压力降载、确认空闲后的浏览器回收，以及只读资源面板 |
 | **升级也留好退路** | AstrBot / SnowLuma 具体版本升级、无外网副本预检、有限修复与 15 分钟观察；失败验证后退回旧程序，保留当前聊天数据 |
 
 公开包包含 **中性人格与空图库**。角色设定、关系阶段、真实聊天、账号、密钥、登录状态和原作图片不随源码分发；你可以加入自己的角色配置及有权使用的素材。[人格与素材配置](docs/deployment.md#图片与人格)

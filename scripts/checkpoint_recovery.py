@@ -14,6 +14,7 @@ def main():
  (pending/'manifest.json').write_text(json.dumps(manifest,sort_keys=True))
  fixed={};metadata={};(pending/'fixed').mkdir()
  for key,source in m.FIXED.items():
+  if not source.exists() and (key.startswith('candidate_') or key.startswith('unit_p1-companion-candidates_')):continue
   assert source.is_file(),key;shutil.copy2(source,pending/'fixed'/key);(pending/'fixed'/key).chmod(0o600);fixed[key]=sha(source)
   s=source.stat();metadata[key]={'uid':s.st_uid,'gid':s.st_gid,'mode':s.st_mode&0o777}
  (pending/'fixed-manifest.json').write_text(json.dumps(fixed,sort_keys=True))

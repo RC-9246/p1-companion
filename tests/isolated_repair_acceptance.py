@@ -3,7 +3,7 @@ import importlib.util,json,os,shutil,sqlite3,subprocess,sys,tempfile,time
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'services/maintenance'))
 import resilience as R
-NAME='p1-repair-lab-worker';PROD=R.SERVICES
+NAME='p1-repair-lab-worker-'+str(os.getpid());PROD=R.SERVICES
 report=[]
 def run(args,timeout=25):
  assert args[0]=='docker' and (args[1] in ('ps','image') or any(x.startswith('p1-repair-lab') for x in args) or args[1]=='inspect')
@@ -94,7 +94,7 @@ def main():
   run(['docker','rm','-f',NAME])
  after=production();item('all_production_containers_unchanged',before==after)
  summary={'isolated_fault_injection':True,'cases':report,'all_passed':all(x['passed'] for x in report),'real_container_crash_and_recreation':True,'production_data_mounted_into_lab':False,'lab_network':'none','production_before_after_equal':before==after,'real_qq_messages':0}
- (ROOT/'evidence/isolated-repair-acceptance.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2));print(json.dumps(summary,ensure_ascii=False))
+ Path(os.environ.get('P1_ACCEPTANCE_OUTPUT',str(ROOT/'evidence/isolated-repair-acceptance.json'))).write_text(json.dumps(summary,ensure_ascii=False,indent=2));print(json.dumps(summary,ensure_ascii=False))
 if __name__=='__main__':
  try:main()
  finally:run(['docker','rm','-f',NAME])

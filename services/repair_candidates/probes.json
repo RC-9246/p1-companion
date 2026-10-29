@@ -1,0 +1,8 @@
+[
+  {"id":"plain-tail","function":"casual_tail","args":["嗯，知道了。"],"expected":"嗯，知道了"},
+  {"id":"url-preserved","function":"casual_tail","args":["https://example.org/a.b"],"expected":"https://example.org/a.b"},
+  {"id":"formal-preserved","function":"qq_reply","args":["内容如下。","请逐字保留原文"],"expected":["内容如下。"]},
+  {"id":"sentence-preserved","function":"casual_tail","args":["句中。句末。"],"expected":"句中。句末"},
+  {"id":"bubble-count","function":"split_reply","args":["一\n\n二\n\n三\n\n四"],"expected":["一","二","三\n\n四"]},
+  {"id":"quoted-preserved","function":"casual_tail","args":["他说“好。”"],"expected":"他说“好。”"}
+]

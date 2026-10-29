@@ -59,12 +59,14 @@ CREATE TABLE IF NOT EXISTS group_affect_events(scope TEXT NOT NULL,event TEXT NO
             if row:return dict(row)
             c.execute('INSERT OR IGNORE INTO group_meta(scope) VALUES(?)',(scope,))
             return dict(c.execute('SELECT * FROM group_meta WHERE scope=?',(scope,)).fetchone())
-    def add(self,scope,event,speaker,display,text,at=None,reply='',mentions=None,role='member',source='live',recipient=''):
+    def add(self,scope,event,speaker,display,text,at=None,reply='',mentions=None,role='member',source='live',recipient='',expected_epoch=None):
         checked(scope);now=time.time()
         if at is not None and (isinstance(at,bool) or not math.isfinite(at) or not 0<at<=now+300):at=None
         if role not in ('member','saki'):raise ValueError('invalid_role')
         with self.db() as c:
+            c.execute('BEGIN IMMEDIATE')
             c.execute('INSERT OR IGNORE INTO group_meta(scope) VALUES(?)',(scope,))
+            if expected_epoch is not None and c.execute('SELECT epoch FROM group_meta WHERE scope=?',(scope,)).fetchone()[0]!=expected_epoch:return False
             out=c.execute('INSERT OR IGNORE INTO group_messages(scope,event,speaker,display,role,text,at,seen,reply,mentions,source) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
                 (scope,event,speaker,clean(display,24),role,clean(text),at,now,reply,json.dumps(mentions or []),source))
             inserted=bool(out.rowcount)
@@ -78,7 +80,7 @@ CREATE TABLE IF NOT EXISTS group_affect_events(scope TEXT NOT NULL,event TEXT NO
         checked(scope);now=time.time() if now is None else now
         with self.db() as c:
             rows=[dict(r) for r in c.execute('SELECT * FROM group_messages WHERE scope=? AND event!=? AND seen>=? ORDER BY seq DESC LIMIT 150',(scope,exclude,now-7*86400))]
-            note=c.execute('SELECT notes,at FROM group_notes WHERE scope=?',(scope,)).fetchone()
+            note=c.execute('SELECT n.notes,n.at FROM group_notes n JOIN group_meta m ON n.scope=m.scope AND n.epoch=m.epoch WHERE n.scope=?',(scope,)).fetchone()
         recent=list(reversed(rows[:24]));selected={r['event'] for r in recent};wanted=terms(query)
         for r in sorted(rows[24:],key=lambda r:len(terms(r['text'])&wanted),reverse=True)[:4]:
             if len(terms(r['text'])&wanted)>=2 and r['event'] not in selected:recent.append(r);selected.add(r['event'])
@@ -93,9 +95,9 @@ CREATE TABLE IF NOT EXISTS group_affect_events(scope TEXT NOT NULL,event TEXT NO
         median=statistics.median(gaps[-20:]) if gaps else 30
         meta=self.meta(scope);notes=json.loads(note['notes']) if note and now-note['at']<30*86400 else []
         return {'messages':result,'notes':notes,'flow':{'median_gap_seconds':round(median,1),'messages_last_minute':sum(r['at'] is not None and 0<=now-r['at']<=60 for r in rows),'seconds_since_saki':round(now-meta['last_bot']) if meta['last_bot'] else None,'follow_window_seconds':min(600,max(60,45+median*3))},'epoch':meta['epoch'],'watermark':max((r['seq'] for r in rows),default=0)}
-    def hydrated(self,scope):
+    def hydrated(self,scope,expected_epoch=None):
         checked(scope)
-        with self.db() as c:c.execute('UPDATE group_meta SET hydrated=1 WHERE scope=?',(scope,))
+        with self.db() as c:c.execute('UPDATE group_meta SET hydrated=1 WHERE scope=? AND (? IS NULL OR epoch=?)',(scope,expected_epoch,expected_epoch))
     def bump(self,scope,erase=False):
         checked(scope)
         with self.db() as c:
@@ -109,7 +111,16 @@ CREATE TABLE IF NOT EXISTS group_affect_events(scope TEXT NOT NULL,event TEXT NO
             c.execute('BEGIN IMMEDIATE');m=c.execute('SELECT * FROM group_meta WHERE scope=?',(scope,)).fetchone()
             latest=c.execute('SELECT COALESCE(MAX(seq),0),COUNT(*) FROM group_messages WHERE scope=? AND seq>?',(scope,m['summary_seq'] if m else 0)).fetchone()
             if not m or latest[1]<24 or now-m['attempt_at']<900:return None
-            c.execute('UPDATE group_meta SET attempt_at=? WHERE scope=?',(now,scope));return m['epoch'],latest[0]
+            batch=c.execute('SELECT seq FROM group_messages WHERE scope=? AND seq>? ORDER BY seq LIMIT 24',(scope,m['summary_seq'])).fetchall()
+            c.execute('UPDATE group_meta SET attempt_at=? WHERE scope=?',(now,scope));return m['epoch'],batch[-1]['seq']
+    def summary_batch(self,scope,epoch,through):
+        checked(scope)
+        with self.db() as c:
+            m=c.execute('SELECT epoch,summary_seq FROM group_meta WHERE scope=?',(scope,)).fetchone()
+            if not m or m['epoch']!=epoch:return None
+            rows=c.execute('SELECT * FROM group_messages WHERE scope=? AND seq>? AND seq<=? ORDER BY seq',(scope,m['summary_seq'],through)).fetchall()
+            notes=c.execute('SELECT notes FROM group_notes WHERE scope=? AND epoch=?',(scope,epoch)).fetchone()
+        return {'messages':[{'id':r['event'],'seq':r['seq'],'speaker':r['speaker'],'name':r['display'],'role':r['role'],'text':r['text'],'sent_at':stamp(r['at']),'reply_to':r['reply'],'mentions':json.loads(r['mentions'])} for r in rows],'notes':json.loads(notes[0]) if notes else []}
     def save_notes(self,scope,epoch,seq,notes,now):
         checked(scope)
         with self.db() as c:

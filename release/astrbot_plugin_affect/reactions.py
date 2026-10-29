@@ -15,6 +15,11 @@ MAX_IMAGE_BYTES=1000000
 REACTION_COOLDOWN_SECONDS=600
 REACTION_MIN_TURNS=3
 SEARCH_LIMIT=12
+def catalog_folder(source,data):
+    private=Path(data)/'reviewed_assets'
+    if not private.exists():return Path(source)
+    if any(p.is_symlink() for p in (private,*private.parents)):raise ValueError('asset_pack_symlink_denied')
+    return private
 SERIOUS=re.compile(r'自杀|自残|急救|过世|去世|病危|葬礼|抑郁|不要.*(?:图|表情)|别.*(?:图|表情)|不用.*(?:图|表情)|严肃|serious|suicid|self.harm',re.I)
 
 def eligible_context(appraisal,text):

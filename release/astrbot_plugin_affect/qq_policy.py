@@ -7,7 +7,8 @@ from .appraisal import scrub
 
 DEFAULT={'version':1,'enabled':False,'scope':'whitelist','cross_forward':'confirm','quiet_start':23,'quiet_end':8,
  'private_min_minutes':60,'private_max_minutes':180,'group_min_minutes':20,'group_max_minutes':60,
- 'private_daily':4,'group_daily':4,'global_daily':16,'max_unanswered':2,'favorite_daily':12}
+ 'private_daily':4,'group_daily':4,'global_daily':16,'max_unanswered':2,'favorite_daily':12,
+ 'interest_daily':999,'interest_cooldown_seconds':90,'interest_per_120_seconds':2,'account_proactive_per_minute':3}
 REF=re.compile(r'[tmi]1_[0-9a-f]{24}')
 ID=re.compile(r'[0-9]{5,20}')
 
@@ -18,7 +19,7 @@ def load(path):
   if not isinstance(d,dict) or d.get('version')!=1:return p
   for k in ('enabled',):
    if type(d.get(k)) is bool:p[k]=d[k]
-  for k,lo,hi in [('private_min_minutes',30,1440),('private_max_minutes',30,2880),('group_min_minutes',10,1440),('group_max_minutes',10,2880),('private_daily',1,12),('group_daily',1,12),('global_daily',1,40),('max_unanswered',1,3),('favorite_daily',1,30)]:
+  for k,lo,hi in [('private_min_minutes',30,1440),('private_max_minutes',30,2880),('group_min_minutes',10,1440),('group_max_minutes',10,2880),('private_daily',1,12),('group_daily',1,12),('global_daily',1,40),('max_unanswered',1,3),('favorite_daily',1,30),('interest_daily',1,9999),('interest_cooldown_seconds',0,3600),('interest_per_120_seconds',1,10),('account_proactive_per_minute',1,10)]:
    v=d.get(k)
    if type(v) is int and lo<=v<=hi:p[k]=v
   for k,allowed in [('scope',('whitelist','all_existing')),('cross_forward',('confirm','allow'))]:

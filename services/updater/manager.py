@@ -118,15 +118,21 @@ def protected(path):
 @contextlib.contextmanager
 def exclusive(path):
     p = Path(path)
-    need(not p.is_symlink(), 'symlink_denied')
+    need(not any(q.is_symlink() for q in (p,*p.parents)), 'symlink_denied')
     p.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    with p.open('a') as f:
-        os.chmod(p, 0o600)
+    fd=os.open(p,os.O_RDWR|os.O_CREAT|getattr(os,'O_NOFOLLOW',0),0o600)
+    with os.fdopen(fd,'a') as f:
+        need(os.fstat(f.fileno()).st_nlink==1,'untrusted_lock')
+        os.fchmod(f.fileno(),0o600)
         try:
             fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             raise UpdateError('operation_busy') from None
         yield
+
+
+def lifecycle_lock(root):
+    return Path(root)/'astrbot/data/plugin_data/affect/lifecycle.lock'
 
 
 def run(args, timeout=60):
@@ -242,11 +248,11 @@ class Docker:
             started = obj['State'].get('StartedAt')
             if started:
                 fresh_after = max(fresh_after, datetime.fromisoformat(started.replace('Z', '+00:00')).timestamp())
-            script = """import json, pathlib, urllib.request
+            script = """import json, pathlib, urllib.request, time
 urllib.request.urlopen('http://127.0.0.1:6185/',timeout=3).close()
 p=pathlib.Path('/AstrBot/data/plugin_data/affect/companion_health.json')
 v=json.loads(p.read_text())
-assert v.get('phase')=='ready' and v.get('at',0)>=%r
+assert v.get('phase') in ('ready','serving') and max(%r,time.time()-300)<=v.get('at',0)<=time.time()+10
 assert all(v.get(k) is True for k in %r)
 """ % (int(fresh_after), HEALTH_KEYS)
             args = ['docker', 'exec', name, 'python', '-c', script]
@@ -269,11 +275,23 @@ process.exit(4);
             return False
 
 
+def core_compose_layout(root,kind,labels):
+    """Accept only the base file or the installer's committed integration overlay."""
+    if labels.get('com.docker.compose.service')!=kind:return False
+    files=labels.get('com.docker.compose.project.config_files','').split(',')
+    if files==[str(root/kind/'compose.yaml')]:return True
+    if kind!='astrbot' or len(files)!=2 or files[0]!=str(root/kind/'compose.yaml'):return False
+    try:
+        overlay=root_path(files[1]);rel=overlay.relative_to(root)
+        if len(rel.parts)!=3 or rel.parts[0]!='backups' or not re.fullmatch(r'oneclick-[A-Za-z0-9_-]+',rel.parts[1]) or rel.parts[2]!='companion-override.json':return False
+        state=read(overlay.parent/'state.json');data=read(overlay)
+        return state.get('root')==str(root) and state.get('status')=='committed' and set(data)<= {'services','networks'} and set(data.get('services',{}))=={'astrbot'} and set(data['services']['astrbot'])<= {'image','networks'}
+    except (ValueError,OSError,UpdateError):return False
+
 def validate_layout(root, kind, obj, docker):
     need(obj and obj.get('Name') == '/' + kind, 'core_container_unavailable')
     labels = obj.get('Config', {}).get('Labels') or {}
-    need(labels.get('com.docker.compose.service') == kind and
-         labels.get('com.docker.compose.project.config_files') == str(root / kind / 'compose.yaml'),
+    need(core_compose_layout(root,kind,labels),
          'unsupported_compose_layout')
     host = obj['HostConfig']
     need(not host.get('Privileged') and host.get('NetworkMode') not in ('host', 'none') and
@@ -558,7 +576,7 @@ class Engine:
 
     def apply(self, kind, tag, source=None):
         kind, tag = component(kind), version(tag)
-        with exclusive(self.home / 'operation.lock'):
+        with exclusive(self.home / 'operation.lock'), exclusive(lifecycle_lock(self.root)):
             module_state = Path('/var/lib/p1-companion-modules') / self.system.key / 'state.json' if hasattr(self.system, 'key') else None
             if module_state and module_state.exists():
                 need(read(module_state).get('state') not in ('applying', 'rollback_blocked'), 'module_operation_pending')
@@ -666,6 +684,8 @@ class Engine:
     def rollback(self, info):
         point, old = self.validate(info)
         kind = info['component']
+        info.update(state='rolling_back',stage='rollback_preparing',timer_restore_done=False)
+        self.save(info)
         try:
             self.system.quiesce()
             with exclusive(self.root / 'astrbot/data/plugin_data/affect/maintenance.lock'):
@@ -673,7 +693,9 @@ class Engine:
                 if self.owned(canary_name, info):
                     self.docker.remove(canary_name)
                 current = self.docker.inspect(kind)
-                if current and current['Id'] == old['Id']:
+                if current and (current['Id'] == old['Id'] or
+                                (current['Image'] == info.get('rollback_image', old['Image']) and
+                                 current.get('Config',{}).get('Labels',{}).get(LABEL)==info['id'])):
                     # Process loss or rejection before any live candidate existed.
                     self.docker.start(kind)
                 else:
@@ -721,7 +743,7 @@ class Engine:
         atom(p, v)
 
     def tick(self, manual_rollback=False):
-        with exclusive(self.home / 'operation.lock'):
+        with exclusive(self.home / 'operation.lock'), exclusive(lifecycle_lock(self.root)):
             if not (self.home / 'active.json').exists():
                 return self.status()
             info = read(self.home / 'active.json')

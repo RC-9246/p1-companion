@@ -111,8 +111,10 @@ async def run_dream_for_user(
     max_messages: int,
     bypass_activity: bool,
     llm_caller,
-    auto_accept: bool,
+    auto_accept: bool, *, guard=None,
 ) -> int:
+    if guard is not None and not guard():raise ValueError('memory_scope_revoked')
+    expected_epoch=await db.scope_epoch(source_session)
     logger.info(
         f"[Dream] start user=redacted scope={scope} "
         f"session=redacted max_msgs={max_messages}"
@@ -154,7 +156,9 @@ async def run_dream_for_user(
         f"lines={len(transcript)} chars={len(prompt)}"
     )
 
+    if guard is not None and not guard():raise ValueError('memory_scope_revoked')
     reply = await llm_caller(prompt)
+    if guard is not None and not guard():raise ValueError('memory_scope_revoked')
     logger.info(f"[Dream] LLM response chars={len(reply)}")
 
     candidates = parse_dream_candidates(reply)
@@ -168,7 +172,7 @@ async def run_dream_for_user(
         await db.add_memory(
             owner, memory_scope, memory_scope_id,
             c["memory_type"], c["content"], c["confidence"],
-            "dream", status,
+            "dream", status,expected_epoch=expected_epoch,epoch_scope=source_session,
         )
         written += 1
 
@@ -203,6 +207,8 @@ async def auto_dream_loop(
             if not sessions:
                 continue
             for session_id, _activity, _last_interaction in sessions:
+                authorize=cfg.get('_p1_authorize_session')
+                if not callable(authorize) or not authorize(session_id):continue
                 if hashlib.sha256(str(session_id).encode()).hexdigest() not in set(cfg.get("_p1_allowed_sessions", [])):
                     continue
                 await db.mark_dream_scheduled(session_id)
@@ -214,6 +220,7 @@ async def auto_dream_loop(
                     count = await run_dream_for_user(
                         db, astrbot_db_path, owner, "session", session_id,
                         max_msgs, False, llm_caller, auto_accept,
+                        guard=lambda sid=session_id:authorize(sid),
                     )
                     logger.info(
                         f"[AutoDream] finished session=redacted candidates={count}"

@@ -16,7 +16,9 @@ from astrbot_plugin_memoria.memoria.dream import _fetch_transcript_from_db
 
 class Event:
     def __init__(self,sender='111',private=True):
-        self.sender=sender;self.private=private;self.session_id='111'
+        self.sender=sender;self.private=private;self.session_id='111';self.extra={}
+    def get_extra(self,key,default=None):return self.extra.get(key,default)
+    def set_extra(self,key,value):self.extra[key]=value
     def get_platform_id(self): return 'qq_snowluma'
     def get_self_id(self): return 'synthetic-bot'
     def get_sender_id(self): return self.sender
@@ -34,6 +36,9 @@ async def run():
         allow.write_text('{}');assert not permitted_event(Event(),allow)
         assert memory_safe('我喜欢简洁的中文回答')
         assert not memory_safe('密码：fixture-secret-value')
+        from astrbot_plugin_affect import main as AM
+        AM.DATA=temp
+        (temp/'allowed_identities.json').write_text(json.dumps({'version':1,'allowed_identities':[identity]}))
         p=memoria_main.MemoriaPlugin(SimpleNamespace(),{})
         p.db=await MemoriaDB.create(str(temp/'memory'))
         memoria_main.permitted_event=lambda e,**kw:e.private and e.sender=='111'

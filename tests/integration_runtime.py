@@ -14,13 +14,15 @@ from test_companion import init_db
 from astrbot_plugin_affect.identity import make_identity_key
 from astrbot.core.provider.entities import ProviderRequest,LLMResponse
 from astrbot.core.agent.tool import ToolSet, FunctionTool
+from astrbot.core.message.components import Plain
+from astrbot.core.message.message_event_result import MessageChain
 
 async def run():
     with tempfile.TemporaryDirectory() as temp:
         data=Path(temp)
         os.environ['P1_COMPANION_DATA']=temp
         init_db(data/'affect.db')
-        allowed=make_identity_key('qq_snowluma','synthetic-bot','synthetic-user')
+        allowed=make_identity_key('qq_snowluma','10001','20002')
         (data/'allowed_identities.json').write_text(json.dumps({'version':1,'allowed_identities':[allowed]}))
         from astrbot_plugin_affect.main import AffectPlugin
         sdk_calls=[]
@@ -32,23 +34,29 @@ async def run():
                 sdk_calls.append({'request':kw})
                 return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(dict(intent='feedback',emotion='neutral',relation='thanks',target='self',confidence=.9))))])
         class Context:
+            def get_platform_inst(self,*a):return SimpleNamespace(get_client=lambda:wire)
             @property
             def provider_manager(self): return self
             async def get_current_chat_provider_id(self,*args): return 'synthetic'
             async def get_provider_by_id(self,*args): return SimpleNamespace(client=Client(),get_model=lambda:'synthetic')
         class Event:
-            def __init__(self,id,private=True,sender='synthetic-user',fail=False):
+            def __init__(self,id,private=True,sender='20002',fail=False):
                 self.message_obj=SimpleNamespace(message_id=id,message_str='谢谢你，帮到我了')
                 self.unified_msg_origin='synthetic'
                 self.extra={};self.private=private;self.sender=sender;self.fail=fail
             def get_platform_id(self): return 'qq_snowluma'
-            def get_self_id(self): return 'synthetic-bot'
+            def get_self_id(self): return '10001'
             def get_sender_id(self): return self.sender
             def is_private_chat(self): return self.private
             def get_extra(self,key,default=None): return self.extra.get(key,default)
             def set_extra(self,key,value): self.extra[key]=value
             async def send(self,message):
                 if self.fail: raise RuntimeError('synthetic_send_failure')
+        class Wire:
+            async def send_private_msg(self,**kw):
+                if active[0].fail:raise RuntimeError('synthetic_send_failure')
+                return {'message_id':123}
+        active=[None];wire=Wire()
         p=AffectPlugin(Context())
         delays=[]
         async def fake_pause(delay): delays.append(delay)
@@ -78,7 +86,8 @@ async def run():
         await p.mark_response(e,LLMResponse(role='assistant',completion_text='嗯，帮到你就好。'))
         await p.commit_after_delivery(e)
         assert p.store.read(allowed)['interaction_count']==0
-        await e.send('synthetic response')
+        active[0]=e
+        await e.send(MessageChain([Plain('synthetic response')]))
         assert len(delays)==1 and 2<=delays[0]<=5
         await p.commit_after_delivery(e)
         await p.commit_after_delivery(e)
@@ -87,7 +96,9 @@ async def run():
             e=Event('failure' if fail else 'model-error',fail=fail)
             await p.inject_state_into_llm(e,ProviderRequest(prompt='谢谢你'))
             await p.mark_response(e,LLMResponse(role='assistant' if fail else 'err',completion_text='synthetic'))
-            try: await e.send('synthetic')
+            try:
+                active[0]=e
+                await e.send(MessageChain([Plain('synthetic')]))
             except RuntimeError: pass
             await p.commit_after_delivery(e)
             assert p.store.read(allowed)['interaction_count']==1

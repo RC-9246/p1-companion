@@ -1,6 +1,6 @@
 name: astrbot_plugin_p1_group_memory
 display_name: P1 群聊记忆
 desc: 各群独立的持久上下文、引用、节奏与来源笔记
-version: v0.16.0
+version: v0.21.0
 author: p1-local
 astrbot_version: ">=4.29,<5"

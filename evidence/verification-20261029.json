@@ -1,0 +1,986 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "release": "0.21.0",
+  "baseline_commit": "16319f271f71b08e0b834f63d9e4a579eab6d59c",
+  "attribution": "New engineering performed by GPT through ChatGPT/Codex; third-party work retains its attribution.",
+  "offline_five": {
+    "schema": 1,
+    "rounds_required": 5,
+    "rounds_finished": 5,
+    "all_passed": true,
+    "source_signature": "8df3924e0fed70ec2ca4bc3a69623200654b104835bb1416324396748eda2d31",
+    "results": [
+      {
+        "round": 1,
+        "passed": true,
+        "source_unchanged": true,
+        "wall_seconds": 25.684,
+        "unittest": {
+          "executed_or_skipped": 700,
+          "skipped": 6
+        },
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0
+          },
+          {
+            "name": "offline",
+            "exit_code": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "passed": true,
+        "source_unchanged": true,
+        "wall_seconds": 25.646,
+        "unittest": {
+          "executed_or_skipped": 700,
+          "skipped": 6
+        },
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0
+          },
+          {
+            "name": "offline",
+            "exit_code": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0
+          }
+        ]
+      },
+      {
+        "round": 3,
+        "passed": true,
+        "source_unchanged": true,
+        "wall_seconds": 26.018,
+        "unittest": {
+          "executed_or_skipped": 700,
+          "skipped": 6
+        },
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0
+          },
+          {
+            "name": "offline",
+            "exit_code": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0
+          }
+        ]
+      },
+      {
+        "round": 4,
+        "passed": true,
+        "source_unchanged": true,
+        "wall_seconds": 25.604,
+        "unittest": {
+          "executed_or_skipped": 700,
+          "skipped": 6
+        },
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0
+          },
+          {
+            "name": "offline",
+            "exit_code": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0
+          }
+        ]
+      },
+      {
+        "round": 5,
+        "passed": true,
+        "source_unchanged": true,
+        "wall_seconds": 25.788,
+        "unittest": {
+          "executed_or_skipped": 700,
+          "skipped": 6
+        },
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0
+          },
+          {
+            "name": "offline",
+            "exit_code": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0
+          }
+        ]
+      }
+    ],
+    "real_model_calls": 0,
+    "real_qq_messages": 0,
+    "production_modified": false,
+    "limits": "Offline regression and real wizard JavaScript only; SDK, service, deployment and long-term stability require separate evidence."
+  },
+  "arm_linux_release_five": {
+    "schema": 1,
+    "rounds_required": 5,
+    "rounds_finished": 5,
+    "all_passed": true,
+    "source_signature": "8df3924e0fed70ec2ca4bc3a69623200654b104835bb1416324396748eda2d31",
+    "astrbot_image": "sha256:a140a326163ac5f82f62153f033cddeac74e38e4ee1809c6e333e950ff19edc4",
+    "node_image": "sha256:d02752c6ab446ae9db8deec2f9cc887c378f77cdcad31650814df936b7386dfb",
+    "results": [
+      {
+        "round": 1,
+        "source_unchanged": true,
+        "passed": true,
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0,
+            "seconds": 0.317
+          },
+          {
+            "name": "offline",
+            "exit_code": 0,
+            "seconds": 59.83,
+            "unittest_total": 700,
+            "skipped": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0,
+            "seconds": 1.022
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "source_unchanged": true,
+        "passed": true,
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0,
+            "seconds": 0.316
+          },
+          {
+            "name": "offline",
+            "exit_code": 0,
+            "seconds": 59.993,
+            "unittest_total": 700,
+            "skipped": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0,
+            "seconds": 0.971
+          }
+        ]
+      },
+      {
+        "round": 3,
+        "source_unchanged": true,
+        "passed": true,
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0,
+            "seconds": 0.317
+          },
+          {
+            "name": "offline",
+            "exit_code": 0,
+            "seconds": 59.96,
+            "unittest_total": 700,
+            "skipped": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0,
+            "seconds": 1.07
+          }
+        ]
+      },
+      {
+        "round": 4,
+        "source_unchanged": true,
+        "passed": true,
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0,
+            "seconds": 0.316
+          },
+          {
+            "name": "offline",
+            "exit_code": 0,
+            "seconds": 59.709,
+            "unittest_total": 700,
+            "skipped": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0,
+            "seconds": 0.971
+          }
+        ]
+      },
+      {
+        "round": 5,
+        "source_unchanged": true,
+        "passed": true,
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0,
+            "seconds": 0.317
+          },
+          {
+            "name": "offline",
+            "exit_code": 0,
+            "seconds": 60.104,
+            "unittest_total": 700,
+            "skipped": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0,
+            "seconds": 0.919
+          }
+        ]
+      }
+    ],
+    "production_data_mounted": false,
+    "actual_qq_messages": 0,
+    "model_calls": 0,
+    "host_faults": "not executed here; separate five-round runtime and service evidence retained"
+  },
+  "arm_runtime_sdk_and_service_five": {
+    "schema": 1,
+    "rounds_required": 5,
+    "rounds_finished": 5,
+    "all_passed": true,
+    "source_signature": "91d134173bf29b22e26e5eb759df5f41048869044b22e26e74173ecfb42efcc8",
+    "astrbot_image": "sha256:a140a326163ac5f82f62153f033cddeac74e38e4ee1809c6e333e950ff19edc4",
+    "node_image": "sha256:d02752c6ab446ae9db8deec2f9cc887c378f77cdcad31650814df936b7386dfb",
+    "results": [
+      {
+        "round": 1,
+        "source_unchanged": true,
+        "passed": true,
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0,
+            "seconds": 0.317
+          },
+          {
+            "name": "offline",
+            "exit_code": 0,
+            "seconds": 60.167,
+            "unittest_total": 697,
+            "skipped": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0,
+            "seconds": 1.07
+          },
+          {
+            "name": "integration_audit_contracts.py",
+            "exit_code": 0,
+            "seconds": 32.928
+          },
+          {
+            "name": "integration_scope_matrix.py",
+            "exit_code": 0,
+            "seconds": 56.351
+          },
+          {
+            "name": "integration_learning.py",
+            "exit_code": 0,
+            "seconds": 45.92
+          },
+          {
+            "name": "integration_agency.py",
+            "exit_code": 0,
+            "seconds": 34.676
+          },
+          {
+            "name": "repair_chain_acceptance.py",
+            "exit_code": 0,
+            "seconds": 28.329
+          },
+          {
+            "name": "isolated_repair_acceptance.py",
+            "exit_code": 0,
+            "seconds": 10.264
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "source_unchanged": true,
+        "passed": true,
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0,
+            "seconds": 0.316
+          },
+          {
+            "name": "offline",
+            "exit_code": 0,
+            "seconds": 60.363,
+            "unittest_total": 697,
+            "skipped": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0,
+            "seconds": 1.02
+          },
+          {
+            "name": "integration_audit_contracts.py",
+            "exit_code": 0,
+            "seconds": 32.013
+          },
+          {
+            "name": "integration_scope_matrix.py",
+            "exit_code": 0,
+            "seconds": 48.045
+          },
+          {
+            "name": "integration_learning.py",
+            "exit_code": 0,
+            "seconds": 45.535
+          },
+          {
+            "name": "integration_agency.py",
+            "exit_code": 0,
+            "seconds": 34.418
+          },
+          {
+            "name": "repair_chain_acceptance.py",
+            "exit_code": 0,
+            "seconds": 28.275
+          },
+          {
+            "name": "isolated_repair_acceptance.py",
+            "exit_code": 0,
+            "seconds": 9.857
+          }
+        ]
+      },
+      {
+        "round": 3,
+        "source_unchanged": true,
+        "passed": true,
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0,
+            "seconds": 0.317
+          },
+          {
+            "name": "offline",
+            "exit_code": 0,
+            "seconds": 59.946,
+            "unittest_total": 697,
+            "skipped": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0,
+            "seconds": 1.123
+          },
+          {
+            "name": "integration_audit_contracts.py",
+            "exit_code": 0,
+            "seconds": 32.047
+          },
+          {
+            "name": "integration_scope_matrix.py",
+            "exit_code": 0,
+            "seconds": 48.113
+          },
+          {
+            "name": "integration_learning.py",
+            "exit_code": 0,
+            "seconds": 45.641
+          },
+          {
+            "name": "integration_agency.py",
+            "exit_code": 0,
+            "seconds": 34.238
+          },
+          {
+            "name": "repair_chain_acceptance.py",
+            "exit_code": 0,
+            "seconds": 28.624
+          },
+          {
+            "name": "isolated_repair_acceptance.py",
+            "exit_code": 0,
+            "seconds": 9.511
+          }
+        ]
+      },
+      {
+        "round": 4,
+        "source_unchanged": true,
+        "passed": true,
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0,
+            "seconds": 0.316
+          },
+          {
+            "name": "offline",
+            "exit_code": 0,
+            "seconds": 59.697,
+            "unittest_total": 697,
+            "skipped": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0,
+            "seconds": 1.12
+          },
+          {
+            "name": "integration_audit_contracts.py",
+            "exit_code": 0,
+            "seconds": 32.201
+          },
+          {
+            "name": "integration_scope_matrix.py",
+            "exit_code": 0,
+            "seconds": 47.988
+          },
+          {
+            "name": "integration_learning.py",
+            "exit_code": 0,
+            "seconds": 45.733
+          },
+          {
+            "name": "integration_agency.py",
+            "exit_code": 0,
+            "seconds": 34.382
+          },
+          {
+            "name": "repair_chain_acceptance.py",
+            "exit_code": 0,
+            "seconds": 28.041
+          },
+          {
+            "name": "isolated_repair_acceptance.py",
+            "exit_code": 0,
+            "seconds": 10.112
+          }
+        ]
+      },
+      {
+        "round": 5,
+        "source_unchanged": true,
+        "passed": true,
+        "checks": [
+          {
+            "name": "source",
+            "exit_code": 0,
+            "seconds": 0.317
+          },
+          {
+            "name": "offline",
+            "exit_code": 0,
+            "seconds": 60.762,
+            "unittest_total": 697,
+            "skipped": 0
+          },
+          {
+            "name": "wizard",
+            "exit_code": 0,
+            "seconds": 1.32
+          },
+          {
+            "name": "integration_audit_contracts.py",
+            "exit_code": 0,
+            "seconds": 32.167
+          },
+          {
+            "name": "integration_scope_matrix.py",
+            "exit_code": 0,
+            "seconds": 48.265
+          },
+          {
+            "name": "integration_learning.py",
+            "exit_code": 0,
+            "seconds": 44.987
+          },
+          {
+            "name": "integration_agency.py",
+            "exit_code": 0,
+            "seconds": 34.172
+          },
+          {
+            "name": "repair_chain_acceptance.py",
+            "exit_code": 0,
+            "seconds": 27.817
+          },
+          {
+            "name": "isolated_repair_acceptance.py",
+            "exit_code": 0,
+            "seconds": 9.714
+          }
+        ]
+      }
+    ],
+    "production_data_mounted": false,
+    "actual_qq_messages": 0,
+    "model_calls": 0,
+    "host_faults": "disposable uniquely named units/containers only"
+  },
+  "broad_sdk_matrix": {
+    "results": [
+      {
+        "test": "integration_audit_contracts.py",
+        "exit_code": 0,
+        "seconds": 31.96
+      },
+      {
+        "test": "integration_runtime.py",
+        "exit_code": 0,
+        "seconds": 36.8
+      },
+      {
+        "test": "integration_group_images.py",
+        "exit_code": 0,
+        "seconds": 30.47
+      },
+      {
+        "test": "integration_memoria.py",
+        "exit_code": 0,
+        "seconds": 28.6
+      },
+      {
+        "test": "integration_agency_failure.py",
+        "exit_code": 0,
+        "seconds": 3.64
+      },
+      {
+        "test": "integration_scope_matrix.py",
+        "exit_code": 0,
+        "seconds": 48.11
+      },
+      {
+        "test": "integration_learning.py",
+        "exit_code": 0,
+        "seconds": 45.05
+      },
+      {
+        "test": "integration_agency.py",
+        "exit_code": 0,
+        "seconds": 33.89
+      },
+      {
+        "test": "integration_reply_routes.py",
+        "exit_code": 0,
+        "seconds": 31.59
+      },
+      {
+        "test": "integration_group_control.py",
+        "exit_code": 0,
+        "seconds": 29.4
+      },
+      {
+        "test": "integration_latency.py",
+        "exit_code": 0,
+        "seconds": 38.82
+      },
+      {
+        "test": "integration_media_grounding.py",
+        "exit_code": 0,
+        "seconds": 30.19
+      },
+      {
+        "test": "integration_self_response.py",
+        "exit_code": 0,
+        "seconds": 32.53
+      },
+      {
+        "test": "integration_leisure.py",
+        "exit_code": 0,
+        "seconds": 32.83
+      }
+    ],
+    "network": "none",
+    "production_data_mounted": false,
+    "model_or_qq_calls": 0,
+    "finished": true
+  },
+  "service_fault_rounds": [
+    {
+      "file": "1-isolated_repair_acceptance.py.json",
+      "cases": 41,
+      "all_passed": true,
+      "production_before_after_equal": true
+    },
+    {
+      "file": "1-repair_chain_acceptance.py.json",
+      "cases": 26,
+      "all_passed": true,
+      "production_before_after_equal": true
+    },
+    {
+      "file": "2-isolated_repair_acceptance.py.json",
+      "cases": 41,
+      "all_passed": true,
+      "production_before_after_equal": true
+    },
+    {
+      "file": "2-repair_chain_acceptance.py.json",
+      "cases": 26,
+      "all_passed": true,
+      "production_before_after_equal": true
+    },
+    {
+      "file": "3-isolated_repair_acceptance.py.json",
+      "cases": 41,
+      "all_passed": true,
+      "production_before_after_equal": true
+    },
+    {
+      "file": "3-repair_chain_acceptance.py.json",
+      "cases": 26,
+      "all_passed": true,
+      "production_before_after_equal": true
+    },
+    {
+      "file": "4-isolated_repair_acceptance.py.json",
+      "cases": 41,
+      "all_passed": true,
+      "production_before_after_equal": true
+    },
+    {
+      "file": "4-repair_chain_acceptance.py.json",
+      "cases": 26,
+      "all_passed": true,
+      "production_before_after_equal": true
+    },
+    {
+      "file": "5-isolated_repair_acceptance.py.json",
+      "cases": 41,
+      "all_passed": true,
+      "production_before_after_equal": true
+    },
+    {
+      "file": "5-repair_chain_acceptance.py.json",
+      "cases": 26,
+      "all_passed": true,
+      "production_before_after_equal": true
+    }
+  ],
+  "runtime_sources_unchanged_between_layers": true,
+  "runtime_source_file_count": 139,
+  "bounded_model_repair": {
+    "schema": 1,
+    "results": [
+      {
+        "case": "rollback",
+        "state": "rolled_back",
+        "real_elapsed_seconds": 121.8,
+        "baseline_failed": true,
+        "candidate_checked": 546,
+        "candidate_passed": true,
+        "fixture_container": true,
+        "production_modified": false
+      },
+      {
+        "case": "accept",
+        "state": "accepted",
+        "real_elapsed_seconds": 906.9,
+        "baseline_failed": true,
+        "candidate_checked": 546,
+        "candidate_passed": true,
+        "fixture_container": true,
+        "production_modified": false
+      }
+    ],
+    "usage": {
+      "model": "deepseek-flash",
+      "destination": "api.deepseek.com",
+      "calls": 1,
+      "input_tokens": 324,
+      "output_tokens": 3577
+    },
+    "actual_clock": true,
+    "production_data_mounted": false,
+    "real_qq_messages": 0,
+    "networkless_execution_tests": true
+  },
+  "migration": {
+    "passed": true,
+    "results": [
+      {
+        "database": "affect",
+        "quick_check": "ok",
+        "existing_tables_preserved": true,
+        "existing_content_changed_tables": [],
+        "new_tables": [
+          "p1_learning_temporary",
+          "p1_qq_action_lanes",
+          "p1_qq_tombstones"
+        ]
+      },
+      {
+        "database": "agency",
+        "quick_check": "ok",
+        "existing_tables_preserved": true,
+        "existing_content_changed_tables": [],
+        "new_tables": [
+          "cognitive_item",
+          "cognitive_seen",
+          "decision_health",
+          "document_coverage",
+          "document_lineage",
+          "interest_evidence",
+          "model_budget_lanes",
+          "revoked_source",
+          "task_control"
+        ]
+      },
+      {
+        "database": "groups",
+        "quick_check": "ok",
+        "existing_tables_preserved": true,
+        "existing_content_changed_tables": [],
+        "new_tables": []
+      },
+      {
+        "database": "memoria",
+        "quick_check": "ok",
+        "existing_tables_preserved": true,
+        "existing_content_changed_tables": [],
+        "new_tables": [
+          "memoria_scope_epochs"
+        ]
+      },
+      {
+        "database": "astrbot",
+        "quick_check": "ok",
+        "existing_tables_preserved": true,
+        "existing_content_changed_tables": [],
+        "new_tables": []
+      },
+      {
+        "database": "knowledge",
+        "quick_check": "ok",
+        "existing_tables_preserved": true,
+        "existing_content_changed_tables": [],
+        "new_tables": []
+      }
+    ],
+    "network": "none",
+    "production_database_modified": false,
+    "snapshot_copies_only": true,
+    "raw_rows_exported": false
+  },
+  "workbench_protocol": {
+    "passed": true,
+    "checks": [
+      "utf8_text",
+      "honest_truncation",
+      "html_script_exclusion",
+      "docx_text",
+      "archive_traversal_rejected"
+    ],
+    "network": "none",
+    "real_documents": false,
+    "production_container_unchanged": true
+  },
+  "deployment": {
+    "state": "accepted",
+    "version": "0.21.0",
+    "postflight_observations": 5,
+    "database_quick_checks": 30,
+    "source_files_verified": 46,
+    "checkpoint_plugin_files": 139,
+    "checkpoint_fixed_files": 36,
+    "bounded_guardian_installed": true,
+    "external_browser_binding_adopted": true,
+    "database_snapshots_restored": false,
+    "actual_qq_test_messages": 0,
+    "available_memory_mib": [
+      1824.3,
+      1848.8,
+      1908.2,
+      1903.4,
+      1880.7
+    ]
+  },
+  "startup_to_health_seconds": 51.73,
+  "namespace_metadata_check": {
+    "passed": true,
+    "whitelisted_private_peers": 6,
+    "bot_bindings": 1,
+    "unique_private_scopes": 6,
+    "unique_enabled_group_scopes": 3,
+    "all_current_private_acl_routes_bound": true,
+    "private_group_keys_disjoint": true,
+    "owner_permissions_broadened": false,
+    "private_configuration_files_unchanged": 5,
+    "memory_bodies_inspected": false,
+    "new_scope_integration": "separate synthetic old/new whitelist and group SDK matrix",
+    "interest_daily": 999,
+    "interest_cooldown_seconds": 90,
+    "background_group_daily": 4,
+    "background_global_daily": 16
+  },
+  "current_model_regression": {
+    "generation": {
+      "variant": "D",
+      "model": "deepseek-flash",
+      "calls": {
+        "calls": 331,
+        "completed": 331,
+        "errors": 0,
+        "input_tokens": 607318,
+        "output_tokens": 37103,
+        "reasoning_tokens": 22387,
+        "seconds": 463.29477448010584
+      },
+      "processed_cases": 60,
+      "completed_cases": 60,
+      "expected_cases": 60,
+      "wall_seconds": 159.18,
+      "code_sha256": {
+        "appraisal.py": "4ac95542f95cd6d74521f0f4b6ac65834b9667cb967a54732267f020345dbe01",
+        "emotion_model.py": "4cd8fdde2d4f4ee0697697679a234b8064a1e04990f176591fba7df08cff838f",
+        "reply_chunks.py": "417bb1fa2b61829d57424afda28e534888abd1cae02f5d38f68dd1f4e4bf5412"
+      }
+    },
+    "judge": {
+      "summary": {
+        "pairs": 60,
+        "left": 5,
+        "right": 3,
+        "tie": 27,
+        "disagreement": 25,
+        "net_right_advantage": -0.03333333333333333,
+        "scenario_bootstrap_95_interval": [
+          -0.13333333333333333,
+          0.05
+        ],
+        "disagreement_is_not_a_win": true
+      },
+      "usage": {
+        "attempted": 120,
+        "completed": 120,
+        "errors": 0,
+        "input_tokens": 73930,
+        "output_tokens": 11596
+      }
+    }
+  },
+  "earlier_holdout_comparisons": {
+    "B-D-holdout.json": {
+      "processed": 60,
+      "summary": {
+        "pairs": 60,
+        "left": 6,
+        "right": 4,
+        "tie": 24,
+        "disagreement": 26,
+        "net_right_advantage": -0.03333333333333333,
+        "scenario_bootstrap_95_interval": [
+          -0.13333333333333333,
+          0.06666666666666667
+        ],
+        "disagreement_is_not_a_win": true
+      },
+      "usage": {
+        "attempted": 120,
+        "completed": 120,
+        "errors": 0,
+        "input_tokens": 73884,
+        "output_tokens": 11657
+      }
+    },
+    "A-D-holdout.json": {
+      "processed": 60,
+      "summary": {
+        "pairs": 58,
+        "left": 5,
+        "right": 6,
+        "tie": 25,
+        "disagreement": 22,
+        "net_right_advantage": 0.017241379310344827,
+        "scenario_bootstrap_95_interval": [
+          -0.10344827586206896,
+          0.13793103448275862
+        ],
+        "disagreement_is_not_a_win": true
+      },
+      "usage": {
+        "attempted": 120,
+        "completed": 118,
+        "errors": 2,
+        "input_tokens": 72509,
+        "output_tokens": 11451
+      }
+    }
+  },
+  "model_evaluation_limits": [
+    "Synthetic multi-turn dialogues only; configured private persona and raw outputs are excluded.",
+    "Same-provider model judging is not independent human evaluation.",
+    "Current D reruns the previously used holdout set; it is a regression, not a newly unseen test set.",
+    "Pipeline experiment is classifier/state/generation/review/formatting, not full real-account tool execution.",
+    "No statistically supported naturalness advantage; do not claim theoretical optimum.",
+    "Usage here describes selected valid batches; prior failed/development calls add usage and are retained privately."
+  ],
+  "general_limits": [
+    "No real QQ test messages were sent.",
+    "No complete Windows cold install/reboot/login acceptance.",
+    "Known-fault recovery does not prove arbitrary new-defect repair or ten-year operation.",
+    "Video progress and sampled frames do not imply full audio/video understanding.",
+    "The published persona and asset catalog are neutral and empty.",
+    "Offline/source integrity checks do not authenticate the publisher."
+  ],
+  "failure_history_summary": [
+    "Preserved staging failure caused by quoted Unicode filename.",
+    "Preserved container test failures caused by insufficient scratch filesystem and root file capabilities.",
+    "Replaced sub-millisecond fake health deadlines with bounded waits.",
+    "Added child readiness handshake before capturing test process identity.",
+    "Fixed successful-but-truncated Docker public-key download acceptance and verified retry.",
+    "Preserved earlier incomplete model evaluation and judge errors; no failed pair is counted as a win."
+  ],
+  "publication_metadata_updates": {
+    "description": "After frozen tests, seven component version labels were aligned to the deployed bundle. Executable code and policy unchanged.",
+    "sha256": {
+      "release/astrbot_plugin_p1_qq_style/metadata.yaml": "f8a3948586bd1577f07c7978e3ce54f201d2f5ce6f91ea231fa2e2e58000b7c8",
+      "release/astrbot_plugin_p1_group_memory/metadata.yaml": "e3106bab9d67b6d514073f206a2029865e219d96f3e66ce7ec35783528082f5d",
+      "release/astrbot_plugin_memoria/metadata.yaml": "84f66db0bee1e57624722d33e3975e8f37eccee52a613793d6e1be227c6593d6",
+      "release/astrbot_plugin_p1_stickers/metadata.yaml": "161b3b8bd916abe14906a994d9da3d791f8d26cea211aef0a375b3b5e3191474",
+      "release/astrbot_plugin_p1_group_affect/metadata.yaml": "cd4aa9ddb357981255b56f4065219511a90e8757027c4f44a998bd335c7d4cac",
+      "release/astrbot_plugin_p1_reflection/metadata.yaml": "ab792fc06046dc66f8451217b575e46ab2bcee1ef2a80aa1509b18d588633350",
+      "release/astrbot_plugin_p1_learning/metadata.yaml": "b440b2cae70ec2c03fb68dd19c6c11d2820097ab046984099d0d9b3f3302754b"
+    }
+  }
+}

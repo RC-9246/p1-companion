@@ -6,7 +6,7 @@ import sys
 from unittest.mock import patch
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
-from tools.inspect_p1 import docker_inventory, inventory
+from scripts.inspect_p1 import docker_inventory, inventory
 
 
 class InspectionSafetyTests(unittest.TestCase):
@@ -34,8 +34,8 @@ class InspectionSafetyTests(unittest.TestCase):
             self.assertFalse(any("external" in x["path"] for x in report["items"]))
 
     def test_docker_errors_never_echo_sensitive_stderr(self):
-        with patch("tools.inspect_p1.shutil.which", return_value="/usr/bin/docker"), patch(
-            "tools.inspect_p1.subprocess.run"
+        with patch("scripts.inspect_p1.shutil.which", return_value="/usr/bin/docker"), patch(
+            "scripts.inspect_p1.subprocess.run"
         ) as run:
             run.return_value.returncode = 1
             run.return_value.stderr = "PRIVATE_TOKEN"

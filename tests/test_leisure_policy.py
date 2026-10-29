@@ -60,6 +60,11 @@ class LeisureSecurityTests(unittest.TestCase):
    self.assertEqual(q.remaining(now),28779)
    q.finish(k,1,'completed');self.assertEqual(q.remaining(now),28779)
    self.assertEqual(q.path.stat().st_mode&0o777,0o600)
+ def test_observed_progress_persists_with_explicit_perception_limits(self):
+  with tempfile.TemporaryDirectory() as t:
+   q=Q(Path(t)/'q.db');q.record_progress('BV1xx411c7mD','synthetic',45.,120.,{'audio_understood':False,'sample_times':[10,40],'perception':'sampled_frames_only'})
+   saved=Q(q.path).progress('BV1xx411c7mD');self.assertEqual(saved['position_seconds'],45);self.assertEqual(saved['sample_times'],[10,40]);self.assertFalse(saved['audio_understood'])
+   with self.assertRaises(ValueError):q.record_progress('BV1xx411c7mD','synthetic',float('nan'),120,{})
 if __name__=='__main__':unittest.main()
 
 import sys

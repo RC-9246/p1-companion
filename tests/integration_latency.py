@@ -23,24 +23,25 @@ async def run():
   async def provider(*a):return N(client=Client(),get_model=lambda:'deepseek-flash')
   a=Agency(N(context=N(get_current_chat_provider_id=pid,provider_manager=N(get_provider_by_id=provider))),tmp)
   a.row_valid=lambda _:valid
-  def take(*args):charges.append(args);return budget
+  await a.start()
+  def take(*args,**kwargs):charges.append((args,kwargs));return budget
   a.store.take_model_budget=take
   row={'peer':'30003','identity':'g1:'+'a'*64,'kind':'group'}
   await a.gate.acquire();start=time.monotonic()
   answer=await a.interest_vote(row,'这个配乐的节奏挺特别',[],['music']);free_seconds=time.monotonic()-start
   assert answer['join'] is True and free_seconds<1,'background gate must not queue foreground ingress'
   a.gate.release()
-  assert options[-1]=={'timeout':2.5,'max_retries':0}
-  assert calls[-1]['max_tokens']==160 and calls[-1]['extra_body']=={'thinking':{'type':'disabled'}}
-  before=len(calls);charged=len(charges);await a.interest_gate.acquire();start=time.monotonic()
-  assert await a.interest_vote(row,'音乐',[],['music'])=={} and time.monotonic()-start<.1
-  assert len(calls)==before and len(charges)==charged;a.interest_gate.release()
-  mode='slow';start=time.monotonic();assert await a.interest_vote(row,'音乐',[],['music'])=={}
-  timeout_seconds=time.monotonic()-start;assert 2.8<=timeout_seconds<4.5 and not a.interest_gate.locked(),{'timeout_seconds':timeout_seconds}
+  assert options[-1]=={'timeout':4,'max_retries':0}
+  assert calls[-1]['max_tokens']==200 and calls[-1]['extra_body']=={'thinking':{'type':'disabled'}}
+  before=len(calls);charged=len(charges);await a.interest_gate.acquire();await a.interest_gate.acquire();start=time.monotonic()
+  assert (await a.interest_vote(row,'音乐',[],['music'])).get('_skip')=='classifier_busy' and time.monotonic()-start<.1
+  assert len(calls)==before and len(charges)==charged;a.interest_gate.release();a.interest_gate.release()
+  mode='slow';start=time.monotonic();assert (await a.interest_vote(row,'音乐',[],['music'])).get('_skip')=='classifier_unavailable'
+  timeout_seconds=time.monotonic()-start;assert 4.1<=timeout_seconds<5.8 and not a.interest_gate.locked(),{'timeout_seconds':timeout_seconds}
   mode='revoke';assert await a.interest_vote(row,'音乐',[],['music'])=={} and not a.interest_gate.locked()
   valid=True;mode='normal';approved=False;before=len(calls);charged=len(charges)
   assert await a.interest_vote(row,'音乐',[],['music'])=={} and len(calls)==before and len(charges)==charged
-  approved=True;budget=False;assert await a.interest_vote(row,'音乐',[],['music'])=={} and len(calls)==before
+  approved=True;budget=False;assert (await a.interest_vote(row,'音乐',[],['music'])).get('_skip')=='model_budget' and len(calls)==before
   budget=True;task=asyncio.create_task(a.interest_vote(row,'音乐',[],['music']));mode='slow';await asyncio.sleep(.05);task.cancel()
   result=await asyncio.gather(task,return_exceptions=True);assert isinstance(result[0],asyncio.CancelledError) and not a.interest_gate.locked()
   os.environ['P1_COMPANION_DATA']=str(Path(tmp)/'data/plugin_data/affect')
@@ -58,8 +59,8 @@ async def run():
   start=time.monotonic();await appraisal();slow_affect=time.monotonic()-start
   assert 4.8<=slow_affect<6.5 and not affect.gate.locked(),'provider lookup is within whole appraisal deadline'
   report={'background_gate_held_foreground_still_completed':True,'foreground_vote_seconds':round(free_seconds,3),'busy_foreground_skips_without_api_or_budget':True,
-   'whole_vote_deadline_seconds':3,'observed_timeout_seconds':round(timeout_seconds,3),'timeout_revocation_cancellation_release_gate':True,'destination_and_budget_checked':True,
+   'whole_vote_deadline_seconds':4.5,'observed_timeout_seconds':round(timeout_seconds,3),'timeout_revocation_cancellation_release_gate':True,'destination_and_budget_checked':True,
    'busy_affect_fallback_seconds':round(busy_affect,3),'appraisal_provider_timeout_seconds':round(slow_affect,3),'appraisal_fallback_keeps_scoped_emotion_hint':True,
-   'decision_tokens_cap':160,'decision_thinking_disabled':True,'decision_sdk_retries':0,'real_model_calls':0,'real_qq_messages':0,'production_database_modified':False}
+   'decision_tokens_cap':200,'decision_thinking_disabled':True,'decision_sdk_retries':0,'real_model_calls':0,'real_qq_messages':0,'production_database_modified':False}
   (R/'evidence/group-latency-isolated.json').write_text(json.dumps(report,indent=2));print(json.dumps(report))
 if __name__=='__main__':asyncio.run(run())

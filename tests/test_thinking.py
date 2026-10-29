@@ -40,7 +40,7 @@ class ThinkingTests(unittest.IsolatedAsyncioTestCase):
   for lane in ('native','interest'):
    e=Event(group='30003',text='这个配乐的节奏真不错');e.set_extra('_p1_group_auto_route',lane)
    await self.t.select(e);self.assertEqual(e.get_extra('selected_provider'),FAST_PROVIDER);self.assertEqual(e.get_extra('_p1_thinking_selected'),'fast')
-  private=Event(text='这个配乐的节奏真不错');await self.t.select(private);self.assertEqual(private.get_extra('selected_provider'),MAX_PROVIDER)
+  private=Event(text='这个配乐的节奏真不错');await self.t.select(private);self.assertIsNone(private.get_extra('selected_provider'));self.assertEqual(private.get_extra('_p1_thinking_selected'),'high')
   serious=Event(group='30003',text='我很难过，不知道该怎么办');serious.set_extra('_p1_group_auto_route','native')
   await self.t.select(serious);self.assertEqual(serious.get_extra('selected_provider'),MAX_PROVIDER)
   self.assertEqual(self.cfg['provider'][0]['custom_extra_body'],{'reasoning_effort':'max'})
@@ -48,12 +48,25 @@ class ThinkingTests(unittest.IsolatedAsyncioTestCase):
   for body in (None,{'thinking':{'type':'disabled'},'max_tokens':'2048'},{'thinking':{'type':'enabled'},'max_tokens':2048}):
    self.cfg['provider'][:]=self.cfg['provider'][:1];self.cfg['provider'].append({'id':FAST_PROVIDER,'enable':True,'model':'deepseek-flash','custom_extra_body':body})
    e=Event(group='30003',text='这段配乐挺好听');e.set_extra('_p1_group_auto_route','native');await self.t.select(e)
-   self.assertEqual(e.get_extra('selected_provider'),MAX_PROVIDER)
+   self.assertIsNone(e.get_extra('selected_provider'));self.assertEqual(e.get_extra('_p1_thinking_selected'),'high')
   self.cfg['provider'][-1]['custom_extra_body']={'thinking':{'type':'disabled'},'max_tokens':2048}
   async def wrong(*a):return N(client=N(base_url=N(host='example.com',scheme='https')))
   self.plugin.context.provider_manager.get_provider_by_id=wrong
   e=Event(group='30003',text='这段配乐挺好听');e.set_extra('_p1_group_auto_route','native');await self.t.select(e)
-  self.assertEqual(e.get_extra('selected_provider'),MAX_PROVIDER)
+  self.assertIsNone(e.get_extra('selected_provider'));self.assertEqual(e.get_extra('_p1_thinking_selected'),'high')
+ async def test_short_implicit_emotion_and_recent_conflict_get_max(self):
+  for text in ('我还以为你会记得呢','算了，当我没说','别总附和我'):
+   e=Event(group='30003',text=text);e.set_extra('_p1_group_auto_route','interest');await self.t.select(e)
+   self.assertEqual(e.get_extra('_p1_thinking_selected'),'max')
+  e=Event(group='30003',text='嗯');e.set_extra('_p1_group_scene',{'messages':[{'text':'你刚才把我的意思弄错了'}]});await self.t.select(e)
+  self.assertEqual(e.get_extra('_p1_thinking_selected'),'max')
+ async def test_completed_usage_comes_from_sdk_response_and_is_idempotent(self):
+  e=Event(text='你怎么看');await self.t.select(e);self.t.trace(e,'prepared')
+  raw=N(usage=N(prompt_tokens=20,completion_tokens=30,completion_tokens_details=N(reasoning_tokens=15)))
+  self.t.trace(e,'completed',N(raw_completion=raw));self.t.trace(e,'completed',N(raw_completion=raw))
+  with self.t.db() as c:
+   row=c.execute("SELECT usage_available,usage FROM p1_thinking_calls WHERE status='completed'").fetchone();self.assertEqual(row[0],1);self.assertEqual(json.loads(row[1])['reasoning_tokens'],15)
+   self.assertEqual(c.execute("SELECT COUNT(*) FROM p1_thinking_audit WHERE status='complete'").fetchone()[0],1)
  def test_latency_metrics_split_delay_from_generation_without_content(self):
   e=Event(text='password=synthetic_secret');e.set_extra('_p1_reply_clock',{'start':0,'input':0,'admitted':2,'prompt_ready':3,'response_ready':7,'send_queued':8,'send_unlocked':10,'send_delayed':13})
   with patch('time.monotonic',return_value=14):r=latency_report(e)

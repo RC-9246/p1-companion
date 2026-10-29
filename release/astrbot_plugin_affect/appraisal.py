@@ -42,6 +42,10 @@ def parse_appraisal(text,original=None):
     if out['target']!='self' or out['intent'] not in ('feedback','boundary'):
         out['relation']='none'
     out['source']='semantic'
+    if isinstance(v.get('continuity'),dict) and c>=.75 and isinstance(original,str):
+        cue=v['continuity'];subject=cue.get('subject','');quote=cue.get('quote','')
+        valid_ref=isinstance(cue.get('ref'),str) and re.fullmatch('[0-9a-f]{24}',cue['ref'])
+        if (set(cue) in ({'subject','quote','status'},{'subject','quote','status','ref'}) and isinstance(subject,str) and 2<=len(subject)<=60 and isinstance(quote,str) and 2<=len(quote)<=160 and (subject in quote or valid_ref) and quote in original and scrub(quote)==quote and cue.get('status') in ('open','eased','resolved','paused','abandoned','uncertain')):out['continuity']=dict(cue)
     if 'interaction' in v:
         x=v['interaction']
         if not isinstance(x,dict) or set(x)!={'need','nuance','intensity','resolution'} or x.get('need') not in NEEDS or x.get('nuance') not in NUANCES or x.get('resolution') not in RESOLUTIONS:
@@ -130,6 +134,9 @@ agency是自主与选择，reciprocity是公平接受善意，understanding是�
 事实纠错选need=repair，不把认错变成自尊受损；对风格的调侃或审美比较可need=banter，不要把所有评价都判为答错或道歉义务。用户难过时先关照对方，不抢情绪主角。"""
 CLASSIFIER_PROMPT+='''\nconfidence表示对本轮语境分类的把握，不是亲密度，也不是人类情感的真实性。明确对AI说“你做事认真，我很欣赏”可为feedback/none/self，附recognition/pleased；不必因为它不是感谢帮助就降低把握或标target=none。纯夸奖不强行归thanks。
 “你自己决定做什么”是在给自主选择，不等于要求停止交流，通常need=none；只有明确结束、要独处或不要联系才用space。“我想听你的看法，不需要模仿”是澄清交流期待，不等于要求只听不说；listen留给明确想倾诉、先听或不要建议的语境。明确要求算数、查事实或处理任务时用practical。'''
+
+CLASSIFIER_PROMPT+='''\n可选continuity用于持续事项：仅当本轮原话明确提到具体正在进行或已解决的事时附 {"subject":"原句中的2至60字事项名","quote":"本轮逐字依据，最多160字","status":"open|eased|resolved|paused|abandoned|uncertain"}。例如“汇报已经讲完了”可提取subject=汇报、status=resolved。原句没有就不附加，不把模糊情绪、剧本、引用他人或假设写成当前人的经历；已经解决的事项不再当待办。'''
+CLASSIFIER_PROMPT+='''\n输入若提供本范围同一发言者的concerns，可在明确接续同一事项而省略名称时额外返回ref=其中精确id，subject沿用它的名称，quote仍是本轮逐字依据。不能借ref添加新事实，多个事项指代不清时不附加；别人的事项不能因当前人一句“好了”被解决。'''
 
 def classifier_input(text,contexts):
     history=[]

@@ -68,8 +68,10 @@ def main():
             if health():break
             time.sleep(1)
         else:raise RuntimeError('monitor_health_failed')
-        assert run(['python3','/usr/local/sbin/p1-healthcheck.py'],30).returncode==0,'existing_stack_health_failed'
-        (point/'committed').write_text(str(time.time()));report={'installed':True,'host':'127.0.0.1','port':6190,'sample_interval_seconds':5,'history_minutes':30,'chatbot_restarted':False,'existing_stack_healthy':True,'recovery_point':str(point),'production_memory_modified':False}
+        helper=Path('/usr/local/sbin/p1-healthcheck.py')
+        stack_checked=helper.is_file() and not helper.is_symlink()
+        if stack_checked:assert run(['python3',str(helper)],30).returncode==0,'existing_stack_health_failed'
+        (point/'committed').write_text(str(time.time()));report={'installed':True,'host':'127.0.0.1','port':6190,'sample_interval_seconds':5,'history_minutes':30,'chatbot_restarted':False,'existing_stack_healthy':True if stack_checked else None,'existing_stack_checked':stack_checked,'recovery_point':str(point),'production_memory_modified':False}
         (SOURCE.parents[1]/'evidence/resource-panel-install.json').write_text(json.dumps(report,indent=2));print(json.dumps(report))
     except BaseException:rollback(point);raise
 if __name__=='__main__':main()

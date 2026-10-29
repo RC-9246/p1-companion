@@ -189,7 +189,7 @@ class QQController:
    cfg=await asyncio.to_thread(agency.store.ensure,row['identity'])
    if cfg['paused'] or cfg['level']<3:return {'ok':False,'error':'autonomy_level_3_required'}
   if not self.allowed(row) or (proactive and quiet(time.time(),p)):return {'ok':False,'error':'not_available'}
-  id=await asyncio.to_thread(self.store.reserve,row,event,kind,time.time(),p,proactive,text)
+  id=await asyncio.to_thread(self.store.reserve,row,event,kind,time.time(),p,proactive,text,lane=auto_lane)
   if not id:return {'ok':False,'error':'duplicate_or_limit'}
   started=False
   try:
@@ -201,25 +201,25 @@ class QQController:
     if preflight:
      await asyncio.wait_for(preflight(),FORWARD_PREFLIGHT_TIMEOUT)
      current=await asyncio.to_thread(self.store.target,row['ref'])
-     if not current or current['generation']!=row['generation'] or not self.allowed(current) or (guard and not guard()):
+     if not modules_allowed() or (agency and agency.ready and (agency.store.ensure(row['identity'])['paused'] or agency.store.ensure(row['identity'])['level']<3)) or (not current or (proactive and not current['enabled']) or not current['alive'] or current['generation']!=row['generation'] or not self.allowed(current) or (proactive and quiet(time.time(),self.policy())) or (guard and not guard()) or (proactive and not self.autonomy_allowed(current,auto_lane))):
       await asyncio.to_thread(self.store.finish,id,'cancelled');return {'ok':False,'state':'cancelled'}
-    started=True;receipt=await self.api(action,**params)
-    if verify:
-     confirmed=await verify(receipt);mid='';state='sent' if confirmed else 'unknown'
-    else:
-     mid=receipt.get('message_id') if isinstance(receipt,dict) else None
-     state='sent' if isinstance(mid,(int,str)) and str(mid).lstrip('-').isdigit() and int(mid)!=0 else 'unknown'
-    native_file=receipt.get('file_id') if verify and isinstance(receipt,dict) and action.startswith('upload_') else None
-    receipt_ref='file:'+str(native_file) if native_file and state=='sent' else str(mid or '')
-    await asyncio.to_thread(self.store.finish,id,state,receipt_ref)
-    if state=='sent' and text and mid:
-     await asyncio.to_thread(self.store.observe,row['ref'],mid,row['bot'],'伙伴',text,False,0,0,time.time(),False)
-     if row['kind']=='group' and self.plugin.groups.memory:
-      m=self.plugin.groups.memory
-      scope=self.group_key(row['bot'],row['peer'])
-      await asyncio.to_thread(m.store.add,scope,hashlib.sha256((scope+'\0'+str(mid)).encode()).hexdigest()[:24],'saki','伙伴',text,time.time(),role='saki',recipient='')
-    await self.audit(kind,state)
-    return {'ok':state=='sent','state':state,'receipt_confirmed':state=='sent','do_not_retry':state=='unknown',**({'receipt_ref':receipt_ref} if receipt_ref else {})}
+   started=True;receipt=await self.api(action,**params)
+   if verify:
+    confirmed=await verify(receipt);mid='';state='sent' if confirmed else 'unknown'
+   else:
+    mid=receipt.get('message_id') if isinstance(receipt,dict) else None
+    state='sent' if isinstance(mid,(int,str)) and str(mid).lstrip('-').isdigit() and int(mid)!=0 else 'unknown'
+   native_file=receipt.get('file_id') if verify and isinstance(receipt,dict) and action.startswith('upload_') else None
+   receipt_ref='file:'+str(native_file) if native_file and state=='sent' else str(mid or '')
+   await asyncio.to_thread(self.store.finish,id,state,receipt_ref)
+   if state=='sent' and text and mid:
+    await asyncio.to_thread(self.store.observe,row['ref'],mid,row['bot'],'伙伴',text,False,0,0,time.time(),False)
+    if row['kind']=='group' and self.plugin.groups.memory:
+     m=self.plugin.groups.memory
+     scope=self.group_key(row['bot'],row['peer'])
+     await asyncio.to_thread(m.store.add,scope,hashlib.sha256((scope+'\0'+str(mid)).encode()).hexdigest()[:24],'saki','伙伴',text,time.time(),role='saki',recipient='')
+   await self.audit(kind,state)
+   return {'ok':state=='sent','state':state,'receipt_confirmed':state=='sent','do_not_retry':state=='unknown',**({'receipt_ref':receipt_ref} if receipt_ref else {})}
   except BaseException:
    await asyncio.to_thread(self.store.finish,id,'unknown' if started else 'cancelled');await self.audit(kind,'unknown' if started else 'cancelled');raise
  def plain(self,text):
@@ -509,8 +509,18 @@ class QQController:
   uid,sid=private_memory_keys(self.data,row['bot'],row['peer'])
   try:
    with closing(sqlite3.connect(path.as_uri()+'?mode=ro',uri=True,timeout=2)) as c:
-    values=c.execute("SELECT content FROM memoria_records WHERE status='active' AND confidence>=.7 AND ((user_id=? AND scope='user' AND scope_id=?) OR (user_id=? AND scope='session' AND scope_id=?) OR (user_id=? AND scope='relationship' AND scope_id=?)) ORDER BY updated_at DESC LIMIT 4",(uid,sid,'session:'+sid,sid,'relationship:'+uid+':'+sid,sid)).fetchall()
-   return [{'kind':'confirmed_memory','text':x} for (x,) in values if isinstance(x,str) and len(x)<=1200 and scrub(x)==x]
+    values=c.execute("SELECT content,confidence,updated_at FROM memoria_records WHERE status='active' AND ((user_id=? AND scope='user' AND scope_id=?) OR (user_id=? AND scope='session' AND scope_id=?) OR (user_id=? AND scope='relationship' AND scope_id=?)) ORDER BY updated_at DESC",(uid,sid,'session:'+sid,sid,'relationship:'+uid+':'+sid,sid)).fetchall()
+   try:from ..astrbot_plugin_memoria.memoria.utils import effective_confidence
+   except ImportError:from astrbot_plugin_memoria.memoria.utils import effective_confidence
+   plugin=getattr(self.plugin.context,'_p1_memoria',None)
+   decay=plugin._cfg('memory_decay_days',90) if plugin else 90
+   minimum=plugin._cfg('min_confidence',.55) if plugin else .55
+   result=[]
+   for text,confidence,updated in values:
+    eff=effective_confidence(confidence,updated,int(time.time()),decay)
+    if isinstance(text,str) and len(text)<=1200 and scrub(text)==text and eff>=minimum:result.append({'kind':'confirmed_memory','text':text,'updated_at':updated,'effective_confidence':round(eff,3)})
+    if len(result)>=4:break
+   return result
   except sqlite3.Error:return []
  async def validate_forward_parts(self,parts,depth,budget,*,cross=False):
   if isinstance(parts,str):parts=[{'type':'text','data':{'text':parts}}]

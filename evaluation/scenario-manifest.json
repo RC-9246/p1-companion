@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "development": {
+    "count": 20,
+    "source": "existing public diagnostics, not blind"
+  },
+  "holdout": {
+    "count": 60,
+    "source": "new original synthetic trajectories, author knows implementation; not independent human validation"
+  },
+  "sha256": {
+    "development.json": "7c05aef865635c5631fe9ddaeb0c59a317ab478c959e75d7de9466ef52da6c9e",
+    "holdout.json": "89c03151d7a0ccd8a862a966b13f2204b2b0386234eb34be8fe65b4a61fc1e37"
+  },
+  "contains_real_chats": false
+}

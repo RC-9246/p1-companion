@@ -17,15 +17,18 @@ CREATE TABLE IF NOT EXISTS p1_learning_items(id INTEGER PRIMARY KEY AUTOINCREMEN
 CREATE TABLE IF NOT EXISTS p1_learning_evidence(scope TEXT NOT NULL,kind TEXT NOT NULL,key TEXT NOT NULL,value TEXT NOT NULL,source TEXT NOT NULL,speaker TEXT NOT NULL,at REAL NOT NULL,PRIMARY KEY(scope,kind,key,value,source));
 CREATE TABLE IF NOT EXISTS p1_learning_revisions(id INTEGER PRIMARY KEY AUTOINCREMENT,item INTEGER NOT NULL,scope TEXT NOT NULL,old TEXT NOT NULL,action TEXT NOT NULL,at REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS p1_learning_checks(scope TEXT NOT NULL,event TEXT NOT NULL,item INTEGER NOT NULL,revision INTEGER NOT NULL,signal INTEGER NOT NULL,at REAL NOT NULL,PRIMARY KEY(scope,event,item));
+CREATE TABLE IF NOT EXISTS p1_learning_temporary(id INTEGER PRIMARY KEY AUTOINCREMENT,scope TEXT NOT NULL,key TEXT NOT NULL,value TEXT NOT NULL,quote TEXT NOT NULL,source TEXT NOT NULL,expires REAL NOT NULL,epoch INTEGER NOT NULL,updated REAL NOT NULL,UNIQUE(scope,key));
 ''')
  def meta(self,scope):
   checked(scope)
   with closing(self.db()) as c,c:
    c.execute('INSERT OR IGNORE INTO p1_learning_meta(scope) VALUES(?)',(scope,));return dict(c.execute('SELECT * FROM p1_learning_meta WHERE scope=?',(scope,)).fetchone())
- def record(self,scope,event,speaker,text,reply='',now=None):
+ def record(self,scope,event,speaker,text,reply='',now=None,expected_epoch=None):
   checked(scope);now=now or time.time()
   with closing(self.db()) as c,c:
+   c.execute('BEGIN IMMEDIATE')
    c.execute('INSERT OR IGNORE INTO p1_learning_meta(scope) VALUES(?)',(scope,))
+   if expected_epoch is not None and c.execute('SELECT epoch FROM p1_learning_meta WHERE scope=?',(scope,)).fetchone()[0]!=expected_epoch:return False
    if not c.execute('SELECT enabled FROM p1_learning_meta WHERE scope=?',(scope,)).fetchone()[0]:return False
    cur=c.execute('INSERT OR IGNORE INTO p1_learning_turns(scope,event,speaker,text,reply,at) VALUES(?,?,?,?,?,?)',(scope,event,speaker,text[:1200],reply[:800],now));inserted=bool(cur.rowcount)
    c.execute('DELETE FROM p1_learning_turns WHERE scope=? AND (at<? OR seq NOT IN (SELECT seq FROM p1_learning_turns WHERE scope=? ORDER BY seq DESC LIMIT 100))',(scope,now-30*86400,scope))
@@ -73,6 +76,22 @@ CREATE TABLE IF NOT EXISTS p1_learning_checks(scope TEXT NOT NULL,event TEXT NOT
    c.execute('DELETE FROM p1_learning_evidence WHERE at<?',(now-90*86400,))
    c.execute('DELETE FROM p1_learning_revisions WHERE scope=? AND id NOT IN (SELECT id FROM p1_learning_revisions WHERE scope=? ORDER BY id DESC LIMIT 100)',(scope,scope))
   return saved
+ def save_temporary(self,scope,epoch,items,now=None):
+  from .policy import PREFS,preference_matches,safe
+  checked(scope);now=time.time() if now is None else now
+  with closing(self.db()) as c,c:
+   c.execute('BEGIN IMMEDIATE');m=c.execute('SELECT epoch,enabled FROM p1_learning_meta WHERE scope=?',(scope,)).fetchone()
+   if not m or m['epoch']!=epoch or not m['enabled']:return []
+   for v in items:
+    if v['key'] not in PREFS or v['value'] not in PREFS[v['key']] or not safe(v['quote']) or not preference_matches(v['key'],v['value'],v['quote']) or not now<v['expires']<=now+86400:raise ValueError('temporary_preference_invalid')
+    c.execute('INSERT INTO p1_learning_temporary(scope,key,value,quote,source,expires,epoch,updated) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(scope,key) DO UPDATE SET value=excluded.value,quote=excluded.quote,source=excluded.source,expires=excluded.expires,epoch=excluded.epoch,updated=excluded.updated',(scope,v['key'],v['value'],v['quote'],v['source'],v['expires'],epoch,now))
+   c.execute('DELETE FROM p1_learning_temporary WHERE expires<=?',(now,))
+  return self.temporaries(scope,now)
+ def temporaries(self,scope,now=None):
+  checked(scope);now=time.time() if now is None else now
+  with closing(self.db()) as c:return [{'kind':'preference','id':-r['id'],'scope':scope,'key':r['key'],'value':r['value'],'quote':r['quote'],'source':r['source'],'updated':r['updated'],'revision':1,'confidence':1.,'status':'active','expires':r['expires']} for r in c.execute('SELECT t.* FROM p1_learning_temporary t JOIN p1_learning_meta m ON t.scope=m.scope AND t.epoch=m.epoch WHERE t.scope=? AND t.expires>? AND m.enabled=1 ORDER BY t.updated DESC',(scope,now))]
+ def clear_temporary(self,scope):
+  with closing(self.db()) as c,c:c.execute('DELETE FROM p1_learning_temporary WHERE scope=?',(checked(scope),))
  def control(self,scope,action,item=0):
   checked(scope);self.meta(scope)
   with closing(self.db()) as c,c:
@@ -80,7 +99,7 @@ CREATE TABLE IF NOT EXISTS p1_learning_checks(scope TEXT NOT NULL,event TEXT NOT
    if action in ('on','off'):
     c.execute('UPDATE p1_learning_meta SET enabled=? WHERE scope=?',(int(action=='on'),scope));return True
    if action=='clear':
-    for t in ('p1_learning_items','p1_learning_turns','p1_learning_evidence','p1_learning_revisions','p1_learning_checks'):c.execute('DELETE FROM '+t+' WHERE scope=?',(scope,))
+    for t in ('p1_learning_items','p1_learning_turns','p1_learning_evidence','p1_learning_revisions','p1_learning_checks','p1_learning_temporary'):c.execute('DELETE FROM '+t+' WHERE scope=?',(scope,))
     return True
    old=c.execute('SELECT * FROM p1_learning_items WHERE scope=? AND id=?',(scope,item)).fetchone()
    if not old:return False

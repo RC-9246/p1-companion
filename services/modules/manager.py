@@ -172,12 +172,42 @@ class Controller:
     def binding(self, name, obj):
         labels = obj.get('Config', {}).get('Labels') or {}
         files = labels.get('com.docker.compose.project.config_files', '').split(',')
+        owned=bool(files and all(p and U.root_path(p).is_relative_to(self.root) for p in files))
+        if not owned:
+            record=self.home/'adopted.json'
+            if record.is_file():
+                U.protected(self.home)
+                approved=U.read(record).get(name,{})
+                owned=approved.get('signature')==self.binding_signature(obj)
         U.need(obj.get('Name') == '/' + name and labels.get('com.docker.compose.service') and files
-               and all(U.root_path(p).is_relative_to(self.root) for p in files), 'foreign_module_container')
+               and owned, 'foreign_module_container')
         U.need(not obj['HostConfig'].get('Privileged') and obj['HostConfig'].get('NetworkMode') not in ('host', 'none'),
                'unsupported_module_container')
         U.need(obj.get('Image', '').startswith('sha256:'), 'module_image_invalid')
         return obj
+
+    @staticmethod
+    def binding_signature(obj):
+        host={k:v for k,v in obj.get('HostConfig',{}).items() if k!='RestartPolicy'}
+        return hashlib.sha256(json.dumps({'image':obj.get('Image'),'labels':obj.get('Config',{}).get('Labels'),'mounts':obj.get('Mounts'),'host':host},sort_keys=True).encode()).hexdigest()
+
+    def adopt_existing(self,names):
+        """Explicit administrator adoption; never inferred from a matching name."""
+        U.need(bool(names) and set(names)<=ALL_SERVICES,'module_service_denied')
+        self.home.mkdir(mode=0o700,parents=True,exist_ok=True);U.protected(self.home)
+        with U.exclusive(self.home/'operation.lock'),U.exclusive(U.lifecycle_lock(self.root)):
+            self.accept_core();v=self.current();U.need(v['state'] not in ('applying','rollback_blocked'),'module_operation_pending')
+            p=self.home/'adopted.json';records=U.read(p) if p.exists() else {}
+            for name in names:
+                obj=self.docker.inspect(name);U.need(obj is not None,'module_requires_setup')
+                labels=obj.get('Config',{}).get('Labels') or {};files=labels.get('com.docker.compose.project.config_files','').split(',')
+                U.need(obj.get('Name')=='/'+name and labels.get('com.docker.compose.service') and all(x and U.root_path(x).is_file() for x in files),'module_adoption_layout_invalid')
+                U.need(not obj['HostConfig'].get('Privileged') and obj['HostConfig'].get('NetworkMode') not in ('host','none'),'unsupported_module_container')
+                U.need(obj.get('Image','').startswith('sha256:'),'module_image_invalid')
+                self.docker.image(obj['Image'])
+                records[name]={'signature':self.binding_signature(obj),'container_id':obj['Id'],'at':time.time(),'explicit_administrator_adoption':True}
+            U.atom(p,records)
+            return {'state':'adopted','services':sorted(names),'runtime_changed':False}
 
     def accept_core(self):
         if (self.root/'.p1-companion-setup.json').exists():
@@ -187,7 +217,7 @@ class Controller:
             obj = self.docker.inspect(name)
             U.need(obj is not None, 'companion_core_required')
             labels = obj['Config'].get('Labels') or {}
-            U.need(labels.get('com.docker.compose.project.config_files') == str(self.root / name / 'compose.yaml'),
+            U.need(U.core_compose_layout(self.root,name,labels),
                    'core_root_mismatch')
         health = self.root / 'astrbot/data/plugin_data/affect/companion_health.json'
         U.need(health.is_file() and U.read(health).get('module_policy_schema') == 1, 'runtime_module_upgrade_required')
@@ -271,7 +301,7 @@ class Controller:
     def apply(self, selected, remove=False):
         self.home.mkdir(mode=0o700, parents=True, exist_ok=True)
         U.protected(self.home)
-        with U.exclusive(self.home / 'operation.lock'):
+        with U.exclusive(self.home / 'operation.lock'), U.exclusive(U.lifecycle_lock(self.root)):
             self.accept_core()
             previous = self.current()
             U.need(previous['state'] not in ('applying', 'rollback_blocked'), 'module_operation_pending')
@@ -339,6 +369,10 @@ class Controller:
                     for name in SERVICES.get(key, ()):
                         if name in bindings:
                             before = point['before_services'][name]
+                            if before['exists'] and not before['running'] and self.docker.inspect(name) is None:
+                                row=bindings[name];original=row['container']
+                                spec=U.create_spec(original,row['image'],row['image'],original['Image'],'module-manager')
+                                self.docker.create(name,spec)
                             self.service(name, before['running'], bindings, remove=not before['exists'])
                             if before.get('restart') is not None and self.docker.inspect(name):
                                 self.docker.restart_policy(name, before['restart'])
@@ -355,7 +389,7 @@ class Controller:
     def recover(self, manual=False):
         if not (self.home / 'state.json').exists():
             return {'state': 'unconfigured'}
-        with U.exclusive(self.home / 'operation.lock'):
+        with U.exclusive(self.home / 'operation.lock'), U.exclusive(U.lifecycle_lock(self.root)):
             v = self.current()
             if v['state'] == 'applying' or (manual and v['state']=='rollback_blocked'):
                 self.rollback(v,manual)
@@ -365,7 +399,8 @@ class Controller:
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--root', default='/srv/p1-agent')
-    p.add_argument('action', choices=('catalog', 'status', 'plan', 'apply', 'remove', 'recover','rollback'), default='catalog', nargs='?')
+    p.add_argument('action', choices=('catalog', 'status', 'plan', 'apply', 'remove', 'recover','rollback','adopt'), default='catalog', nargs='?')
+    p.add_argument('--services',help='Exact reviewed optional container names to adopt, comma separated')
     p.add_argument('--only', help='Comma-separated final selection; dependencies are added')
     p.add_argument('--disable', help='Disable these modules and their dependents')
     p.add_argument('--profile', choices=('chat', 'companion', 'tools', 'full'))
@@ -376,7 +411,9 @@ def main():
         else:
             U.need(os.geteuid() == 0 and sys.platform.startswith('linux'), 'linux_root_required')
             c = Controller(a.root)
-            if a.action == 'status':
+            if a.action == 'adopt':
+                result=c.adopt_existing((a.services or '').split(','))
+            elif a.action == 'status':
                 result = c.status()
             elif a.action in ('recover','rollback'):
                 result = c.recover(a.action=='rollback')

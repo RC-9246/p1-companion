@@ -1,6 +1,6 @@
 name: astrbot_plugin_p1_stickers
 display_name: P1 伙伴表情 · MemeManagerLite 适配
 desc: 已审核贴图标签选择与统一发送门控
-version: v0.16.0
+version: v0.21.0
 author: p1-local / ctrlkk
 astrbot_version: ">=4.29,<5"

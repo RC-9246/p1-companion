@@ -68,10 +68,11 @@ def update_thread(s,previous,now,a):
  if not signal or (previous.get('last_event_at') and now<=previous['last_event_at']):return
  if old and old['source_hash']==signal['source_hash']:return
  # Fast-turn emotions can change without awarding new trust/familiarity.
- strength=min(.8,.35+.35*a.get('confidence',0))
+ impact=clamp(x.get('intensity',a.get('evaluation',{}).get('importance',.5)))
+ strength=min(.8,.2+.6*impact)
  s['thread']={**signal,'strength':strength,'started_at':max(now,previous['updated_at']),
               'last_at':max(now,previous['updated_at']),'remaining_turns':6}
- gain=.045*a.get('confidence',0)
+ gain=.045*a.get('confidence',0)*(.5+impact)
  if signal['feeling'] in ('pleased','touched','embarrassed','relieved'):s['joy']+=gain;s['valence']+=gain*.4
  if signal['feeling'] in ('touched','embarrassed','hesitant'):s['tenderness']+=gain*.5
  if signal['feeling'] in ('competitive','frustrated'):s['arousal']+=gain;s['agency']+=gain*.3

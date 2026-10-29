@@ -46,8 +46,8 @@ class AgencyPersistence(unittest.TestCase):
   self.s.learn_interest(I,'music',1,'receipt:1');self.assertGreater(self.s.interests(I)[0]['score'],.5);self.assertTrue(all(x['score']==.5 for x in self.s.interests(J)))
   with self.assertRaises(ValueError):self.s.learn_interest(I,'music',float('nan'),'receipt')
   with self.assertRaises(ValueError):self.s.learn_interest(I,'music',1,'')
- def test_interest_join_switch_cooldown_and_group_isolation(self):
-  self.assertTrue(self.s.join(G,time.time(),True));self.assertFalse(self.s.join(G,time.time()+1));self.assertTrue(self.s.join(G,time.time()+1201))
+ def test_interest_admission_has_no_delivery_charge_and_remains_scoped(self):
+  self.assertTrue(self.s.join(G,time.time(),True));self.assertTrue(self.s.join(G,time.time()+1));self.assertEqual(self.s.ensure(G)['last_join'],0)
   self.s.config(G,interest_join=0);self.assertFalse(self.s.join(G,time.time()+3000));self.assertTrue(self.s.join('g1:'+'d'*64,time.time()))
  def test_reply_routes_upgrade_preserves_old_closed_scope(self):
   self.s.config(G,interest_join=0)
