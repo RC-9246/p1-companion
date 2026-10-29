@@ -144,7 +144,7 @@ class Groups:
         if str(event.message_obj.message_str).lstrip().startswith('/') or not any(isinstance(c,(Plain,Image,Json)) for c in event.get_messages()):return False
         if quiet(time.time(),qq.policy()):return False
         row=await asyncio.to_thread(qq.store.target,qq.event_ref(event))
-        if not row or not qq.allowed(row) or not qq.autonomy_allowed(row,'native') or not qq.store.can_action(row,time.time(),qq.policy(),True):return False
+        if not row or not qq.allowed(row) or not qq.autonomy_allowed(row,'native') or not qq.store.can_action(row,time.time(),qq.policy(),True,lane='native'):return False
         try:
             raw=self.plugin.context.get_config(umo=event.unified_msg_origin)['provider_ltm_settings']['active_reply']
             probability=raw.get('possibility_reply',0)
@@ -382,11 +382,17 @@ class Groups:
             if auto_lane and not event.get_extra('_p1_interest_reserved'):
                 qq=self.plugin.qq;row=await asyncio.to_thread(qq.store.target,qq.event_ref(event))
                 if not row or not qq.autonomy_allowed(row,auto_lane):event.set_extra('_p1_send_cancelled',True);return
-                interest_reservation=await asyncio.to_thread(qq.store.reserve,row,auto_lane+':'+str(event.message_obj.message_id),'message',time.time(),qq.policy(),True,text)
+                interest_reservation=await asyncio.to_thread(qq.store.reserve,row,auto_lane+':'+str(event.message_obj.message_id),'message',time.time(),qq.policy(),True,text,lane=auto_lane)
                 if not interest_reservation:event.set_extra('_p1_send_cancelled',True);return
                 event.set_extra('_p1_interest_reserved',interest_reservation)
+            if not self.valid(event):
+                if interest_reservation:await asyncio.to_thread(self.plugin.qq.store.finish,interest_reservation,'cancelled')
+                event.set_extra('_p1_send_cancelled',True);return
+            from .module_policy import enabled
+            if appended and not enabled(self.data,'stickers'):
+                payload=[part for part in payload if part.get('type')!='image'];appended=False
             receipt=await asyncio.wait_for(platform.get_client().send_group_msg(group_id=int(event.get_group_id()),message=payload),15)
-            if not isinstance(receipt,dict) or not str(receipt.get('message_id','')).lstrip('-').isdigit():raise ValueError('group_receipt_missing')
+            if not isinstance(receipt,dict) or not str(receipt.get('message_id','')).lstrip('-').isdigit() or int(receipt['message_id'])==0:raise ValueError('group_receipt_missing')
             if interest_reservation:await asyncio.to_thread(self.plugin.qq.store.finish,interest_reservation,'sent',str(receipt['message_id']))
         except BaseException:
             if event.get_extra('_p1_interest_reserved'):await asyncio.to_thread(self.plugin.qq.store.finish,event.get_extra('_p1_interest_reserved'),'unknown')
@@ -394,6 +400,8 @@ class Groups:
             if appended:await asyncio.to_thread(self.affect.store.reaction_done,p['scope'],p['event'],False)
             raise
         event._has_send_oper=True
+        event.set_extra('_p1_verified_receipts',[*event.get_extra('_p1_verified_receipts',[]),str(receipt['message_id'])][-8:])
+        event.set_extra('_p1_verified_sent_text',[*event.get_extra('_p1_verified_sent_text',[]),text][-8:])
         if p:p['ack']=True
         if appended:await asyncio.to_thread(self.affect.store.reaction_done,p['scope'],p['event'],True)
         v=self.state.groups.get(scope(event))
@@ -439,6 +447,13 @@ class Groups:
             elif mode=='关闭':rows=[x for x in rows if x!=row]
             elif row not in rows:return '这个群尚未开启，没有清空任何记录'
             atomic_json(self.data/'groups.json',{'version':1,'groups':rows})
+            if mode in ('关闭','清空') and self.plugin.qq:
+                from .qq_policy import reference
+                target=reference('t','group',row['bot'],group)
+                if mode=='清空':await asyncio.to_thread(self.plugin.qq.store.clear_target,target)
+                else:
+                    current=await asyncio.to_thread(self.plugin.qq.store.target,target)
+                    if current:await asyncio.to_thread(self.plugin.qq.store.toggle,target,bool(current['enabled']))
             self.state.forget((row['bot'],group));self.pending.pop((row['bot'],group),None)
             if self.memory:
                 key=self.memory.key(type('Scope',(),{'get_self_id':lambda _:row['bot'],'get_group_id':lambda _:group})())

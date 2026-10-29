@@ -4,6 +4,7 @@ from pathlib import Path
 from types import SimpleNamespace as NS
 R=Path(__file__).resolve().parents[1];sys.path[:0]=[str(R/'release'),str(R/'tests')]
 from test_companion import init_db
+from neutral_assets import expanded
 from astrbot.core.message.components import Plain,At,Reply
 from astrbot.core.message.message_event_result import MessageChain,MessageEventResult
 from astrbot.core.platform.message_type import MessageType
@@ -12,7 +13,7 @@ from astrbot.core.agent.tool import ToolSet,FunctionTool
 
 async def run():
  with tempfile.TemporaryDirectory() as tmp:
-  d=Path(tmp)/'affect';d.mkdir();os.environ['P1_COMPANION_DATA']=str(d);init_db(d/'affect.db')
+  d=Path(tmp)/'affect';d.mkdir();os.environ['P1_COMPANION_DATA']=str(d);init_db(d/'affect.db');expanded(d/'reviewed_assets')
   from astrbot_plugin_affect.identity import make_identity_key
   from astrbot_plugin_affect.main import AffectPlugin,authorized,atomic_json
   from astrbot_plugin_affect.private_access import companion_identity
@@ -40,6 +41,7 @@ async def run():
     else:raw=dict(intent='casual',emotion='sad' if '难过' in text else 'happy',relation='none',target='user',confidence=.95)
     return NS(choices=[NS(message=NS(content=json.dumps(raw)))])
    async def send_group_msg(self,**kw):sends.append(kw);return {'message_id':90000+len(sends)}
+   async def send_private_msg(self,**kw):sends.append(kw);return {'message_id':90000+len(sends)}
   client=Client()
   class Context:
    def __init__(self):self._event_queue=asyncio.Queue()
@@ -118,7 +120,9 @@ async def run():
    config['platform_settings']['id_whitelist'].append('qq_snowluma:FriendMessage:20005');p.reply_pause=pause
    # Fast explicit preferences change immediately after actual synthetic delivery, even in one minute.
    async def learn_private(text,sender='20003',fail=False):
-    ev=Event(text,sender=sender);await p.inject_state_into_llm(ev,ProviderRequest(prompt=text));await p.mark_response(ev,LLMResponse(role='assistant',completion_text='嗯'))
+    ev=Event(text,sender=sender);req=ProviderRequest(prompt=text)
+    await p.inject_state_into_llm(ev,req);await learning.private_prompt(ev,req)
+    await p.mark_response(ev,LLMResponse(role='assistant',completion_text='嗯'))
     if not fail:
      await ev.send(MessageChain([Plain('嗯')]))
      await p.commit_after_delivery(ev)

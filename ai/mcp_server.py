@@ -33,9 +33,9 @@ def create_server(live_root=None):
         return verify()
 
     @server.tool(annotations=annotations)
-    def p1_deployment_plan(root:str='/srv/p1-agent')->dict:
-        """Return command arrays for a standard first install. Never executes them or grants permission."""
-        try: return plan(root)
+    def p1_deployment_plan(root:str='/srv/p1-agent',mode:str='fresh_host')->dict:
+        """Return command arrays for fresh_host, existing_core or existing_companion. Never executes them or grants permission."""
+        try: return plan(root,mode)
         except AccessError: return {'ok':False,'error':'invalid_plan_root','writes':False}
 
     @server.tool(annotations=annotations)

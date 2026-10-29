@@ -178,10 +178,12 @@ def materialize(source, dest, root):
         content = src.read_bytes()
         if rel in manifest:
             check(hashlib.sha256(content).hexdigest() == manifest[rel], 'source_changed_during_staging')
-        text = content.decode('utf-8')
         if src.suffix in ('.py', '.yaml', '.service', '.timer', '.json'):
+            text = content.decode('utf-8')
             text = text.replace('/srv/p1-agent', str(root)).replace('/home/p1admin/p1-agent', str(root))
-        target.write_text(text); target.chmod(0o644)
+            target.write_text(text)
+        else:target.write_bytes(content)
+        target.chmod(0o644)
 
 # A child cannot mutate until its PID/start time is durably journaled.
 GATE = 'import os,sys; b=sys.stdin.buffer.read(1); sys.exit(125) if b!=b"G" else os.execvp(sys.argv[1],sys.argv[1:])'
@@ -230,7 +232,8 @@ def backup_paths(root):
     data = root/'astrbot/data'
     return [data/'cmd_config.json', data/'mcp_server.json',
             *[data/'plugins'/name for name in PLUGINS], root/'public-browser',
-            *[data/name for name in ('companion_services', 'companion_v020_lab', 'companion_workflows', 'plugin_data/affect')]]
+            *[data/name for name in ('companion_services', 'companion_v020_lab', 'companion_workflows')],
+            *[data/'plugin_data/affect'/name for name in ('allowed_identities.json','groups.json','social_policy.json','qq_policy.json','browser_token','leisure_token','workbench_token','browser_policy','leisure_policy','reviewed_assets')]]
 
 def snapshot(job):
     root = Path(job.state['root']); records = []
@@ -240,6 +243,8 @@ def snapshot(job):
             if parent == root: break
             check(not parent.is_symlink(), 'managed_parent_symlink_denied')
         record = {'path': str(p), 'exists': p.exists(), 'slot': str(n)}
+        if p.exists():
+            record['metadata']=[{'path':str(q.relative_to(p)),'uid':q.lstat().st_uid,'gid':q.lstat().st_gid,'mode':q.lstat().st_mode&0o777} for q in ([p,*p.rglob('*')] if p.is_dir() else [p])]
         dest = job.path/'before'/str(n)
         if p.is_dir(): shutil.copytree(p, dest, symlinks=True)
         elif p.exists(): dest.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(p, dest)
@@ -250,15 +255,51 @@ def restore_paths(job):
     allowed = {str(p) for p in backup_paths(Path(job.state['root']))}
     for row in job.state.get('before', []):
         p = Path(row['path']); check(str(p) in allowed, 'rollback_path_denied')
+        check(str(row['slot']).isdigit(),'rollback_slot_invalid')
+        if row.get('restore_phase')=='done':continue
         dest = job.path/'replaced'/row['slot']
-        if p.exists() or p.is_symlink():
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            check(not dest.exists(), 'rollback_already_replaced')
-            os.replace(p, dest)
         old = job.path/'before'/row['slot']
+        if row.get('restore_phase') not in ('displacing','restoring'):
+            row['restore_phase']='displacing';row['restore_had_current']=p.exists() or p.is_symlink();job.save()
+        if row['restore_phase']=='displacing':
+            if row['restore_had_current'] and not (dest.exists() or dest.is_symlink()):
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                check(p.exists() or p.is_symlink(),'rollback_current_missing')
+                os.replace(p,dest)
+            row['restore_phase']='restoring';job.save()
         if row['exists']:
-            if old.is_dir(): shutil.copytree(old, p, symlinks=True)
-            else: p.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(old, p)
+            stage=job.path/'restore-staging'/row['slot'];stage.parent.mkdir(parents=True,exist_ok=True)
+            if stage.exists():
+                if stage.is_dir():shutil.rmtree(stage)
+                else:stage.unlink()
+            if old.is_dir():shutil.copytree(old,stage,symlinks=True)
+            else:shutil.copy2(old,stage)
+            restore_metadata(stage,row.get('metadata',[]))
+            if p.exists() or p.is_symlink():
+                check(tree_signature(p)==tree_signature(old),'rollback_post_restore_changes')
+                restore_metadata(p,row.get('metadata',[]))
+                if stage.is_dir():shutil.rmtree(stage)
+                else:stage.unlink()
+            else:p.parent.mkdir(parents=True,exist_ok=True);os.replace(stage,p)
+        row['restore_phase']='done';job.save()
+
+def restore_metadata(base,entries):
+    check(isinstance(entries,list) and len(entries)<=100000,'rollback_metadata_invalid')
+    for row in entries:
+        rel=Path(row['path']);check(not rel.is_absolute() and '..' not in rel.parts,'rollback_metadata_path')
+        check(all(type(row[k]) is int and 0<=row[k]<2**31 for k in ('uid','gid')) and type(row['mode']) is int and 0<=row['mode']<=0o777,'rollback_metadata_invalid')
+        q=base/rel
+        check(not any(parent.is_symlink() for parent in q.parents if parent!=base and base in parent.parents),'rollback_metadata_parent_link')
+        st=q.lstat()
+        if (st.st_uid,st.st_gid)!=(row['uid'],row['gid']):os.chown(q,row['uid'],row['gid'],follow_symlinks=False)
+        if not q.is_symlink():q.chmod(row['mode'])
+
+def tree_signature(path):
+    path=Path(path);rows=[]
+    for p in sorted([path,*path.rglob('*')] if path.is_dir() and not path.is_symlink() else [path]):
+        rel=str(p.relative_to(path))
+        rows.append((rel,'link',os.readlink(p)) if p.is_symlink() else (rel,'dir','') if p.is_dir() else (rel,'file',hashlib.sha256(p.read_bytes()).hexdigest()))
+    return hashlib.sha256(json.dumps(rows).encode()).hexdigest()
 
 @contextlib.contextmanager
 def deploy_lock(root):
@@ -314,8 +355,11 @@ def watchdog(path):
             return
         time.sleep(2)
 
-def apply(root, bot, owner, source=SOURCE, social=False):
+def apply(root, bot, owner, source=SOURCE, social=False,asset_pack=None):
     check(os.geteuid() == 0, 'apply_requires_sudo')
+    if asset_pack:
+        from asset_pack import Catalog
+        Catalog(asset_pack)
     with deploy_lock(root):
         report = doctor(root, source)
         check(report['ok'], 'preflight_failed:'+','.join(report['errors']))
@@ -366,6 +410,9 @@ def apply(root, bot, owner, source=SOURCE, social=False):
             cmd = [sys.executable, str(generated/'scripts/bootstrap.py'), '--root', str(root), '--bot-id', bot, '--owner-id', owner, '--apply']
             if social: cmd.append('--enable-social')
             job.command('install_plugins_and_config', cmd)
+            if asset_pack:
+                from asset_pack import install_pack
+                install_pack(asset_pack,root/'astrbot/data/plugin_data/affect')
             for project in ('p1-companion', 'p1-workbench', 'p1-leisure'):
                 job.command('start_'+project, compose(root, project, ['up', '-d', '--pull', 'never']))
             job.command('initialize_workflows', [sys.executable, str(generated/'scripts/setup_workflows.py')], 900)
@@ -401,6 +448,7 @@ def parser():
     p.add_argument('--check', action='store_true', help='只读环境诊断')
     p.add_argument('--apply', action='store_true', help='安装；失败恢复源码、配置与核心镜像，保留数据库')
     p.add_argument('--enable-social', action='store_true', help='首次安装开启白名单自主社交，默认关闭')
+    p.add_argument('--asset-pack',type=Path,help='已人工审核的私有表情包目录，不修改公开源码')
     p.add_argument('--status', action='store_true', help='查看本安装器的最后一次成功安装和容器状态')
     p.add_argument('--rollback', type=Path, help='恢复最近一次安装；拒绝覆盖安装后的配置/源码修改')
     p.add_argument('--watchdog', help=argparse.SUPPRESS)
@@ -451,7 +499,7 @@ def main():
                 owner = owner or input('主人 QQ 号：').strip()
             check(bool(bot and owner), 'provide_bot_id_and_owner_id')
             identity(bot); identity(owner); check(bot != owner, 'bot_and_owner_must_differ')
-            print(json.dumps(apply(root, bot, owner, social=a.enable_social), ensure_ascii=False, indent=2)); return 0
+            print(json.dumps(apply(root, bot, owner, social=a.enable_social,asset_pack=a.asset_pack), ensure_ascii=False, indent=2)); return 0
         report = doctor(root)
         print(json.dumps(report, ensure_ascii=False, indent=2))
         print('检查通过后：sudo bash deploy.sh --apply --bot-id 你的机器人QQ --owner-id 你的QQ')

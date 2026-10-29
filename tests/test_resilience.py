@@ -3,8 +3,16 @@ from pathlib import Path
 R=Path(__file__).resolve().parents[1];sys.path.insert(0,str(R/'services/maintenance'))
 import resilience as M
 class RecoveryTests(unittest.TestCase):
- def setUp(self):self.t=tempfile.TemporaryDirectory();self.root=Path(self.t.name)
+ def setUp(self):self.t=tempfile.TemporaryDirectory();self.root=Path(self.t.name).resolve()
  def tearDown(self):self.t.cleanup()
+ def test_optional_guardian_control_files_are_restorable_after_deletion(self):
+  cp=self.root/'trusted';cp.mkdir();files={};manifest={};metadata={}
+  for key,unused in M.candidate_fixed(self.root).items():
+   target=self.root/'installed'/key;target.parent.mkdir(exist_ok=True);source=cp/key;source.write_bytes(b'synthetic sealed control file');manifest[key]=M.digest(source);files[key]=target
+   metadata[key]={'uid':__import__('os').getuid(),'gid':__import__('os').getgid(),'mode':0o444 if 'kit' in key else 0o600}
+  self.assertEqual(set(M.restore_fixed(files,cp,manifest,metadata)),set(files))
+  self.assertFalse(M.restore_fixed(files,cp,manifest,metadata))
+  for key,path in files.items():self.assertEqual(path.stat().st_mode&0o777,metadata[key]['mode'])
  def test_source_recovery_requires_exact_hash_and_known_module(self):
   cp=self.root/'checkpoint';live=self.root/'live';p=cp/'astrbot_plugin_affect/main.py';p.parent.mkdir(parents=True);p.write_text('known good');manifest={'astrbot_plugin_affect/main.py':M.digest(p)}
   self.assertEqual(len(M.restore_sources(live,cp,manifest)),1);self.assertEqual((live/'astrbot_plugin_affect/main.py').read_text(),'known good')

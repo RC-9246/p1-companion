@@ -137,9 +137,11 @@ class TransactionTests(unittest.TestCase):
         self.docker = FakeDocker(self.root)
         self.system = FakeSystem(self.root)
         self.engine = U.Engine(self.root, self.docker, self.system)
-        self.engine.poll = .0001
-        self.engine.boot_wait = .004
-        self.engine.canary_wait = .004
+        # Exercise all three health samples on slower ARM hosts too. These are
+        # fake transports; sub-millisecond wall deadlines only test CPU timing.
+        self.engine.poll = .005
+        self.engine.boot_wait = .3
+        self.engine.canary_wait = .3
         self.engine.watch_seconds = 0
         patches = [patch.object(U, 'catalog', return_value={'versions': [{'version': 'v4.29.3'}]}),
                    patch.object(self.engine, 'resolve', return_value=NEW),

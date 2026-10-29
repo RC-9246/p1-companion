@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Closed-action whole-stack recovery. Neither shell commands nor paths come from a model."""
-import fcntl,hashlib,json,os,sqlite3,subprocess,sys,time,shutil
+import fcntl,hashlib,json,os,sqlite3,stat,subprocess,sys,time,shutil
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent));sys.path.insert(0,'/usr/local/lib/p1-companion')
-from resilience import SERVICES,restore_sources,restore_database,valid_db,snapshot_database,repair_policy_file,maintenance_plan,restore_fixed,fixed_dependents
+from resilience import SERVICES,restore_sources,restore_database,valid_db,snapshot_database,repair_policy_file,maintenance_plan,restore_fixed,fixed_dependents,atomic_bytes,candidate_source_exclusions,candidate_fixed
 BASE=Path('/srv/p1-agent');AST=BASE/'astrbot/data';DATA=AST/'plugin_data/affect';STATE=DATA/'maintenance_state.json';RECOVERY=Path('/var/lib/p1-companion/recovery/current')
 MODULE_POLICY_SCHEMA=1
 def module_disabled_services(base=BASE,policy_root=Path('/var/lib/p1-companion-modules')):
@@ -32,6 +32,7 @@ FIXED={'mcp_server':AST/'companion_services/mcp/server.py',**{'internal_'+name:D
  'backup_agency':Path('/usr/local/sbin/p1-companion-backup-agency.py'),'backup_dbs':Path('/usr/local/sbin/p1-backup-dbs'),'core_health':Path('/usr/local/sbin/p1-healthcheck.py'),
  **{'unit_'+name.replace('.','_'):Path('/etc/systemd/system')/name for name in ('p1-companion-maintain.service','p1-companion-maintain.timer','p1-companion-watchdog.service','p1-companion-watchdog.timer')},
  **{'compose_'+key:row[0] for key,row in COMPOSE.items()}}
+FIXED.update(candidate_fixed(BASE))
 def recover_service(name,force_recreate=False):
  if name not in SERVICES:raise ValueError('unknown_service')
  inspected=run(['docker','inspect',name,'--format','{{.Id}}'])
@@ -45,7 +46,7 @@ def recover_service(name,force_recreate=False):
 
 def run(args,timeout=15):return subprocess.run(args,capture_output=True,text=True,timeout=timeout)
 def atomic(path,data):
- p=path.with_name(path.name+'.next');p.write_text(json.dumps(data,sort_keys=True));p.chmod(0o600);os.replace(p,path)
+ atomic_bytes(path,json.dumps(data,sort_keys=True).encode())
 def read(path,default):
  try:return json.loads(Path(path).read_text())
  except (OSError,ValueError):return default
@@ -56,7 +57,11 @@ def healthy(name):
  v=json.loads(r.stdout);ok=v.get('Running') is True and v.get('Health',{}).get('Status','healthy')=='healthy' and not v.get('OOMKilled')
  if name=='astrbot' and ok:
   try:
-   stamp=read(DATA/'companion_health.json',{});ok=all(stamp.get(k) for k in ('group_memory_ready','group_affect_ready','learning_ready','qq_plain_ready','agency_ready'))
+   stamp=read(DATA/'companion_health.json',{})
+   started=v.get('StartedAt')
+   from datetime import datetime
+   after=datetime.fromisoformat(started.replace('Z','+00:00')).timestamp() if started else 0
+   ok=stamp.get('phase') in ('ready','serving') and max(after,time.time()-300)<=stamp.get('at',0)<=time.time()+10 and all(stamp.get(k) is True for k in ('group_memory_ready','group_affect_ready','learning_ready','qq_plain_ready','agency_ready'))
   except Exception:ok=False
  return ok
 
@@ -89,11 +94,24 @@ def ensure_databases(state,now,repairs):
   selected={k:next((q/(k+'.db') for q in candidates if valid_db(q/(k+'.db'),DBS[k][1])),None) for k in bad}
   # No corrupt backup is ever promoted. Keep live state untouched if none validates.
   if all(selected.values()):
-   run(['docker','stop','--time','10','astrbot'],45);point=snapshot('databases',now)
    try:
+    initial=run(['docker','inspect','astrbot','--format','{{json .}}'])
+    before=json.loads(initial.stdout) if initial.returncode==0 else {}
+    if not before.get('Id') or type(before.get('State',{}).get('Running')) is not bool:raise ValueError('container_not_verified')
+    stopped=run(['docker','stop','--time','10','astrbot'],45)
+    check=run(['docker','inspect','astrbot','--format','{{json .}}'])
+    current=json.loads(check.stdout) if check.returncode==0 else {}
+    if stopped.returncode or current.get('Id')!=before['Id'] or current.get('State',{}).get('Running') is not False:raise ValueError('stop_not_verified')
+   except (ValueError,OSError,subprocess.SubprocessError):
+    repairs.append({'module':'database','state':'stop_not_verified','restored':False});return integrity
+   try:
+    point=snapshot('databases',now)
     for k in bad:
      result=restore_database(DBS[k][0],selected[k],point/'quarantine',DBS[k][1],now);repairs.append({'module':k,**result});entry=state['db-'+k];entry['last_repair']=now;entry['repairs'].append(now)
-   finally:run(['docker','start','astrbot'],25)
+   finally:
+    if before['State']['Running']:
+     started=run(['docker','start','astrbot'],25)
+     if started.returncode:repairs.append({'module':'database','state':'restart_failed','restored':False})
   else:repairs.append({'module':'database','state':'no_verified_backup','restored':False})
  # Snapshot only healthy databases, in six-hour generations, fourteen retained.
  if not bad and now-state.get('_last_verified_backup',0)>21600:
@@ -126,8 +144,13 @@ def resources():
  return {**maintenance_plan(available,shutil.disk_usage(DATA).free//1048576,temperature,clock_skew),'uptime':float(Path('/proc/uptime').read_text().split()[0])}
 def main():
  os.umask(0o077);DATA.mkdir(parents=True,exist_ok=True)
- with (DATA/'maintenance.lock').open('w') as lock:
-  try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+ def open_lock(path):
+  if any(p.is_symlink() for p in path.parents):raise ValueError('lock_parent_link')
+  fd=os.open(path,os.O_RDWR|os.O_CREAT|getattr(os,'O_NOFOLLOW',0),0o600)
+  if not stat.S_ISREG(os.fstat(fd).st_mode) or os.fstat(fd).st_nlink!=1:os.close(fd);raise ValueError('lock_untrusted')
+  return os.fdopen(fd,'a')
+ with open_lock(DATA/'lifecycle.lock') as lifecycle, open_lock(DATA/'maintenance.lock') as lock:
+  try:fcntl.flock(lifecycle,fcntl.LOCK_EX|fcntl.LOCK_NB);fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
   except BlockingIOError:return
   state=read(STATE,{});now=time.time();repairs=[];integrity={};request=read(DATA/'maintenance_request.json',{});(DATA/'maintenance_request.json').unlink(missing_ok=True);disabled=(DATA/'maintenance.disabled').exists()
   module_off,module_policy_valid=module_disabled_services()
@@ -137,12 +160,15 @@ def main():
     if repaired_fixed:
      repairs.append({'module':'fixed_services','files':repaired_fixed})
      if any(k.startswith('unit_') for k in repaired_fixed):run(['systemctl','daemon-reload']);run(['systemctl','enable','--now','p1-companion-maintain.timer','p1-companion-watchdog.timer'])
+     if any(k.startswith('unit_p1-companion-candidates_') for k in repaired_fixed):run(['systemctl','enable','--now','p1-companion-candidates.timer'])
      for service in fixed_dependents(repaired_fixed):
       if service not in module_off:run(['docker','restart','--time','8',service],45)
    except (ValueError,OSError):repairs.append({'module':'fixed_services','state':'checkpoint_rejected'})
    manifest=read(RECOVERY/'manifest.json',{})
    if manifest:
     try:
+     exclusions=candidate_source_exclusions(BASE,manifest)
+     manifest={k:v for k,v in manifest.items() if k not in exclusions}
      fixed=restore_sources(AST/'plugins',RECOVERY/'plugins',manifest)
      if fixed:
       repairs.append({'module':'plugin_sources','restored_files':len(fixed),'verified_snapshot':True});run(['docker','restart','--time','10','astrbot'],45)

@@ -60,6 +60,8 @@ def remove_managed_source(source):
         if any(q.is_symlink() for q in (p,*p.parents)) or not p.is_file():retained+=1;continue
         if hashlib.sha256(p.read_bytes()).hexdigest()!=digest:retained+=1;continue
         candidates.append(p);dirs.update(q for q in p.parents if q!=source and q.is_relative_to(source))
+    extra=[p for p in source.rglob('*') if p.is_file() and str(p.relative_to(source)) not in manifest and p not in (manifest_path,marker)]
+    retained+=len(extra)
     for p in candidates:p.unlink()
     if not retained:
         manifest_path.unlink();marker.unlink()

@@ -1,79 +1,52 @@
-import importlib.util
-import json
+"""Current deployment rollback contracts; real files and SQLite, no live daemon."""
+import json,os,sys,tempfile,time,sqlite3,unittest
 from pathlib import Path
-import tempfile
-import unittest
-import sqlite3,time
-from types import SimpleNamespace
 from unittest.mock import patch
-
-spec=importlib.util.spec_from_file_location('v09_rollout',Path(__file__).resolve().parents[1]/'tools/deploy.py')
-rollout=importlib.util.module_from_spec(spec)
-spec.loader.exec_module(rollout)
-
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'deploy'))
+import install as rollout
 class RolloutSafetyTests(unittest.TestCase):
-    def test_group_enrollment_policy_is_reversible(self):
-        with tempfile.TemporaryDirectory() as t:
-            root=Path(t);data=root/'data';point=root/'point'
-            active=data/'plugin_data/affect/groups.json';saved=point/'config/plugin_data/affect/groups.json'
-            active.parent.mkdir(parents=True);saved.parent.mkdir(parents=True)
-            previous={'version':1,'groups':[]}
-            saved.write_text(json.dumps(previous));active.write_text('{"version":1,"groups":[{"bot":"10001","group":"30003"}]}')
-            db=active.parent/'affect.db';db.write_bytes(b'private state retained')
-            rollout.restore_sources(data,point)
-            self.assertEqual(json.loads(active.read_text()),previous)
-            self.assertEqual(db.read_bytes(),b'private state retained')
-    def test_new_mcp_and_social_policy_are_reverted_without_database_loss(self):
-        with tempfile.TemporaryDirectory() as t:
-            root=Path(t);data=root/'data';point=root/'point'
-            for name in rollout.NAMES:
-                old=point/'plugins'/name;old.mkdir(parents=True);(old/'main.py').write_text('previous')
-                active=data/'plugins'/name;active.mkdir(parents=True);(active/'main.py').write_text('next')
-                (active/'new_module.py').write_text('new feature')
-            (point/'config').mkdir()
-            for name in ('cmd_config.json','mcp_server.json'):
-                (point/'config'/name).write_text('{"before":true}')
-                (data/name).write_text('{"next":true}')
-            affect=data/'plugin_data/affect';affect.mkdir(parents=True)
-            (affect/'social_policy.json').write_text('{"enabled":true}')
-            (affect/'social_probe_v09_0').touch()
-            sentinel=affect/'affect.db';sentinel.write_bytes(b'keep post-release state')
-            rollout.restore_sources(data,point)
-            self.assertEqual(sentinel.read_bytes(),b'keep post-release state')
-            self.assertFalse((affect/'social_policy.json').exists())
-            self.assertTrue((affect/'social_probe_v09_0').exists())
-            self.assertEqual(json.loads((data/'mcp_server.json').read_text()),{'before':True})
-            for name in rollout.NAMES:
-                self.assertEqual((data/'plugins'/name/'main.py').read_text(),'previous')
-                self.assertFalse((data/'plugins'/name/'new_module.py').exists())
-    def test_new_plugins_are_removed_when_no_prior_copy_existed(self):
-        with tempfile.TemporaryDirectory() as t:
-            root=Path(t);data=root/'data';point=root/'point';(point/'plugins').mkdir(parents=True)
-            for name in rollout.NAMES:
-                target=data/'plugins'/name;target.mkdir(parents=True);(target/'main.py').write_text('new')
-            affect=data/'plugin_data/affect';affect.mkdir(parents=True);(affect/'affect.db').write_bytes(b'new rows')
-            rollout.restore_sources(data,point)
-            self.assertTrue(all(not (data/'plugins'/name).exists() for name in rollout.NAMES))
-            self.assertEqual((affect/'affect.db').read_bytes(),b'new rows')
-    def test_watchdog_rolls_back_only_uncommitted_release(self):
-        with tempfile.TemporaryDirectory() as t:
-            base=Path(t);point=base/'backups/companion-release-v020-test';point.mkdir(parents=True)
-            (point/'rollback.json').write_text('{"deadline":0}')
-            with patch.object(rollout,'BASE',base),patch.object(rollout,'rollback',return_value={'status':'synthetic'}) as revert:
-                rollout.watchdog(point);revert.assert_called_once_with(point.resolve())
-                revert.reset_mock();(point/'committed').touch()
-                rollout.watchdog(point);revert.assert_not_called()
-    def test_rollback_preserves_contact_pause_and_enabled_preference(self):
-        with tempfile.TemporaryDirectory() as t:
-            base=Path(t);data=base/'data';point=base/'backups/companion-release-v020-paused';(point/'plugins').mkdir(parents=True)
-            (point/'rollback.json').write_text('{}');db=data/'plugin_data/affect/affect.db';db.parent.mkdir(parents=True)
-            with sqlite3.connect(db) as c:
-                c.executescript('CREATE TABLE companion_social(identity TEXT PRIMARY KEY,enabled INTEGER);CREATE TABLE companion_contact_pauses(identity TEXT PRIMARY KEY,until_at REAL);')
-                c.execute('INSERT INTO companion_social VALUES(?,1)',('synthetic',));c.execute('INSERT INTO companion_contact_pauses VALUES(?,?)',('synthetic',time.time()+3600))
-            with patch.object(rollout,'BASE',base),patch.object(rollout,'DATA',data),patch.object(rollout,'run',return_value=SimpleNamespace(returncode=0)):
-                self.assertEqual(rollout.rollback(point)['status'],'rolled_back')
-            with sqlite3.connect(db) as c:
-                self.assertEqual(c.execute('SELECT enabled FROM companion_social').fetchone()[0],1)
-                self.assertGreater(c.execute('SELECT until_at FROM companion_contact_pauses').fetchone()[0],time.time()+3500)
-
-if __name__=='__main__':unittest.main()
+ @unittest.skipUnless(os.geteuid()==0,'requires Linux/root UID restoration acceptance')
+ def test_restored_private_assets_retain_nonroot_ownership_and_readability(self):
+  with tempfile.TemporaryDirectory() as t:
+   root,job=self.fixture(Path(t));p=root/'astrbot/data/plugin_data/affect/reviewed_assets';p.mkdir(parents=True);f=p/'reactions.json';f.write_text('synthetic private pack');p.chmod(0o700);f.chmod(0o600);os.chown(p,1001,1001);os.chown(f,1001,1001)
+   rollout.snapshot(job);f.write_text('candidate');rollout.restore_paths(job)
+   self.assertEqual((p.stat().st_uid,f.stat().st_uid),(1001,1001));self.assertEqual(f.stat().st_mode&0o777,0o600);self.assertEqual(f.read_text(),'synthetic private pack')
+ def fixture(self,base):
+  root=base/'agent';point=root/'backups/oneclick-fixture';point.mkdir(parents=True)
+  rollout.atomic(point/'state.json',{'root':str(root),'status':'installing','steps':[],'core_project':'astrbot','deadline':0,'parent_pid':999999999,'parent_start':'gone'})
+  return root,rollout.Job(point)
+ def test_all_policy_sources_restore_without_changing_new_history(self):
+  with tempfile.TemporaryDirectory() as t:
+   root,job=self.fixture(Path(t));a=root/'astrbot/data/plugin_data/affect';a.mkdir(parents=True);p=a/'groups.json';p.write_text('{"version":1,"groups":[]}')
+   rollout.snapshot(job);p.write_text('{"version":1,"groups":[{"bot":"10001","group":"30003"}]}');db=root/'astrbot/data/data_v4.db';db.write_bytes(b'newer native chat history')
+   rollout.restore_paths(job);self.assertEqual(json.loads(p.read_text())['groups'],[]);self.assertEqual(db.read_bytes(),b'newer native chat history')
+ def test_rollback_does_not_replace_contact_pause_or_enabled_state(self):
+  with tempfile.TemporaryDirectory() as t:
+   root,job=self.fixture(Path(t));a=root/'astrbot/data/plugin_data/affect';a.mkdir(parents=True);db=a/'affect.db'
+   with sqlite3.connect(db) as c:c.executescript('CREATE TABLE companion_social(identity TEXT PRIMARY KEY,enabled INTEGER);CREATE TABLE companion_contact_pauses(identity TEXT PRIMARY KEY,until_at REAL);');c.execute("INSERT INTO companion_social VALUES('fixture',1)")
+   rollout.snapshot(job)
+   with sqlite3.connect(db) as c:c.execute("INSERT INTO companion_contact_pauses VALUES('fixture',?)",(time.time()+3600,))
+   rollout.restore_paths(job)
+   with sqlite3.connect(db) as c:self.assertEqual(c.execute('SELECT enabled FROM companion_social').fetchone()[0],1);self.assertGreater(c.execute('SELECT until_at FROM companion_contact_pauses').fetchone()[0],time.time()+3500)
+ def test_restoration_restart_is_idempotent_after_displacement(self):
+  with tempfile.TemporaryDirectory() as t:
+   root,job=self.fixture(Path(t));p=root/'public-browser';p.mkdir();(p/'code').write_text('original');rollout.snapshot(job);(p/'code').write_text('candidate')
+   real=rollout.os.replace;hit=[False]
+   def replace(src,dst):
+    real(src,dst)
+    if Path(src)==p and not hit[0]:hit[0]=True;raise KeyboardInterrupt('power loss after rename')
+   with patch.object(rollout.os,'replace',replace):
+    with self.assertRaises(KeyboardInterrupt):rollout.restore_paths(job)
+   job=rollout.Job(job.path);rollout.restore_paths(job);rollout.restore_paths(job);self.assertEqual((p/'code').read_text(),'original')
+ def test_new_plugin_tree_removed_and_database_retained(self):
+  with tempfile.TemporaryDirectory() as t:
+   root,job=self.fixture(Path(t));rollout.snapshot(job)
+   for name in rollout.PLUGINS:
+    p=root/'astrbot/data/plugins'/name;p.mkdir(parents=True);(p/'main.py').write_text('new')
+   db=root/'astrbot/data/data_v4.db';db.write_bytes(b'keep');rollout.restore_paths(job)
+   self.assertTrue(all(not (root/'astrbot/data/plugins'/n).exists() for n in rollout.PLUGINS));self.assertEqual(db.read_bytes(),b'keep')
+ def test_watchdog_ignores_committed_job_and_restores_uncommitted(self):
+  with tempfile.TemporaryDirectory() as t:
+   root,job=self.fixture(Path(t))
+   with patch.object(rollout,'rollback') as revert:
+    rollout.watchdog(job.path);revert.assert_called_once();revert.reset_mock();job.state['status']='committed';job.save();rollout.watchdog(job.path);revert.assert_not_called()

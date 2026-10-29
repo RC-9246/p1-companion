@@ -6,7 +6,8 @@ PREFS={'length':{'short':'日常通常一两句、20至80字；知识问题先�
  'tone':{'plain':'用自然平实的口语','formal':'需要时用正式措辞'},
  'images':{'off':'不主动配表情图','occasional':'轻松语境可以偶尔配图'},
  'offers':{'less':'说完当前想法就收住，不惯例附加如果需要我可以、随时找我或陪你聊等服务式邀约；对方明确求助或想聊天时正常回应','normal':'对方需要时可以自然提出具体帮助，不把帮助邀约当每轮结尾'},
- 'stance':{'independent':'先形成自己的具体判断，再决定赞同或保留意见；不为了哄对方而附和，也不为了独立而刻意反对，情绪只影响语气，不改变事实'}}
+ 'stance':{'independent':'先形成自己的具体判断，再决定赞同或保留意见；不为了哄对方而附和，也不为了独立而刻意反对，情绪只影响语气，不改变事实'},
+ 'order':{'conclusion_first':'需要解释时先给核心结论，再按需要补理由；日常闲聊不强行套用结论标题'}}
 TOPICS={'science','technology','reading','cooking','music','animation','daily_life','history'}
 LESSONS={'speaker_grounding':'先分清是谁说的、引用谁，不把别人的事情归给当前人',
  'action_truth':'核对实际工具回执后再说完成；无法核实时坦率说明',
@@ -30,6 +31,7 @@ def safe(text,limit=240):
  return isinstance(text,str) and 0<len(text)<=limit and not UNSAFE.search(text) and not re.search(r'[\x00-\x1f\x7f]',text)
 def preference_matches(key,value,q):
  patterns={
+  ('order','conclusion_first'):r'先.{0,5}(?:结论|重点|答案)',
   ('length','short'):r'简短|短一点|少说|别.{0,4}长|不要.{0,4}大段|不要.{0,4}长篇',
   ('length','detailed'):r'详细|展开|多.{0,4}细节|别只回.{0,5}句',
   ('advice','listen_first'):r'先听|先陪|别总.{0,6}建议|不要每次.{0,6}建议|不急.{0,4}建议',
@@ -79,7 +81,7 @@ def parse(raw,sources,group_shared=False):
    if kind!='jargon' or not safe(key,16) or not safe(value,60) or key not in quote or value not in quote or not re.search(r'是指|意思是|就是|叫做',quote):continue
   elif kind=='preference':
    if re.search(r'不是.{0,6}(?:让你|要你|叫你)|并非.{0,6}(?:让你|要你)|不要不|别不|别总不|不要老不|不用不|我(?:的)?(?:朋友|同学|老师|同事)',row['text']):continue
-   if not re.search(r'你|伙伴|saki|我(?:更|平时|通常|喜欢|不喜欢|希望|想)|^(?:以后|平时|通常)(?:请|回复|回答|解释|说话|别|不要|多|少)|^(?:别总|不要每次|别每次|不要老|不要再|别老|不要总|没必要|不需要你)',quote,re.I):continue
+   if not re.search(r'你|伙伴|saki|我(?:更|平时|通常|喜欢|不喜欢|希望|想)|^(?:以后|平时|通常)(?:请|回复|回答|解释|说话|别|不要|多|少|先|给)|^(?:别总|不要每次|别每次|不要老|不要再|别老|不要总|没必要|不需要你)',quote,re.I):continue
    if key not in PREFS or value not in PREFS[key] or not STABLE.search(quote) or not (quoted_offer or preference_matches(key,value,quote)):continue
   elif kind=='interest':
    if re.search(r'(?:不是|并非|并不)我.{0,5}(?:喜欢|感兴趣)|我(?:的)?(?:同学|朋友|老师).{0,5}(?:喜欢|感兴趣)',row['text']):continue
@@ -136,6 +138,29 @@ def fast_lessons(row):
     candidates=[dict(kind='lesson',key=k,value='remember',source=row['id'],quote=text,confidence=1.0) for k in LESSONS]
     # The parser bounds output batches to five. Each candidate is independently checked.
     return [v for c in candidates for v in parse(json.dumps({'items':[c]},ensure_ascii=False),{row['id']:row})][:5]
+
+def temporary_preferences(row,now):
+    """Time-limited direct preferences; a one-turn request remains in that turn."""
+    text=row['text']
+    if not safe(text) or SOURCE_TRAP.search(text) or re.search(r'[?？]|朋友|同学|老师|不是让你|不要不',text) or not re.search(r'今天|暂时|现在',text):return []
+    if re.search(r'这次|这一轮|这回',text):return []
+    expiry=(int((now+28800)//86400)+1)*86400-28800 if '今天' in text else now+3600
+    items=[]
+    for key,values in PREFS.items():
+        matches=[value for value in values if preference_matches(key,value,text)]
+        if len(matches)==1:items.append({'kind':'preference','key':key,'value':matches[0],'source':row['id'],'quote':text,'confidence':1.,'speaker':row['speaker'],'seq':row['seq'],'expires':expiry})
+    return items[:2]
+
+def relevant_cards(cards,text='',limit=2):
+    """Keep a small, applicable expression layer instead of accumulating rules."""
+    chosen=[]
+    for card in sorted(cards,key=lambda c:(c['id']>=0,-c['updated'])):
+        if card['key']=='length' and card['value']=='short' and re.search(r'详细|展开|完整推导',text):continue
+        if card['key']=='order' and re.search(r'随便聊|闲聊|打个招呼',text):continue
+        if any(c['kind']==card['kind'] and c['key']==card['key'] for c in chosen):continue
+        chosen.append(card)
+        if len(chosen)>=limit:break
+    return chosen
 
 def consensus_sources(items,sources):
     """A selected definition is reinforced by identical literal definitions, not LLM guesses."""

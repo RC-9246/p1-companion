@@ -26,7 +26,9 @@ def extract(text,allowed):
 class P1Stickers(Star):
  def __init__(self,context):super().__init__(context);self.context=context;self.catalog=None
  async def initialize(self):
-  self.catalog=Catalog(Path(__file__).parent.parent/'astrbot_plugin_affect')
+  try:from ..astrbot_plugin_affect.reactions import catalog_folder
+  except ImportError:from astrbot_plugin_affect.reactions import catalog_folder
+  self.catalog=Catalog(catalog_folder(Path(__file__).parent.parent/'astrbot_plugin_affect',DATA))
   logger.info('[P1 Stickers] READY reviewed='+str(len(self.catalog.assets)))
  @filter.on_llm_request(priority=-20)
  async def describe(self,event,req):

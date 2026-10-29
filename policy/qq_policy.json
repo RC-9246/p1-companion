@@ -13,5 +13,9 @@
   "group_daily": 4,
   "global_daily": 16,
   "max_unanswered": 2,
-  "favorite_daily": 12
+  "favorite_daily": 12,
+  "interest_daily": 999,
+  "interest_cooldown_seconds": 90,
+  "interest_per_120_seconds": 2,
+  "account_proactive_per_minute": 3
 }

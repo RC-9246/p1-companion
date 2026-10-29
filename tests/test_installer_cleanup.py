@@ -33,9 +33,9 @@ class CleanupTests(unittest.TestCase):
         r=G.remove_managed_source(self.source);self.assertEqual(r['managed_files_removed'],0);self.assertTrue((self.source/'deploy/wizard.py').exists())
     def test_changed_and_untracked_files_are_retained(self):
         (self.source/'deploy/wizard.py').write_text('local edits');(self.source/'user-note.txt').write_text('preserve')
-        r=self.finish();self.assertEqual(r['managed_files_retained'],1);self.assertTrue((self.source/'user-note.txt').exists());self.assertTrue((self.source/'source-manifest.json').exists())
+        r=self.finish();self.assertEqual(r['managed_files_retained'],2);self.assertTrue((self.source/'user-note.txt').exists());self.assertTrue((self.source/'source-manifest.json').exists())
     def test_untracked_file_is_not_removed_with_directory(self):
-        (self.source/'local.txt').write_text('keep');self.finish();self.assertEqual((self.source/'local.txt').read_text(),'keep')
+        (self.source/'local.txt').write_text('keep');self.finish();self.assertEqual((self.source/'local.txt').read_text(),'keep');self.assertTrue((self.source/'.p1-wizard-source').is_file())
     def test_symlink_directory_never_traversed(self):
         outside=self.base/'outside';outside.mkdir();(outside/'important').write_text('keep')
         (self.source/'deploy/wizard.py').unlink();(self.source/'deploy').rmdir();(self.source/'deploy').symlink_to(outside,target_is_directory=True)

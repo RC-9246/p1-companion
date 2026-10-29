@@ -3,9 +3,9 @@ from .module_policy import enabled as module_on
 """Scoped public research for all admitted companions, no account/browser-session access."""
 import asyncio,json,time,xml.etree.ElementTree as ET
 from .search_policy import query as checked_query,public_url
-DAILY_LIMIT=240  # Shared public search/page reads; model API budgets are separate.
+from .budget_policy import PUBLIC_READ_LIMIT as DAILY_LIMIT
 class Research:
- def __init__(self,plugin):self.plugin=plugin;self.cache={}
+ def __init__(self,plugin):self.plugin=plugin;self.cache={};self.admission_lock=asyncio.Lock()
  def budget_status(self):
   view=getattr(self.plugin.store,'budget_status',None)
   return view(DAILY_LIMIT,bucket=1) if callable(view) else {'limit':DAILY_LIMIT,'remaining':None,'resets_at':None}
@@ -24,10 +24,11 @@ class Research:
     validate_url(url,domains(self.plugin.thinking.data/'browser_policy/domains.json'))
    key=(scope,action,term if action=='search' else url);cached=self.cache.get(key)
    if cached and time.time()-cached['at']<(120 if action=='search' else 3600):return {**cached['value'],'cached':True,'fetched_at':cached['at']}
-   count=event.get_extra('_p1_public_research_calls',0)
-   if count>=3:return {'ok':False,'error':'research_turn_limit'}
-   if not await asyncio.to_thread(self.plugin.store.take_budget,DAILY_LIMIT,bucket=1):return {'ok':False,'error':'research_budget','budget':await asyncio.to_thread(self.budget_status)}
-   event.set_extra('_p1_public_research_calls',count+1)
+   async with self.admission_lock:
+    count=event.get_extra('_p1_public_research_calls',0)
+    if count>=3:return {'ok':False,'error':'research_turn_limit'}
+    if not await asyncio.to_thread(self.plugin.store.take_budget,DAILY_LIMIT,bucket=1):return {'ok':False,'error':'research_budget','budget':await asyncio.to_thread(self.budget_status)}
+    event.set_extra('_p1_public_research_calls',count+1)
    import aiohttp
    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=27),trust_env=False) as client:
     if action=='search':

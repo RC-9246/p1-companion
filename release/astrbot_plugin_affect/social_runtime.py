@@ -1,4 +1,5 @@
 from .module_policy import enabled as module_on
+from .budget_policy import PUBLIC_READ_LIMIT,FREE_LEISURE_ACTIONS
 """Connect the persistent social policy to existing AstrBot APIs; a single worker only."""
 import asyncio
 from contextlib import closing
@@ -162,7 +163,7 @@ class SocialController:
     async def read_web(self, identity, url):
         if identity not in self.allowed() or not self.plugin.enabled():
             return {'ok': False}
-        if not await asyncio.to_thread(self.plugin.store.take_budget, 60, None, 1):
+        if not await asyncio.to_thread(self.plugin.store.take_budget, PUBLIC_READ_LIMIT, None, 1):
             return {'ok': False}
         token = (self.data / 'browser_token').read_text().strip()
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=27)) as client:
@@ -253,12 +254,12 @@ class SocialController:
                         or not valid_target(current, self.allowed())):
                     await asyncio.to_thread(self.store.finish, key, 'cancelled')
                     return 'cancelled'
-                started = True
-                accepted = await self.plugin.send_social_message(row,decision['message'])
-                state = 'sent' if accepted is True else 'unknown'
-                await asyncio.to_thread(self.store.finish, key, state)
-                await asyncio.to_thread(self.plugin.store.audit, 'social_send', state)
-                return state
+            started = True
+            accepted = await self.plugin.send_social_message(row,decision['message'])
+            state = 'sent' if accepted is True else 'unknown'
+            await asyncio.to_thread(self.store.finish, key, state)
+            await asyncio.to_thread(self.plugin.store.audit, 'social_send', state)
+            return state
         except BaseException:
             await asyncio.to_thread(self.store.finish, key, 'unknown' if started else 'cancelled')
             raise

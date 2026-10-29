@@ -90,12 +90,15 @@ class FileRollback(unittest.TestCase):
    self.assertEqual(target.read_text(),'later user edit');self.assertEqual(db.read_bytes(),b'newer-history')
  def test_native_installer_watchdog_stops_only_matching_owned_pid(self):
   with tempfile.TemporaryDirectory() as t:
-   p=Path(t);child=subprocess.Popen([sys.executable,'-c','import time;time.sleep(60)'])
+   import select
+   p=Path(t);child=subprocess.Popen([sys.executable,'-c','import time;print("ready",flush=True);time.sleep(60)'],stdout=subprocess.PIPE,text=True)
    try:
+    self.assertTrue(select.select([child.stdout],[],[],5)[0]);self.assertEqual(child.stdout.readline().strip(),'ready')
     record=I.owner_identity(child.pid);(p/'owner.json').write_text(json.dumps({**record,'start':'wrong'}));I.stop_owner(p);self.assertIsNone(child.poll())
     (p/'owner.json').write_text(json.dumps(record));I.stop_owner(p);child.wait(timeout=5);self.assertEqual(child.returncode,-G.signal.SIGTERM)
    finally:
     if child.poll() is None:child.terminate();child.wait(timeout=5)
+    child.stdout.close()
 class Cooperative(unittest.IsolatedAsyncioTestCase):
  async def asyncSetUp(self):
   self.s=leisure_scope();self.browser=Mock(ctx=object(),qr=None,job=None);self.browser.lock=asyncio.Lock();self.browser.save=AsyncMock();self.browser.close=AsyncMock();self.browser.stop=AsyncMock();self.s['B']=self.browser;self.s['resource_mode']=lambda:'pressure'

@@ -101,9 +101,12 @@ async def run():
     # Explicit @ remains conversational when all unsolicited routes are off.
     p.agency.store.route_config(scope,native=0,p1=0);e=E([At(qq='10001'),Plain('你好')])
     assert await p.groups.route(e) and not e.get_extra('_p1_group_auto_route');await p.groups.finish(e)
-    assert e.get_extra('selected_provider')==MAX_PROVIDER
+    assert e.get_extra('_p1_thinking_selected')=='high' and e.get_extra('selected_provider')!=FAST_PROVIDER
+    e=E([At(qq='10001'),Plain('你上次误解了两个人的意思，请认真比较前后的矛盾')]);e.message_obj.message_str='你上次误解了两个人的意思，请认真比较前后的矛盾'
+    assert await p.groups.route(e);await p.groups.finish(e)
+    assert e.get_extra('selected_provider')==MAX_PROVIDER and e.get_extra('_p1_thinking_selected')=='max'
     assert all(2<=x<=5 for x in delays)
   finally:await p.terminate()
-  result={'native_probability_predicate_used':True,'four_native_p1_combinations':True,'p1_selected_before_probability_fallback':True,'native_ui_enable_probability_whitelist_honored':True,'independent_interest_and_background':True,'same_message_deduplicated':True,'single_scoped_transport_and_receipt':True,'shared_proactive_limit_ledger':True,'late_disable_cancels_send':True,'stale_directory_denied_then_verified_refresh':True,'quiet_pause_and_enrollment_preserved':True,'normal_mentions_with_both_routes_off':True,'casual_auto_selects_quick_after_real_admission':True,'normal_mention_keeps_max':True,'content_free_phase_metrics_written_after_receipt':True,'delay_2_to_5_preserved':True,'fake_qq_sends':1,'real_qq_sends':0,'model_requests':0,'production_database_modified':False}
+  result={'native_probability_predicate_used':True,'four_native_p1_combinations':True,'p1_selected_before_probability_fallback':True,'native_ui_enable_probability_whitelist_honored':True,'independent_interest_and_background':True,'same_message_deduplicated':True,'single_scoped_transport_and_receipt':True,'shared_proactive_limit_ledger':True,'late_disable_cancels_send':True,'stale_directory_denied_then_verified_refresh':True,'quiet_pause_and_enrollment_preserved':True,'normal_mentions_with_both_routes_off':True,'casual_auto_selects_quick_after_real_admission':True,'complex_mention_selects_max':True,'ordinary_mention_uses_configured_provider':True,'content_free_phase_metrics_written_after_receipt':True,'delay_2_to_5_preserved':True,'fake_qq_sends':1,'real_qq_sends':0,'model_requests':0,'production_database_modified':False}
   (R/'evidence/reply-routes-native.json').write_text(json.dumps(result,indent=2));print(json.dumps(result))
 if __name__=='__main__':asyncio.run(run())

@@ -79,15 +79,20 @@ def verify(source=SOURCE):
     return {'ok':not failures,'source_files_checked':checked,'source_manifest_sha256':identity,
             'errors':sorted(set(failures)),'publisher_authenticity_verified':False,'network_calls':0,'writes':False}
 
-def plan(root='/srv/p1-agent'):
+def plan(root='/srv/p1-agent',mode='fresh_host'):
     root=str(root_path(root))
-    return {'ok':True,'kind':'plan_not_execution','root':root,'steps':[
-        {'id':'source','argv':['python3','ai/companion.py','verify'],'writes':False},
-        {'id':'preflight','argv':['sudo','bash','deploy.sh','--root',root,'--check'],'writes':False},
-        {'id':'first_install_only','argv':['sudo','bash','deploy.sh','--root',root,'--apply'],
-         'writes':True,'actual_user_authorization_required':True,'interactive_inputs':['bot_QQ','owner_QQ']},
-        {'id':'installed_status','argv':['sudo','bash','deploy.sh','--root',root,'--status'],'writes':False}],
-        'stop_on_preflight_errors':True,'existing_companion':'use_manual_patch_workflow_not_first_install',
+    if mode not in ('fresh_host','existing_core','existing_companion'):raise AccessError('invalid_install_mode')
+    steps=[{'id':'source','argv':['python3','ai/companion.py','verify'],'writes':False}]
+    if mode=='fresh_host':
+        steps += [{'id':'host_wizard','argv':['sudo','python3','deploy/wizard.py'],'windows_launcher':'开始安装.cmd','writes':True,'actual_user_authorization_required':True,'interactive_inputs':['installation_root','bot_QQ','owner_QQ','DeepSeek_API','QQ_scan','real_chat_acceptance']}]
+    elif mode=='existing_core':
+        steps += [{'id':'preflight','argv':['sudo','bash','deploy.sh','--root',root,'--check'],'writes':False},
+                  {'id':'integrate_only','argv':['sudo','bash','deploy.sh','--root',root,'--apply'],'writes':True,'actual_user_authorization_required':True,'interactive_inputs':['bot_QQ','owner_QQ']}]
+    else:
+        steps += [{'id':'health','argv':['python3','ai/companion.py','status','--root',root],'writes':False},
+                  {'id':'manage_existing','argv':['sudo','python3','deploy/wizard.py','--manage-root',root],'writes':True,'actual_user_authorization_required':True,'never_reinstall':True}]
+    return {'ok':True,'kind':'plan_not_execution','mode':mode,'root':root,'steps':steps,
+        'stop_on_preflight_errors':True,'existing_companion':'use_reviewed_patch_or_component_upgrade_not_first_install',
         'manual_acceptance':['QQ_login_and_real_delivery','Bilibili_QR_if_used','host_repair_after_acceptance'],
         'executed':False,'network_calls':0,'writes':False}
 
@@ -183,7 +188,7 @@ def main():
     p=argparse.ArgumentParser(description='AI engineering context; JSON only, no deployment or shell tools')
     sub=p.add_subparsers(dest='action',required=True)
     for name in ('describe','verify','handoff'): sub.add_parser(name)
-    q=sub.add_parser('plan');q.add_argument('--root',default='/srv/p1-agent')
+    q=sub.add_parser('plan');q.add_argument('--root',default='/srv/p1-agent');q.add_argument('--mode',choices=('fresh_host','existing_core','existing_companion'),default='fresh_host')
     q=sub.add_parser('mcp-config');q.add_argument('--live-root')
     for name in ('doctor','status'):
         q=sub.add_parser(name);q.add_argument('--root',required=True)
@@ -191,7 +196,7 @@ def main():
     try:
         if a.action=='describe': value=describe()
         elif a.action=='verify': value=verify()
-        elif a.action=='plan': value=plan(a.root)
+        elif a.action=='plan': value=plan(a.root,a.mode)
         elif a.action=='handoff': value=handoff()
         elif a.action=='mcp-config': value=mcp_config(a.live_root)
         elif a.action=='doctor': value=doctor(a.root)

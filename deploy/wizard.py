@@ -62,6 +62,8 @@ class Wizard:
             F.need(isinstance(values,dict) and values.get('mode','new') in ('new','existing'),'invalid_input')
             v={'root':str(I.safe_root(values.get('root','/srv/p1-agent'))),'mode':values.get('mode','new')}
         else:v=F.validate_input(values)
+        if v.get('mode')=='existing' and action in ('core','login','model_save','model_test','stop_core'):
+            F.need(False,'existing_core_use_dashboard')
         F.need(v.get('accepted') is True or action in ('check','login','finish','upgrade_check','upgrade_status','modules_status','modules_plan'),'review_installation_first')
         F.need(self.lock.acquire(blocking=False),'another_operation_in_progress')
         row={'id':str(time.time_ns())+'-'+secrets.token_hex(3),'action':action,'root':v['root'],'settings':{k:v[k] for k in ('root','mode','bot','owner','model','social') if k in v},'status':'running','events':[],'message':'正在准备','at':int(time.time())}

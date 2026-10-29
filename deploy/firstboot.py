@@ -104,9 +104,17 @@ def install_docker(emit):
     # Reuse only our exact source; do not replace the administrator's repository.
     if repo.exists():need(repo.read_text()==content,'docker_repository_conflict')
     else:
-        need(not key.exists(),'docker_repository_conflict');key.parent.mkdir(mode=0o755,exist_ok=True)
-        command(['curl','--fail','--silent','--show-error','--proto','=https','--tlsv1.2','--max-time','90','https://download.docker.com/linux/'+distro+'/gpg','-o',str(key)],100);key.chmod(0o644)
-        repo.write_text(content);repo.chmod(0o644)
+        need(not key.exists() and not key.is_symlink(),'docker_repository_conflict');key.parent.mkdir(mode=0o755,exist_ok=True)
+        temp=key.with_name('.p1-docker-'+secrets.token_hex(8)+'.asc')
+        try:
+            command(['curl','--fail','--silent','--show-error','--proto','=https','--tlsv1.2','--max-time','90','https://download.docker.com/linux/'+distro+'/gpg','-o',str(temp)],100)
+            need(temp.is_file() and not temp.is_symlink(),'docker_key_invalid')
+            armor=temp.read_text(encoding='ascii').strip()
+            need(armor.startswith('-----BEGIN PGP PUBLIC KEY BLOCK-----\n') and armor.endswith('\n-----END PGP PUBLIC KEY BLOCK-----'),'docker_key_invalid')
+            temp.chmod(0o644);os.replace(temp,key)
+            try:repo.write_text(content);repo.chmod(0o644)
+            except BaseException:key.unlink(missing_ok=True);raise
+        finally:temp.unlink(missing_ok=True)
     command(['apt-get','update'],300)
     command(['apt-get','install','-y','docker-ce','docker-ce-cli','containerd.io','docker-buildx-plugin','docker-compose-plugin'],1200)
     command(['systemctl','enable','--now','docker']);command(['docker','info']);command(['docker','compose','version'])

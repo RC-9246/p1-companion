@@ -12,11 +12,14 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'release'))
 from astrbot_plugin_affect.reactions import Catalog,ReactionStore,eligible_context
 from astrbot_plugin_affect.privacy_logging import PrivacyFilter
+from neutral_assets import expanded
 I='v1:'+'a'*64;J='v1:'+'b'*64
 def event(n):return hashlib.sha256(str(n).encode()).hexdigest()
 A=dict(intent='casual',emotion='happy',relation='none',confidence=.9)
 
 class ReactionPolicyTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);self.folder=expanded(Path(self.tmp.name))
     def test_existing_database_and_legacy_rows_preserved(self):
         import sqlite3
         with tempfile.TemporaryDirectory() as t:
@@ -32,20 +35,20 @@ class ReactionPolicyTests(unittest.TestCase):
             r=logging.LogRecord('fixture',logging.ERROR,'/thirdparty/qq.py',1,'failed payload '+prefix+'PRIVATE_IMAGE',(),None)
             PrivacyFilter().filter(r);self.assertNotIn('PRIVATE_IMAGE',r.getMessage())
     def test_reviewed_character_catalog_and_hashes(self):
-        c=Catalog(ROOT/'release/astrbot_plugin_affect')
+        c=Catalog(self.folder)
         self.assertEqual(len(c.assets),46)
         self.assertEqual(c.search('好奇')[0]['id'],'saki_listening')
         for row in c.search():self.assertTrue(c.read(row['id']).startswith((b'\xff\xd8\xff',b'\x89PNG\r\n\x1a\n')))
     def test_tamper_and_symlink_rejected(self):
         with tempfile.TemporaryDirectory() as t:
-            d=Path(t)/'plugin';shutil.copytree(ROOT/'release/astrbot_plugin_affect',d)
-            p=d/'reaction_assets/saki_smile.jpg';p.write_bytes(p.read_bytes()+b'tampered')
+            d=Path(t)/'plugin';shutil.copytree(self.folder,d)
+            p=d/'reaction_assets/saki_smile.png';p.write_bytes(p.read_bytes()+b'tampered')
             with self.assertRaises(ValueError):Catalog(d)
-            p.unlink();p.symlink_to(ROOT/'release/astrbot_plugin_affect/reaction_assets/saki_smile.jpg')
+            p.unlink();p.symlink_to(ROOT/'release/astrbot_plugin_affect/reaction_assets/saki_smile.png')
             with self.assertRaises(ValueError):Catalog(d)
     def test_paths_urls_and_unreviewed_entries_rejected(self):
         with tempfile.TemporaryDirectory() as t:
-            d=Path(t);manifest=json.loads((ROOT/'release/astrbot_plugin_affect/reactions.json').read_text())
+            d=Path(t);manifest=json.loads((self.folder/'reactions.json').read_text())
             for field,value in [('file','../../secret'),('url','http://169.254.169.254/'),('reviewed',False)]:
                 bad=json.loads(json.dumps(manifest));bad['assets'][0][field]=value;(d/'reactions.json').write_text(json.dumps(bad))
                 with self.assertRaises(AssertionError):Catalog(d)

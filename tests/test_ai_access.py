@@ -22,7 +22,8 @@ class ContextTests(unittest.TestCase):
  def test_plan_is_metadata_never_execution(self):
   with patch.object(M.subprocess,'run') as run:
    result=M.plan();self.assertFalse(result['executed']);self.assertFalse(result['writes']);run.assert_not_called()
-  step=result['steps'][2];self.assertTrue(step['writes']);self.assertTrue(step['actual_user_authorization_required']);self.assertIn('--apply',step['argv'])
+  step=result['steps'][1];self.assertTrue(step['writes']);self.assertTrue(step['actual_user_authorization_required']);self.assertIn('deploy/wizard.py',step['argv']);self.assertEqual(result['mode'],'fresh_host')
+  self.assertIn('--apply',M.plan(mode='existing_core')['steps'][2]['argv']);self.assertTrue(M.plan(mode='existing_companion')['steps'][2]['never_reinstall'])
  def test_invalid_plan_roots_rejected(self):
   for value in ('relative','/','/srv','/srv/a/../b','/tmp/a;id','/tmp/a $(id)','/tmp/a\n'):
    with self.assertRaises(M.AccessError):M.plan(value)

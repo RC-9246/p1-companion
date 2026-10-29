@@ -19,7 +19,7 @@ class Fixture:
    else:raw=b'#!/usr/bin/env python3\nvalue=1\n'
    source=self.root/'fixed'/key;source.write_bytes(raw);source.chmod(0o600)
    mode=0o644 if key.startswith('unit_') else 0o700
-   q.write_bytes(raw);q.chmod(mode);self.files[key]=q;self.hashes[key]=W.digest(raw);self.metadata[key]={'uid':self.uid,'gid':self.gid,'mode':mode}
+   q.write_bytes(raw);q.chmod(mode);os.chown(q,self.uid,self.gid);self.files[key]=q;self.hashes[key]=W.digest(raw);self.metadata[key]={'uid':self.uid,'gid':self.gid,'mode':mode}
   self.seal();self.units={W.SERVICE:{'Id':W.SERVICE,'ActiveState':'inactive','Result':'success','UnitFileState':'static'}}
   self.units.update({t:{'Id':t,'ActiveState':'active','Result':'success','UnitFileState':'enabled'} for t in W.TIMERS})
   self.report();self.ctx=W.Context(self.root,self.data,self.files,self.uid,self.gid,self.run,lambda:tuple(self.now))

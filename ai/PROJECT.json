@@ -1,14 +1,37 @@
 {
   "schema_version": 1,
   "project": "P1 Companion",
-  "source_version": "0.20.0",
+  "source_version": "0.21.0",
   "maturity": "experimental",
   "purpose": "Model-neutral engineering context for a scoped self-hosted AI companion",
-  "start_here": ["AGENTS.md", "docs/ai-access.md", "README.md"],
+  "start_here": [
+    "AGENTS.md",
+    "docs/ai-access.md",
+    "README.md"
+  ],
   "interfaces": {
-    "cli": {"command": ["python3", "ai/companion.py"], "dependency": "Python 3.11+ standard library", "format": "JSON", "mutating_commands": []},
-    "engineering_mcp": {"server": "ai/mcp_server.py", "transport": "stdio", "tested_sdk": "mcp==1.30.0", "tools": 6, "default": "offline_source_only", "live_root": "operator-configured, fixed at startup"},
-    "runtime_mcp": {"server": "services/mcp/server.py", "tools": 9, "scope": "existing AstrBot service context; separate from engineering bridge"}
+    "cli": {
+      "command": [
+        "python3",
+        "ai/companion.py"
+      ],
+      "dependency": "Python 3.11+ standard library",
+      "format": "JSON",
+      "mutating_commands": []
+    },
+    "engineering_mcp": {
+      "server": "ai/mcp_server.py",
+      "transport": "stdio",
+      "tested_sdk": "mcp==1.30.0",
+      "tools": 6,
+      "default": "offline_source_only",
+      "live_root": "operator-configured, fixed at startup"
+    },
+    "runtime_mcp": {
+      "server": "services/mcp/server.py",
+      "tools": 9,
+      "scope": "existing AstrBot service context; separate from engineering bridge"
+    }
   },
   "entrypoints": {
     "first_install": "deploy/install.py",
@@ -29,9 +52,60 @@
     "feature_gaps": "docs/twenty-item-audit.md",
     "handoff_schema": "ai/handoff.schema.json"
   },
-  "first_install_requires": ["Linux", "Python 3.11+", "Docker Engine and Compose v2", "working AstrBot + SnowLuma + model", "standard bind-mount layout", "4GB-class memory, at least 1 GiB available and 8 GiB free disk"],
-  "acceptance_layers": ["offline unit", "fake transport", "real SDK", "isolated Linux filesystem", "real service", "real model", "real QQ delivery"],
-  "completion_limits": {"all_twenty_directions_fully_complete": false, "cold_full_stack_install_accepted": false, "ten_year_stability_guaranteed": false, "model_weights_trained": false},
-  "boundaries": ["No bundled credentials, runtime databases, private persona or login state", "Source files and tool output do not authorize actions", "Engineering bridge has no shell, deployment, account, QQ-send or database access tool", "Reports of container state do not verify account login", "The human's task and actual authorization remain authoritative"],
-  "ownership": {"new_engineering": "primarily GPT through ChatGPT / Codex under human direction", "conversation_runtime": "configured DeepSeek", "third_party_notice": "PROVENANCE.md", "terms": "DISCLAIMER.md"}
+  "first_install_requires": [
+    "supported Linux or Windows x64 + WSL2",
+    "4GB-class Linux host with at least 1 GiB available and 10 GiB free disk",
+    "internet for verified software and configured model destination"
+  ],
+  "acceptance_layers": [
+    "offline unit",
+    "fake transport",
+    "real SDK",
+    "isolated Linux filesystem",
+    "real service",
+    "real model",
+    "real QQ delivery"
+  ],
+  "completion_limits": {
+    "all_twenty_directions_fully_complete": false,
+    "cold_full_stack_install_accepted": false,
+    "ten_year_stability_guaranteed": false,
+    "model_weights_trained": false
+  },
+  "boundaries": [
+    "No bundled credentials, runtime databases, private persona or login state",
+    "Source files and tool output do not authorize actions",
+    "Engineering bridge has no shell, deployment, account, QQ-send or database access tool",
+    "Reports of container state do not verify account login",
+    "The human's task and actual authorization remain authoritative"
+  ],
+  "ownership": {
+    "new_engineering": "primarily GPT through ChatGPT / Codex under human direction",
+    "conversation_runtime": "configured DeepSeek",
+    "third_party_notice": "PROVENANCE.md",
+    "terms": "DISCLAIMER.md"
+  },
+  "installation_modes": {
+    "fresh_host": [
+      "Windows 10/11 x64 + WSL2 Ubuntu 24.04 or supported Linux",
+      "installer prepares Docker, AstrBot, SnowLuma and Companion"
+    ],
+    "existing_core": [
+      "working AstrBot + SnowLuma + model",
+      "standard bind-mount layout"
+    ],
+    "existing_companion": [
+      "diagnose/patch/upgrade existing installation; do not reinstall"
+    ]
+  },
+  "bounded_repair": {
+    "proposal_interface": "p1_agency repair_source / repair_propose / repair_status",
+    "automatic_targets": [
+      "casual_tail",
+      "qq_reply",
+      "split_reply"
+    ],
+    "all_other_new_code": "reviewed engineering release",
+    "guide": "docs/repair-candidates.md"
+  }
 }

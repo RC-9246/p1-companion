@@ -31,8 +31,11 @@ async def main():
    assert json.loads(await p.bilibili(Event(),action))['error']=='action_not_authorized'
   assert not calls
   e=Event()
-  for n in range(4):assert json.loads(await p.bilibili(e,'quota'))['ok']
-  assert json.loads(await p.bilibili(e,'quota'))['error']=='budget_exceeded' and len(calls)==4
+  for n in range(6):assert json.loads(await p.bilibili(e,'quota'))['ok']
+  assert e.get_extra('_p1_leisure_calls',0)==0 and len(calls)==6
+  for n in range(4):assert json.loads(await p.bilibili(e,'search',query='public science'))['ok']
+  assert json.loads(await p.bilibili(e,'search',query='public science'))['error']=='budget_exceeded' and len(calls)==10
+  assert json.loads(await p.bilibili(e,'stop'))['ok'] and len(calls)==11
   (data/'companion.disabled').touch();assert json.loads(await p.bilibili(Event(),'quota'))['error']=='forbidden'
   req=ProviderRequest(func_tool=ToolSet([FunctionTool(name='p1_bilibili',description='test',parameters={},handler=None)]))
   await p.restrict_companion_tools(Event(),req);assert not req.func_tool.tools

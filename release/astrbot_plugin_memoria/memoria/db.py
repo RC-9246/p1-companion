@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import time
+import asyncio,fcntl,json,os,secrets,time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from dataclasses import asdict, dataclass, field
@@ -58,6 +58,7 @@ class MemoriaDB:
         db_path = str(Path(data_dir) / "memoria.db")
         self = cls(db_path)
         await self._init_db()
+        await self._replay_forgets()
         return self
 
     async def _conn(self) -> aiosqlite.Connection:
@@ -70,6 +71,10 @@ class MemoriaDB:
         db = await self._conn()
         try:
             await db.executescript("""
+                CREATE TABLE IF NOT EXISTS memoria_scope_epochs (
+                    scope TEXT PRIMARY KEY, epoch INTEGER NOT NULL DEFAULT 0,
+                    cleared_at INTEGER NOT NULL DEFAULT 0
+                );
                 CREATE TABLE IF NOT EXISTS p1_private_turns (
                     identity TEXT NOT NULL,event TEXT NOT NULL,user_text TEXT NOT NULL,
                     assistant_text TEXT NOT NULL DEFAULT '',at INTEGER NOT NULL,
@@ -126,10 +131,97 @@ class MemoriaDB:
 
     # ── CRUD ──────────────────────────────────────────────
 
+    @staticmethod
+    def owners(user_id, session_id):
+        return list(dict.fromkeys([user_id, session_memory_user_id(session_id),
+                                  relationship_memory_user_id(user_id, session_id)]))
+
+    def _forget_markers(self):
+        p=Path(self.db_path).with_name('clear-epochs.json')
+        if not p.exists():return {}
+        if p.is_symlink() or p.stat().st_size>1048576:raise ValueError('forget_ledger_untrusted')
+        value=json.loads(p.read_text())
+        if not isinstance(value,dict) or value.get('schema')!=1 or not isinstance(value.get('epochs'),dict) or any(not isinstance(k,str) or len(k)>512 or type(v) is not int or v<1 for k,v in value['epochs'].items()):raise ValueError('forget_ledger_untrusted')
+        return value['epochs']
+
+    def _write_forgets(self,epochs):
+        p=Path(self.db_path).with_name('clear-epochs.json');lock=p.with_suffix('.lock')
+        fd=os.open(lock,os.O_CREAT|os.O_RDWR|getattr(os,'O_NOFOLLOW',0),0o600)
+        with os.fdopen(fd,'a') as f:
+            fcntl.flock(f,fcntl.LOCK_EX);current=self._forget_markers()
+            for key,value in epochs.items():current[key]=max(current.get(key,0),value)+1
+            temp=p.with_name('.clear-'+secrets.token_hex(10));fd=os.open(temp,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
+            with os.fdopen(fd,'w') as out:json.dump({'schema':1,'epochs':current},out);out.flush();os.fsync(out.fileno())
+            os.replace(temp,p);directory=os.open(p.parent,os.O_RDONLY)
+            try:os.fsync(directory)
+            finally:os.close(directory)
+            return {key:current[key] for key in epochs}
+
+    async def _replay_forgets(self):
+        markers=await asyncio.to_thread(self._forget_markers)
+        if not markers:return
+        db=await self._conn()
+        try:
+            await db.execute('BEGIN IMMEDIATE')
+            for owner,epoch in markers.items():
+                rows=await db.execute_fetchall('SELECT epoch FROM memoria_scope_epochs WHERE scope=?',(owner,))
+                if rows and rows[0][0]>=epoch:continue
+                await db.execute('DELETE FROM memoria_records WHERE user_id=?',(owner,))
+                await db.execute('DELETE FROM p1_private_turns WHERE identity=?',(owner,))
+                await db.execute('INSERT INTO memoria_scope_epochs VALUES(?,?,?) ON CONFLICT(scope) DO UPDATE SET epoch=excluded.epoch,cleared_at=excluded.cleared_at',(owner,epoch,int(time.time())))
+            await db.commit()
+        finally:await db.close()
+
+    async def scope_epoch(self, scope):
+        db=await self._conn()
+        try:
+            rows=await db.execute_fetchall('SELECT epoch FROM memoria_scope_epochs WHERE scope=?',(scope,))
+            return rows[0][0] if rows else 0
+        finally:await db.close()
+
+    async def _check_epoch(self, db, scope, expected):
+        if expected is None:return
+        rows=await db.execute_fetchall('SELECT epoch FROM memoria_scope_epochs WHERE scope=?',(scope,))
+        if (rows[0][0] if rows else 0)!=expected:raise ValueError('memory_scope_changed')
+
+    async def clear_scope(self, user_id, session_id):
+        owners=self.owners(user_id,session_id);keys=list(dict.fromkeys([user_id,session_id,*owners]))
+        epochs={key:await self.scope_epoch(key) for key in keys}
+        required=await asyncio.to_thread(self._write_forgets,epochs)
+        db=await self._conn()
+        try:
+            await db.execute('BEGIN IMMEDIATE')
+            for key in keys:
+                await db.execute('INSERT INTO memoria_scope_epochs(scope,epoch,cleared_at) VALUES(?,?,?) ON CONFLICT(scope) DO UPDATE SET epoch=MAX(epoch+1,excluded.epoch),cleared_at=excluded.cleared_at',(key,required[key],int(time.time())))
+            placeholders=','.join('?' for _ in owners)
+            cur=await db.execute('DELETE FROM memoria_records WHERE user_id IN ('+placeholders+')',owners)
+            await db.execute('DELETE FROM p1_private_turns WHERE identity IN (?,?)',(user_id,session_id))
+            for table in ('memoria_follow_up','memoria_suppression','memoria_activity'):
+                await db.execute('DELETE FROM '+table+' WHERE session_id=?',(session_id,))
+            await db.commit();return cur.rowcount
+        finally:await db.close()
+
+    async def scope_memories(self,user_id,session_id,status=None,limit=30):
+        owners=self.owners(user_id,session_id);sql='SELECT id,user_id,scope,scope_id,memory_type,content,confidence,source,status,created_at,updated_at,last_used_at FROM memoria_records WHERE user_id IN ('+','.join('?' for _ in owners)+')'
+        params=list(owners)
+        if status:sql+=' AND status=?';params.append(status)
+        db=await self._conn()
+        try:return [_row_to_record(r) for r in await db.execute_fetchall(sql+' ORDER BY updated_at DESC,id DESC LIMIT ?',[*params,max(1,min(limit,200))])]
+        finally:await db.close()
+
+    async def scope_status(self,mid,user_id,session_id,status,*,verified=False):
+        if status not in ('active','candidate','archived'):return False
+        owners=self.owners(user_id,session_id);db=await self._conn()
+        try:
+            await db.execute('BEGIN IMMEDIATE')
+            cur=await db.execute('UPDATE memoria_records SET status=?,updated_at=?,confidence=CASE WHEN ? THEN MAX(confidence,1.0) ELSE confidence END WHERE id=? AND user_id IN ('+','.join('?' for _ in owners)+')',(status,int(time.time()),int(verified and status=='active'),mid,*owners))
+            await db.commit();return cur.rowcount>0
+        finally:await db.close()
+
     async def add_memory(
         self, user_id: str, scope: str, scope_id: str,
         memory_type: str, content: str, confidence: float,
-        source: str, status: str,
+        source: str, status: str, *, expected_epoch=None, epoch_scope=None,
     ) -> int:
         content = content.strip()
         if not content:
@@ -139,6 +231,8 @@ class MemoriaDB:
         confidence = max(0.0, min(1.0, confidence))
         db = await self._conn()
         try:
+            await db.execute('BEGIN IMMEDIATE')
+            await self._check_epoch(db,epoch_scope or user_id,expected_epoch)
             cursor = await db.execute(
                 "INSERT INTO memoria_records"
                 " (user_id, scope, scope_id, memory_type, content, confidence,"
@@ -154,47 +248,26 @@ class MemoriaDB:
 
     async def upsert_memory_candidate(
         self, user_id: str, scope: str, scope_id: str,
-        memory_type: str, content: str, confidence: float, source: str,
+        memory_type: str, content: str, confidence: float, source: str, *, expected_epoch=None, epoch_scope=None,
     ) -> int:
         content = content.strip()
         if not content:
             raise ValueError("memory content is empty")
         memory_type = normalize_memory_type(memory_type)
         confidence = max(0.0, min(1.0, confidence))
-        existing = await self.list_memories(user_id, memory_type, None, 200)
-        for m in existing:
-            if m.scope!=scope or m.scope_id!=scope_id:
-                continue
-            # A model-created candidate cannot silently rewrite an already confirmed fact.
-            if m.status=='active':
-                if normalize_content_key(m.content)==normalize_content_key(content):return m.id
-                continue
-            if m.status == "candidate" and memory_similarity(m.content, content) >= 0.82:
-                now = int(time.time())
-                merged_conf = max(m.confidence, confidence)
-                new_status = "candidate"
-                db = await self._conn()
-                try:
-                    await db.execute(
-                        "UPDATE memoria_records"
-                        " SET content=?, confidence=?, source=?, status=?, updated_at=?"
-                        " WHERE id=?",
-                        (content, merged_conf, source, new_status, now, m.id),
-                    )
-                    await db.commit()
-                    return m.id
-                finally:
-                    await db.close()
-        has_conflict = any(
-            m.status == "active"
-            and memory_similarity(m.content, content) >= 0.35
-            and looks_conflicting(m.content, content)
-            for m in existing
-        )
-        src = f"{source}:conflict" if has_conflict else source
-        return await self.add_memory(
-            user_id, scope, scope_id, memory_type, content, confidence, src, "candidate",
-        )
+        db=await self._conn()
+        try:
+            await db.execute('BEGIN IMMEDIATE');await self._check_epoch(db,epoch_scope or user_id,expected_epoch)
+            rows=await db.execute_fetchall('SELECT id,user_id,scope,scope_id,memory_type,content,confidence,source,status,created_at,updated_at,last_used_at FROM memoria_records WHERE user_id=? AND memory_type=? AND scope=? AND scope_id=? AND status!=?',(user_id,memory_type,scope,scope_id,'archived'))
+            existing=[_row_to_record(r) for r in rows];now=int(time.time())
+            for m in existing:
+                if m.status=='active' and normalize_content_key(m.content)==normalize_content_key(content):return m.id
+                if m.status=='candidate' and memory_similarity(m.content,content)>=.82:
+                    await db.execute('UPDATE memoria_records SET content=?,confidence=?,source=?,updated_at=? WHERE id=?',(content,max(m.confidence,confidence),source,now,m.id));await db.commit();return m.id
+            conflict=any(m.status=='active' and memory_similarity(m.content,content)>=.35 and looks_conflicting(m.content,content) for m in existing)
+            cur=await db.execute('INSERT INTO memoria_records(user_id,scope,scope_id,memory_type,content,confidence,source,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)',(user_id,scope,scope_id,memory_type,content,confidence,source+(':conflict' if conflict else ''),'candidate',now,now))
+            await db.commit();return cur.lastrowid
+        finally:await db.close()
 
     async def list_memories(
         self, user_id: str, memory_type: str | None = None,
@@ -278,17 +351,26 @@ class MemoriaDB:
         self, user_id: str, status: str | None = None,
         query: str = "", limit: int = 8,
     ) -> list[MemoryRecord]:
-        all_mem = await self.list_memories(user_id, None, status, 300)
-        now = int(time.time())
-
-        def score(m: MemoryRecord) -> float:
-            rel = memory_similarity(m.content, query)
-            fresh = effective_confidence(m.confidence, m.updated_at, now, 90)
-            boost = 0.2 if m.source == "explicit" else 0.0
-            return rel * 1.5 + fresh + boost
-
-        all_mem.sort(key=lambda m: score(m), reverse=True)
-        return all_mem[:limit]
+        # Rank the scope before limiting. Paging bounds memory, not recall.
+        import heapq
+        db=await self._conn();best=[];now=int(time.time());limit=max(1,min(200,limit))
+        try:
+            sql='SELECT id,user_id,scope,scope_id,memory_type,content,confidence,source,status,created_at,updated_at,last_used_at FROM memoria_records WHERE user_id=?'
+            args=[user_id]
+            if status:sql+=' AND status=?';args.append(status)
+            async with db.execute(sql,args) as cur:
+                while True:
+                    rows=await cur.fetchmany(256)
+                    if not rows:break
+                    for row in rows:
+                        m=_row_to_record(row);rel=memory_similarity(m.content,query)
+                        if query.strip() and rel<=0:continue
+                        score=rel*1.5+effective_confidence(m.confidence,m.updated_at,now,90)+(0.2 if m.source=='explicit' else 0)
+                        item=(score,m.id,m)
+                        if len(best)<limit:heapq.heappush(best,item)
+                        elif item[:2]>best[0][:2]:heapq.heapreplace(best,item)
+        finally:await db.close()
+        return [m for _,_,m in sorted(best,reverse=True)]
 
     async def forget_memory(self, user_id: str, key: str) -> int:
         try:
@@ -551,11 +633,12 @@ class MemoriaDB:
         finally:
             await db.close()
 
-    async def record_private_turn(self,identity,event,user_text,assistant_text=None):
+    async def record_private_turn(self,identity,event,user_text,assistant_text=None,*,expected_epoch=None):
         if not __import__('re').fullmatch(r'v1:[0-9a-f]{64}',identity):raise ValueError('scoped_identity_required')
         db=await self._conn()
         try:
             await db.execute('BEGIN IMMEDIATE')
+            await self._check_epoch(db,identity,expected_epoch)
             now=int(time.time())
             await db.execute('INSERT OR IGNORE INTO p1_private_turns(identity,event,user_text,at) VALUES(?,?,?,?)',(identity,event,user_text[:1200],now))
             if assistant_text is not None:await db.execute('UPDATE p1_private_turns SET assistant_text=? WHERE identity=? AND event=?',(assistant_text[:1600],identity,event))

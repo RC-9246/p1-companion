@@ -20,7 +20,7 @@ except ImportError:
  from astrbot_plugin_affect.private_access import companion_identity
  from astrbot_plugin_affect.appraisal import scrub
  from astrbot_plugin_p1_group_memory.store import scope_key
-from .policy import member_scope,parse,hints,SYSTEM,STABLE,UNSAFE,fast_preferences,fast_lessons,consensus_sources,PREFS,LESSONS
+from .policy import member_scope,parse,hints,SYSTEM,STABLE,UNSAFE,fast_preferences,fast_lessons,consensus_sources,PREFS,LESSONS,temporary_preferences,relevant_cards
 from .store import Store
 MARKER='[P1-LEARNING:v1]'
 def nonfatal(fn):
@@ -58,6 +58,7 @@ class P1Learning(Star):
  async def active(self,scope):
   if not module_on(DATA,'learning'):return []
   cards=await asyncio.to_thread(self.store.cards,scope)
+  cards=[*await asyncio.to_thread(self.store.temporaries,scope),*cards]
   # Explicit behavioral corrections must not disappear under a burst of interests.
   return sorted(cards,key=lambda c:({'preference':0,'lesson':1,'correction':2}.get(c['kind'],3),-c['updated'],-c['id']))
  async def expression_hints(self,scope):
@@ -65,9 +66,11 @@ class P1Learning(Star):
   selected=[c for c in cards if c['kind'] in ('preference','interest','lesson')][:8]
   return [{**{k:x[k] for k in ('kind','hint')},'key':c['key'],'value':c['value']} for x,c in zip(hints(selected),selected)]
  async def inject_scope(self,event,request,scope,shared=None):
+  event.set_extra('_p1_learning_epoch',(await asyncio.to_thread(self.store.meta,scope))['epoch'])
   if any(getattr(x,'text','').startswith(MARKER) for x in request.extra_user_content_parts):return
   cards=await self.active(scope);public=await self.active(shared) if shared else []
-  combined=cards[:12]+[x for x in public if x['kind']=='jargon'][:6]
+  cards=relevant_cards(cards,str(getattr(event.message_obj,'message_str','')),2)
+  combined=cards+[x for x in public if x['kind']=='jargon'][:2]
   if not combined:return
   data=hints(combined)
   # Only server-owned canonical strings enter system instructions. Raw quotes,
@@ -125,13 +128,16 @@ class P1Learning(Star):
   else:return
   result=event.get_result();reply='\n'.join(c.text for c in getattr(result,'chain',[]) if hasattr(c,'text'))
   if not text or text.startswith('/') or UNSAFE.search(text):return
-  if await asyncio.to_thread(self.store.record,scope,key,speaker,scrub(text),scrub(reply)):
+  expected=event.get_extra('_p1_learning_epoch')
+  if expected is None:return
+  if await asyncio.to_thread(self.store.record,scope,key,speaker,scrub(text),scrub(reply),expected_epoch=expected):
    rows=await asyncio.to_thread(self.store.turns,scope)
    row=next((r for r in rows if r['id']==key),None)
    immediate=fast_preferences(row)+fast_lessons(row) if row else []
+   if row:
+    await asyncio.to_thread(self.store.save_temporary,scope,expected,temporary_preferences(row,time.time()))
    if immediate:
-    meta=await asyncio.to_thread(self.store.meta,scope)
-    await asyncio.to_thread(self.store.save,scope,meta['epoch'],immediate)
+    await asyncio.to_thread(self.store.save,scope,expected,immediate)
    urgent=bool(STABLE.search(text) or re.search(r'弄错|说错|搞错|不对|又.{0,8}(?:问|建议)|不是我|没查|没做|别再',text))
    self.schedule(event,scope,urgent=urgent)
   used=event.get_extra('_p1_learning_used')
@@ -186,7 +192,7 @@ class P1Learning(Star):
  def describe(self,cards):
   if not cards:return '还没有有据可查的学习条目'
   names={'preference':'表达习惯','interest':'兴趣','lesson':'纠错经验','jargon':'群内用语','correction':'会话更正'}
-  return '\n'.join(str(x['id'])+'、'+names[x['kind']]+'：'+hints([x])[0]['hint']+'（'+('生效' if x['status']=='active' else '待确认')+'）\n依据：'+x['quote'][:100] for x in cards[:8])
+  return '\n'.join(('临时'+str(-x['id']) if x['id']<0 else str(x['id']))+'、'+names[x['kind']]+'：'+hints([x])[0]['hint']+'（'+('生效' if x['status']=='active' else '待确认')+'）\n依据：'+x['quote'][:100] for x in cards[:8])
  @filter.command('学习')
  async def control(self,event,mode:str='状态',item:str=''):
   scope=self.private(event)
@@ -196,12 +202,14 @@ class P1Learning(Star):
    meta=await asyncio.to_thread(self.store.meta,scope);rows=await asyncio.to_thread(self.store.effects,scope)
    checked=sum(r['checked'] for r in rows);repeated=sum(r['repeated'] for r in rows)
    yield event.plain_result(('经验学习已暂停\n' if not meta['enabled'] else '')+'最近30天当前版本的措辞核对：'+str(checked)+'条已送达回复，出现服务式邀约'+str(repeated)+'次\n只核对明确不要的惯用措辞，不代表人格、情绪或事实正确率；其他偏好没有自动评分');return
+  if mode=='临时清空':
+   await asyncio.to_thread(self.store.clear_temporary,scope);yield event.plain_result('已撤销当前范围的临时表达偏好，长期偏好保留');return
   if mode in ('状态','内容'):
-   meta=await asyncio.to_thread(self.store.meta,scope);cards=await asyncio.to_thread(self.store.cards,scope,False)
+   meta=await asyncio.to_thread(self.store.meta,scope);cards=[*await asyncio.to_thread(self.store.temporaries,scope),*await asyncio.to_thread(self.store.cards,scope,False)]
    yield event.plain_result(('经验学习'+('开启' if meta['enabled'] else '暂停')+'，本范围已保存'+str(len(cards))+'项\n')+self.describe(cards));return
   actions={'开启':'on','暂停':'off','清空':'clear','忘记':'forget','回滚':'rollback','确认':'confirm'}
   if mode not in actions or (mode in ('忘记','回滚','确认') and not (item.isascii() and item.isdigit() and len(item)<=12)):
-   yield event.plain_result('用法：/学习 状态、内容、效果、暂停、开启、忘记 ID、回滚 ID、确认 ID、清空');return
+   yield event.plain_result('用法：/学习 状态、内容、效果、临时清空、暂停、开启、忘记 ID、回滚 ID、确认 ID、清空');return
   result=await asyncio.to_thread(self.store.control,scope,actions[mode],int(item) if item.isascii() and item.isdigit() and len(item)<=12 else 0)
   yield event.plain_result('已'+mode+'这项学习设置' if result else '当前范围没有可操作的这条学习记录')
  @filter.command('群学习')

@@ -15,7 +15,7 @@ This file helps a coding or operations assistant work on this repository. It is 
 - `browser/`, `services/`: public browser, private leisure, workbench, MCP, maintenance and monitor
 - `deploy.sh`, `deploy/`: first-install coordinator; originals remain in `scripts/`
 - `tests/`, `evidence/`: distinguish offline, mocked transport, real SDK, real service, real model and real QQ evidence
-- `docs/twenty-item-audit.md`: existing implementation and remaining gaps; all twenty directions are not fully complete
+- `docs/design-verification-20261029.md`: current implementation and evidence layers; `docs/twenty-item-audit.md` preserves historical gaps. Do not infer full completion from a feature row.
 
 ## Safe workflow
 

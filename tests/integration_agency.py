@@ -70,9 +70,9 @@ async def main():
    foreign=Event(friend);denied=await a.docs.run(foreign,'load',refs[0]['attachment_ref']);assert not denied['ok'];a.docs.download.assert_not_awaited()
    nointent=Event(owner,text='嗯');assert not (await a.docs.run(nointent,'load',refs[0]['attachment_ref']))['ok']
    doc=await a.docs.run(e,'load',refs[0]['attachment_ref']);assert doc['ok'];id=doc['document_id'];assert '[P1-DOC-TTL:' in (await a.docs.run(e,'read',id))['temporary_content'];assert not (await a.docs.run(foreign,'read',id))['ok']
-   artifact=a.artifact(scopes[0],'临时摘要','仅工作副本');assert artifact['expires']<=doc['expires'];goal=a.store.goal(scopes[0],'继续整理文件')
+   artifact=a.artifact(scopes[0],'临时摘要','仅工作副本',sources=[id]);assert artifact['expires']<=doc['expires'];goal=a.store.goal(scopes[0],'继续整理文件',sources=[id]);unrelated=a.store.goal(scopes[0],'与附件无关的小目标')
    with closing(a.store.db()) as c:assert c.execute('SELECT expires FROM task WHERE id=?',(goal,)).fetchone()[0]<=doc['expires']
-   a.store.cleanup(doc['expires']+1);assert not (await a.docs.run(e,'read',id))['ok'];assert not a.store.goals(scopes[0]);assert not list(a.store.directory(scopes[0]).iterdir())
+   a.store.cleanup(doc['expires']+1);assert not (await a.docs.run(e,'read',id))['ok'];assert [g['id'] for g in a.store.goals(scopes[0])]==[unrelated];assert not list(a.store.directory(scopes[0]).iterdir())
    # Clear while parser runs: old response cannot resurrect content.
    refs=a.docs.observe(Event(owner,parts=[File(name='later.txt',url='https://example.evil/file')],mid='2'),scopes[0])
    async def clear_worker(*args):a.store.wipe(scopes[0]);return {'ok':True,'text':'stale','format':'txt','mode':'text','warnings':[]}
@@ -94,8 +94,11 @@ async def main():
     assert not result['ok'];api.assert_not_awaited()
    a.store.config(scopes[0],paused=0)
    # Interest ingress is genuinely used for an unmentioned group message, and shares the QQ send ledger.
-   p.groups.state.forget((bot,group));g=Event(friend,group,'最近在看动画分镜和配乐，很有意思',mid='interest-1');a.complete=AsyncMock(return_value={'join':True,'confidence':.98,'topic':'animation'})
-   assert await p.groups.route(g);assert g.get_extra('_p1_interest_join');await g.send(MessageChain([Plain('这段配乐的留白确实很有意思')]))
+   p.groups.state.forget((bot,group));g=Event(friend,group,'最近在看动画分镜和配乐，很有意思',mid='interest-1');a.interest_vote=AsyncMock(return_value={'join':True,'confidence':.98,'topic':'animation'})
+   # Routing here is tested outside quiet hours; the clock/quiet policy has its
+   # own tests and must not make this fake-transport acceptance time-dependent.
+   with patch('astrbot_plugin_affect.qq_policy.quiet',return_value=False),patch('astrbot_plugin_affect.qq_runtime.quiet',return_value=False):
+    assert await p.groups.route(g);assert g.get_extra('_p1_interest_join');await g.send(MessageChain([Plain('这段配乐的留白确实很有意思')]))
    assert len(calls)==1 and calls[0]['group_id']==int(group);assert p.qq.store.recent_sent(reference('t','group',bot,group))
    await p.groups.finish(g);scope=a.scope(g);a.store.config(scope,interest_join=0);p.groups.classify=AsyncMock(return_value=False);p.groups.state.forget((bot,group));assert not await p.groups.route(Event(friend,group,'动画分镜和配乐也很有意思',mid='interest-2'))
    # Direct mention still responds with proactive off; and @someone else never invites an interest interjection.

@@ -44,6 +44,7 @@ async def run():
     return await super().call_action(action,**kw)
    async def get_group_list(self):return await self.call_action('get_group_list')
    async def send_group_msg(self,**kw):sends.append(kw);return {'message_id':80000+len(sends)}
+   async def send_private_msg(self,**kw):sends.append(kw);return {'message_id':80000+len(sends)}
    async def create(self,**kw):
     calls.append(kw);system=kw['messages'][0]['content']
     if '这是一次空闲活动选择' in system:raw={'activity':'reflection','topic':'reading','seconds':0}
@@ -69,7 +70,7 @@ async def run():
   p.reply_pause=pause
   class Event(BaseEvent):
    sequence=1000
-   def __init__(self,sender='20002',group='',text='以后回复简短一些，先听我说完'):
+   def __init__(self,sender='20002',group='',text='你上次误解了，以后回复简短一些，先听我说完'):
     Event.sequence+=1;super().__init__(sender,group,text,str(Event.sequence));self.parts=[At(qq='10001'),Plain(text)] if group else [Plain(text)];self.result=None;self.stopped=False;self.session_id=group or sender;self.session=N(message_type='group' if group else 'private');self._has_send_oper=False
    def get_message_type(self):return MessageType.GROUP_MESSAGE if self.group else MessageType.FRIEND_MESSAGE
    def get_platform_name(self):return 'aiocqhttp'

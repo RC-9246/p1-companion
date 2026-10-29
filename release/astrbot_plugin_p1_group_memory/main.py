@@ -58,7 +58,7 @@ class P1GroupMemory(Star):
       botrole=content['type'] in ('bot','assistant');uid=str(getattr(row,'sender_id','') or '')
       speaker='saki' if botrole else (member_key(event.get_self_id(),event.get_group_id(),uid) if uid else 'unknown')
       at=getattr(row,'created_at',None);at=at.replace(tzinfo=timezone.utc).timestamp() if isinstance(at,datetime) and at.tzinfo is None else (at.timestamp() if isinstance(at,datetime) else None)
-      count+=await asyncio.to_thread(self.store.add,scope,event_key(scope,'platform-history:'+str(row.id)),speaker,'伙伴' if botrole else clean(getattr(row,'sender_name','') or '群友',24),text,at,role='saki' if botrole else 'member',source='framework-recorded-time')
+      count+=await asyncio.to_thread(self.store.add,scope,event_key(scope,'platform-history:'+str(row.id)),speaker,'伙伴' if botrole else clean(getattr(row,'sender_name','') or '群友',24),text,at,role='saki' if botrole else 'member',source='framework-recorded-time',expected_epoch=meta['epoch'])
     except Exception as exc:logger.info('[P1 Group Memory] platform_bootstrap_skipped code='+type(exc).__name__)
    if not count:
     manager=getattr(self.context,'conversation_manager',None)
@@ -71,9 +71,9 @@ class P1GroupMemory(Star):
         if row.get('role') not in ('user','assistant'):continue
         content=row.get('content',[]);content=[{'type':'text','text':content}] if isinstance(content,str) else content
         text='\n'.join(x.get('text','') for x in content if isinstance(x,dict) and x.get('type')=='text' and not x.get('text','').startswith('[P1-'))
-        if text.strip():await asyncio.to_thread(self.store.add,scope,event_key(scope,'conversation:'+str(cid)+':'+str(n)),'saki' if row['role']=='assistant' else 'unknown','伙伴' if row['role']=='assistant' else '旧群记录（发言者未知）',text,None,role='saki' if row['role']=='assistant' else 'member',source='framework-history-time-unknown')
+        if text.strip():await asyncio.to_thread(self.store.add,scope,event_key(scope,'conversation:'+str(cid)+':'+str(n)),'saki' if row['role']=='assistant' else 'unknown','伙伴' if row['role']=='assistant' else '旧群记录（发言者未知）',text,None,role='saki' if row['role']=='assistant' else 'member',source='framework-history-time-unknown',expected_epoch=meta['epoch'])
      except Exception as exc:logger.info('[P1 Group Memory] conversation_bootstrap_skipped code='+type(exc).__name__)
-   await asyncio.to_thread(self.store.hydrated,scope)
+   await asyncio.to_thread(self.store.hydrated,scope,meta['epoch'])
  async def observe(self,event):
   await self.hydrate(event);r=extract(event);event.set_extra('_p1_group_record',r)
   await asyncio.to_thread(self.store.add,**{k:v for k,v in r.items() if k!='quoted'})
@@ -106,7 +106,9 @@ class P1GroupMemory(Star):
   if not await asyncio.to_thread(groups.plugin.store.take_budget,12,bucket=6):return
   async with self.gate:
    if not groups.allowed(event) or (await asyncio.to_thread(self.store.meta,scope))['epoch']!=epoch:return
-   snapshot=await self.snapshot(event);provider=await groups.provider(event)
+   snapshot=await asyncio.to_thread(self.store.summary_batch,scope,epoch,seq)
+   if not snapshot or not snapshot['messages']:return
+   provider=await groups.provider(event)
    evidence={x['id']:x for x in snapshot['messages']}
    for n in snapshot['notes']:
     for e in n.get('evidence',[]):evidence.setdefault(e['id'],e)

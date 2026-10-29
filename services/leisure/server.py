@@ -165,12 +165,15 @@ class Browser:
   self.job_id=quota_id;self.result={'status':'running','bvid':id,'frames':[]}
   self.job=asyncio.create_task(self.watch(id,seconds,quota_id));return {'ok':True,'job_id':self.job_id}
  async def watch(self,id,seconds,quota_id):
-  started=time.monotonic();frames=[];samples=[];first=None;last=None;step='navigation'
+  started=time.monotonic();frames=[];samples=[];first=None;last=None;duration=0;last_progress_write=0;title='';step='navigation'
   try:
    async with self.lock:
     await self.navigate('https://www.bilibili.com/video/'+id+'/')
     step='player_attachment';title=(await self.page.title())[:200];video=self.page.locator('video').first
     await video.wait_for(state='attached',timeout=15000)
+    previous=Q.progress(id)
+    if previous and previous['position_seconds']>3:
+     await video.evaluate('(v,p)=>{if(Number.isFinite(v.duration)&&p<v.duration-5)v.currentTime=p}',previous['position_seconds'])
     step='play_request';await self.page.evaluate('window.__p1ActiveWatch=true')
     await asyncio.wait_for(video.evaluate('(v)=>{v.muted=true;v.playbackRate=1;return v.play()}'),12)
     play_started=time.monotonic()
@@ -179,6 +182,7 @@ class Browser:
     while time.monotonic()-play_started<seconds:
      await asyncio.sleep(3)
      step='progress';v=await video.evaluate('(v)=>({time:v.currentTime,duration:v.duration,paused:v.paused,ended:v.ended,width:v.videoWidth,height:v.videoHeight})')
+     if type(v.get('duration')) in (int,float) and __import__('math').isfinite(v['duration']):duration=max(0,v['duration'])
      if v['time']>0:
       if first is None:first=v['time']
       last=v['time']
@@ -190,6 +194,8 @@ class Browser:
       next_frame+=max(15,seconds/4)
      if v['ended']:break
      if elapsed>30 and (last is None or first is None or last-first<2):raise ValueError('playback_not_advancing')
+     if last is not None and elapsed-last_progress_write>=15:
+      last_progress_write=elapsed;Q.record_progress(id,quota_id,last,duration,{'status':'running','title':title,'sample_times':[f['at_seconds'] for f in frames],'perception':'sampled_frames_only','audio_understood':False})
     await video.evaluate('(v)=>v.pause()')
     description=''
     for sel in ('.video-desc-container','.video-desc', '#v_desc'):
@@ -197,13 +203,16 @@ class Browser:
     played=max(0,(last or 0)-(first or 0))
     if played<3 or not frames:raise ValueError('no_verified_video_observation')
     self.result={'status':'completed','bvid':id,'title':title,'url':'https://www.bilibili.com/video/'+id+'/',
-     'description':description,'played_seconds':round(played,1),'frames':frames,'audio_understood':False,
+     'description':description,'played_seconds':round(played,1),'position_seconds':last,'duration_seconds':duration,'coverage':{'start_seconds':first,'end_seconds':last,'sample_times':[f['at_seconds'] for f in frames],'audio_understood':False,'full_video_understood':False},'frames':frames,'audio_understood':False,
      'perception':'sampled_video_frames_only_not_full_video_or_audio','wall_seconds':round(time.monotonic()-started,1)}
   except asyncio.CancelledError:
    self.result={'status':'cancelled','bvid':id,'frames':[]};raise
   except Exception as e:
    self.result={'status':'blocked','bvid':id,'error':str(e) if isinstance(e,ValueError) else type(e).__name__,'step':step,'wall_seconds':round(time.monotonic()-started,1),'frames':[]}
   finally:
+   if last is not None:
+    try:Q.record_progress(id,quota_id,last,duration,{'status':self.result.get('status','unknown'),'title':title,'sample_times':[f['at_seconds'] for f in frames],'perception':'sampled_frames_only','audio_understood':False})
+    except Exception:pass
    async with self.lock:
     try:
      if self.page:
@@ -259,7 +268,7 @@ async def action(request):
   data=await request.json()
   if data.get('subject') not in OWNER:raise ValueError('unauthorized_subject')
   name=data.get('action')
-  if resource_mode()!='normal' and name not in ('stop','poll','quota','logout'):
+  if resource_mode()!='normal' and name not in ('stop','poll','quota','progress','logout'):
    return web.json_response({'ok':False,'error':'resource_pressure_pause','retry_after_seconds':90},status=503)
   if name=='cards':result=await B.cards(data.get('query',''))
   elif name in ('watchlater_add','watchlater_remove','favorite_add','favorite_remove'):
@@ -274,6 +283,7 @@ async def action(request):
    if data.get('job_id')!=B.job_id:raise ValueError('invalid_job')
    result={'ok':True,**B.result}
   elif name=='quota':result={'ok':True,'daily_limit_seconds':28800,'remaining_seconds':Q.remaining(time.time())}
+  elif name=='progress':result={'ok':True,'bvid':data.get('bvid'),'progress':Q.progress(data.get('bvid'))}
   elif name=='stop':result=await B.stop()
   else:raise ValueError('unsupported_action')
   return web.json_response(result)

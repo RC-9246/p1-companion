@@ -2,9 +2,11 @@ import json,sys,tempfile,shutil,unittest
 from pathlib import Path
 R=Path(__file__).resolve().parents[1];sys.path.insert(0,str(R/'release'))
 from astrbot_plugin_affect.reactions import Catalog,ReactionStore
+from neutral_assets import expanded
 I='v1:'+'a'*64;J='v1:'+'b'*64
 class ExpandedCatalog(unittest.TestCase):
- def setUp(self):self.c=Catalog(R/'release/astrbot_plugin_affect')
+ def setUp(self):
+  self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);self.folder=expanded(Path(self.tmp.name));self.c=Catalog(self.folder)
  def test_visual_reviewed_unique_full_catalog_and_categories(self):
   self.assertEqual(len(self.c.assets),46);self.assertEqual(sum(self.c.categories().values()),46);self.assertEqual(len(self.c.categories()),8)
   self.assertEqual(len({a['sha256'] for a in self.c.assets.values()}),46)
@@ -21,9 +23,9 @@ class ExpandedCatalog(unittest.TestCase):
    self.assertEqual(ReactionStore(path).recent(I),['saki_tired']);self.assertEqual(s.recent(J),[])
    with self.assertRaises(ValueError):s.recent(I,100)
  def test_duplicate_or_excess_catalog_is_rejected(self):
-  base=json.loads((R/'release/astrbot_plugin_affect/reactions.json').read_text())
+  base=json.loads((self.folder/'reactions.json').read_text())
   with tempfile.TemporaryDirectory() as t:
-   d=Path(t);shutil.copytree(R/'release/astrbot_plugin_affect/reaction_assets',d/'reaction_assets')
+   d=Path(t);shutil.copytree(self.folder/'reaction_assets',d/'reaction_assets')
    v=json.loads(json.dumps(base));v['assets'][1]['sha256']=v['assets'][0]['sha256'];(d/'reactions.json').write_text(json.dumps(v))
    with self.assertRaises(AssertionError):Catalog(d)
    v=json.loads(json.dumps(base));v['assets']*=3;(d/'reactions.json').write_text(json.dumps(v))

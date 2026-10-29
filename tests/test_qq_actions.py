@@ -14,6 +14,7 @@ from astrbot_plugin_affect.companion_store import CompanionStore
 from astrbot_plugin_affect.social import SocialStore
 from astrbot_plugin_affect.private_access import companion_identity
 from astrbot_plugin_affect.reactions import Catalog,ReactionStore
+from neutral_assets import catalog as neutral_catalog
 
 class Event:
  def __init__(self,sender='20002',group='',text='哈哈，发张表情包',mid='100'):
@@ -58,7 +59,7 @@ class QQActions(unittest.IsolatedAsyncioTestCase):
   social=SocialStore(self.data/'affect.db');social.migrate();store=CompanionStore(self.data/'affect.db');store.migrate();reaction=ReactionStore(self.data/'affect.db');reaction.migrate()
   ctx=N(get_platform_inst=lambda _:N(get_client=lambda:self.api),get_config=lambda _:self.config)
   groups=N(policy=lambda:[{'bot':'10001','group':'30003'}],valid=lambda e:bool(e.group),allowed=lambda e:bool(e.group),state=N(groups={}),memory=None)
-  self.plugin=N(context=ctx,store=store,social=N(allowed=lambda:{self.owner},store=social),groups=groups,enabled=lambda:True,reply_gate=asyncio.Lock(),reply_pause=pause,reaction_catalog=Catalog(R/'release/astrbot_plugin_affect'),reactions=reaction)
+  self.plugin=N(context=ctx,store=store,social=N(allowed=lambda:{self.owner},store=social),groups=groups,enabled=lambda:True,reply_gate=asyncio.Lock(),reply_pause=pause,reaction_catalog=Catalog(neutral_catalog(self.data/'fixture-assets')),reactions=reaction)
   self.q=QQController(self.plugin,self.data);await self.q.start();await self.q.refresh(True)
   self.a=Event();self.b=Event('20003');self.g=Event('20003','30003')
   for e in (self.a,self.b,self.g):await self.q.observe(e)
@@ -255,9 +256,9 @@ class QQActions(unittest.IsolatedAsyncioTestCase):
   with self.assertRaises(ValueError):await self.q.records(self.b,'forward','',m)
   with self.assertRaises(ValueError):await self.q.records(self.g,'forward','',m)
  async def test_favorite_add_native_verification_and_no_duplicate(self):
-  r=await self.q.sticker(self.a,'favorite','saki_novel_portrait')
+  r=await self.q.sticker(self.a,'favorite','saki_fixture_portrait')
   self.assertTrue(r['ok']);self.assertEqual(self.api.ids,['native_image'])
-  r=await self.q.sticker(self.a,'favorite','saki_novel_portrait');self.assertFalse(r['ok'])
+  r=await self.q.sticker(self.a,'favorite','saki_fixture_portrait');self.assertFalse(r['ok'])
   self.assertEqual(len([x for x in self.api.calls if x[0]=='add_custom_face']),1)
  async def test_favorite_activity_does_not_reopen_an_old_group_topic(self):
   row=self.row(self.g);now=time.time()
@@ -324,9 +325,10 @@ class QQActions(unittest.IsolatedAsyncioTestCase):
   with sqlite3.connect(path) as c:
    c.execute('CREATE TABLE memoria_records(user_id TEXT,scope TEXT,scope_id TEXT,content TEXT,status TEXT,confidence REAL,updated_at INTEGER)')
    c.executemany('INSERT INTO memoria_records VALUES(?,?,?,?,?,?,?)',[
-    (uid,'user',sid,'当前好友已确认的读书偏好','active',.95,3),
-    ('session:'+sid,'session',sid,'当前会话已确认的学习项目','active',.95,2),
-    ('relationship:'+uid+':'+sid,'relationship',sid,'当前会话已确认的沟通习惯','active',.95,1),
+    (uid,'user',sid,'当前好友已确认的读书偏好','active',.95,int(time.time())-3),
+    ('session:'+sid,'session',sid,'当前会话已确认的学习项目','active',.95,int(time.time())-2),
+    ('relationship:'+uid+':'+sid,'relationship',sid,'当前会话已确认的沟通习惯','active',.95,int(time.time())-1),
+    (uid,'user',sid,'已经过时的偏好','active',.95,1),
     (other,'user',other,'别人的记录绝不能读出','active',1,9),
     ('20003','user',self.b.unified_msg_origin,'错误旧键不该命中','active',1,9),
     (uid,'user',sid,'尚未确认的猜测','candidate',.99,9)])

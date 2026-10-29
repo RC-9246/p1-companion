@@ -43,7 +43,7 @@ async def post(browser,path,data,grant=None):
  if not isinstance(result,dict) or type(result.get('code')) is not int or result['code']!=0:raise ValueError('private_action_rejected')
  return result.get('data') or {}
 
-async def folder(browser,title,root):
+async def folder(browser,title,root,*,create=True):
  title=folder_title(title);path=Path(root)/'private_folders.json'
  mapping=json.loads(path.read_text()) if path.exists() else {}
  row=mapping.get(title)
@@ -51,6 +51,7 @@ async def folder(browser,title,root):
   info=await get(browser,'/x/v3/fav/folder/info',{'media_id':row['id']})
   if private_info(info,browser.uid):return row['id']
   raise ValueError('folder_no_longer_private')
+ if not create:return None
  if len(mapping)>=12:raise ValueError('managed_folder_limit')
  pending_path=Path(root)/'pending_folders.json'
  pending=json.loads(pending_path.read_text()) if pending_path.exists() else []
@@ -99,8 +100,9 @@ async def change(browser,root,action,video_id,title=DEFAULT_FOLDER):
    present=any(str(x.get('aid'))==aid for x in listing.get('list',[]))
    output['membership_verified']=present if action.endswith('_add') else not present
   else:
-   id=await folder(browser,title,root)
    remove=action.endswith('_remove')
+   id=await folder(browser,title,root,create=not remove)
+   if id is None:return {**output,'membership_verified':True,'already_absent':True}
    grant={'kind':'favorite','folder':id,'rid':aid,'remove':remove}
    await post(browser,'/x/v3/fav/resource/deal',{'rid':aid,'type':'2','add_media_ids':'' if remove else id,'del_media_ids':id if remove else ''},grant)
    listing=await get(browser,'/x/v3/fav/folder/created/list-all',{'up_mid':browser.uid,'rid':aid,'type':'2'})

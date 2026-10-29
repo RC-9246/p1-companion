@@ -2,6 +2,25 @@
 
 import math
 
+def review_evidence(request,media=None):
+    """Give a selective factual reviewer the same bounded, scoped text evidence.
+
+    This is transient event state, never an audit log. No images, hidden model
+    reasoning, URLs containing account data or a second conversation are added.
+    """
+    from .appraisal import scrub
+    recent=[]
+    for row in (getattr(request,'contexts',None) or [])[-8:]:
+        if not isinstance(row,dict) or row.get('role') not in ('user','assistant'):continue
+        text=row.get('content','')
+        if isinstance(text,list):text=' '.join(x.get('text','') for x in text if isinstance(x,dict) and x.get('type')=='text')
+        if isinstance(text,str):recent.append({'role':row['role'],'text':scrub(text)[:450]})
+    facts=[]
+    for part in getattr(request,'extra_user_content_parts',[]) or []:
+        text=getattr(part,'text','')
+        if isinstance(text,str) and text.startswith(('[P1-MEMORY-DATA]','[P1-CONTINUITY:','本群短期上下文')):facts.append(scrub(text)[:1800])
+    return {'recent':recent,'scoped_facts':facts[:3],'media':media or {},'visual_pixels_supplied_to_reviewer':False}
+
 
 CONTEXT_MARKER = "[P1-AFFECT-CONTEXT:v1]"
 
